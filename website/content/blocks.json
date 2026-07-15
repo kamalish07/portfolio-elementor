@@ -54,7 +54,9 @@
           "key": "footer"
         }
       ],
-      "defaultOverrides": {},
+      "defaultOverrides": {
+        "overview": {}
+      },
       "migrated": true
     },
     "product-decks": {

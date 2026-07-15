@@ -246,6 +246,11 @@
       <!-- Settings Panel -->
       <div id="tab-settings" class="sidebar-panel" style="display:none">
         <h2>Global Appearance</h2>
+        <div style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center">
+          <button id="themeSaveBtn" type="button" class="btn-sm" style="background:#111827;color:#fff;border-radius:4px;padding:6px 12px;font-size:13px;border:none;cursor:pointer;">Save Theme</button>
+          <button id="themeResetBtn" type="button" class="btn-sm" style="background:#f3f4f6;color:#374151;border-radius:4px;padding:6px 12px;font-size:13px;border:1px solid #d1d5db;cursor:pointer;">Reset</button>
+          <span id="themeStatus" style="font-size:13px;color:#6b7280;margin-left:auto;"></span>
+        </div>
         <div id="appearanceControls"></div>
         <div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:20px">
           <h2>Page Data</h2>
@@ -1045,7 +1050,6 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   const saveBtn = document.getElementById('blocksSaveBtn');
   const listEl = document.getElementById('secList');
   const inspector = document.getElementById('blocksInspector');
-  const pageNameEl = document.getElementById('sectionsPageName');
   const pageBar = document.getElementById('pageBar');
 
   const uid = (p) => p + '_' + Math.random().toString(36).slice(2, 9);
@@ -1095,20 +1099,26 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   }
 
   // ---- tabs ----
-  const tabA = document.getElementById('tabAppearanceBtn');
-  const tabS = document.getElementById('tabSectionsBtn');
-  const paneA = document.getElementById('tab-appearance');
-  const paneS = document.getElementById('tab-sections');
-  function setTab(sections) {
-    editMode = sections;
-    tabA.classList.toggle('active', !sections);
-    tabS.classList.toggle('active', sections);
-    paneA.style.display = sections ? 'none' : '';
-    paneS.style.display = sections ? '' : 'none';
+  const tabElementsBtn = document.getElementById('tabElementsBtn');
+  const tabSectionsBtn = document.getElementById('tabSectionsBtn');
+  const tabSettingsBtn = document.getElementById('tabSettingsBtn');
+  const paneElements = document.getElementById('tab-elements');
+  const paneSections = document.getElementById('tab-sections');
+  const paneSettings = document.getElementById('tab-settings');
+
+  function setTab(tabName) {
+    editMode = (tabName !== 'settings');
+    tabElementsBtn.classList.toggle('active', tabName === 'elements');
+    tabSectionsBtn.classList.toggle('active', tabName === 'sections');
+    tabSettingsBtn.classList.toggle('active', tabName === 'settings');
+    paneElements.style.display = tabName === 'elements' ? '' : 'none';
+    paneSections.style.display = tabName === 'sections' ? '' : 'none';
+    paneSettings.style.display = tabName === 'settings' ? '' : 'none';
     push();
   }
-  tabA.addEventListener('click', () => setTab(false));
-  tabS.addEventListener('click', () => setTab(true));
+  tabElementsBtn.addEventListener('click', () => setTab('elements'));
+  tabSectionsBtn.addEventListener('click', () => setTab('sections'));
+  tabSettingsBtn.addEventListener('click', () => setTab('settings'));
 
   // ---- dynamic page bar ----
   function buildPageBar() {
@@ -1301,16 +1311,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     push();
   }
 
-  document.getElementById('addSectionBtn').addEventListener('click', () => {
-    if (!blocksData) return;
-    const s = newSection();
-    cur().sections.push(s);
-    selected = { s: s.id, b: s.blocks[0].id };
-    markBlocksDirty();
-    renderAll();
-    if (!editMode) setTab(true);
-    else push();
-  });
+  // addSectionBtn replaced by addSelectedWidget('section')
 
   // ---- inspector controls ----
   function field(label, control, role) {
@@ -1399,7 +1400,6 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
   function renderAll() {
     const pg = pagesData.pages.find((p) => p.slug === currentPage);
-    pageNameEl.textContent = pg ? pg.label : currentPage;
     renderList();
     renderInspector();
   }
