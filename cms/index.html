@@ -924,6 +924,10 @@ input, select, textarea { font-family: inherit; }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg>
               Section
             </button>
+            <button class="widget-card" data-widget="container" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="4 4"/></svg>
+              Container
+            </button>
           </div>
           <p class="hint">Click a widget to add it to the selected section. Select a section first in the Navigator or preview.</p>
         </div>
@@ -1742,15 +1746,19 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         setTimeout(() => btn.classList.remove('pulse'), 600);
         return;
       }
-      if (!selected.s) { toast('Select a section first.', true); return; }
+      if (!selected.s) { toast('Select a custom section first to add widgets.', true); return; }
       const sec = findSec(selected.s);
-      if (!sec || sec.type === 'default_section') { toast('Cannot add widgets to this section.', true); return; }
+      if (!sec || sec.type === 'default_section') { 
+        toast('Theme sections have fixed layouts. Select a Custom Section to drop widgets into.', true); 
+        return; 
+      }
       let blk;
       if (type === 'heading') blk = newTextBlock('h2');
       else if (type === 'text') blk = newTextBlock('p');
       else if (type === 'image') blk = newImageBlock();
       else if (type === 'button') blk = newButtonBlock();
-      else if (type === 'divider') blk = { id: uid('b'), type: 'text', tag: 'small', text: '———', font: '', fontCustom: '', size: 0, color: '#999', bold: false, align: 'center', width: 100 };
+      else if (type === 'divider') blk = { id: uid('b'), type: 'divider', color: '#e5e7eb', height: 1, width: 100, lineStyle: 'solid' };
+      else if (type === 'container') blk = newContainerBlock();
       else blk = newTextBlock();
       
       sec.blocks = sec.blocks || [];
@@ -1766,13 +1774,16 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           let parentArr = sec.blocks;
           let idx = sec.blocks.findIndex(x => x.id === selected.b);
           if (idx === -1) {
-            // Might be inside a container
-            sec.blocks.forEach(b => {
-              if (b.type === 'container' && b.blocks) {
-                const i = b.blocks.findIndex(x => x.id === selected.b);
-                if (i !== -1) { parentArr = b.blocks; idx = i; }
+            const findParent = (arr) => {
+              for (let i = 0; i < arr.length; i++) {
+                if (arr[i].type === 'container' && arr[i].blocks) {
+                  const childIdx = arr[i].blocks.findIndex(x => x.id === selected.b);
+                  if (childIdx !== -1) { parentArr = arr[i].blocks; idx = childIdx; return true; }
+                  if (findParent(arr[i].blocks)) return true;
+                }
               }
-            });
+            };
+            findParent(sec.blocks);
           }
           if (idx !== -1) {
             parentArr.splice(idx + 1, 0, blk);
@@ -1881,10 +1892,61 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       }
     });
 
+    let dragNode = null;
+    let dragType = null; // 'section' or 'block'
+    let dragSecId = null;
+    let dragBlkId = null;
+
     allSecs.forEach((sec, i) => {
       const group = document.createElement('div'); group.className = 'nav-tree-section';
       if (sec._hidden) group.style.opacity = '0.5';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-tree-item';
+      
+      if (!sec._hidden) {
+        group.draggable = true;
+        group.addEventListener('dragstart', (e) => {
+          dragNode = group; dragType = 'section'; dragSecId = sec.id;
+          e.dataTransfer.effectAllowed = 'move';
+          group.style.opacity = '0.4';
+        });
+        group.addEventListener('dragend', () => {
+          group.style.opacity = '';
+          listEl.querySelectorAll('.nav-tree-section').forEach(el => {
+            el.style.borderTop = ''; el.style.borderBottom = '';
+          });
+        });
+        group.addEventListener('dragover', (e) => {
+          if (dragType !== 'section' || dragNode === group) return;
+          e.preventDefault();
+          const rect = group.getBoundingClientRect();
+          if (e.clientY < rect.top + rect.height / 2) {
+            group.style.borderTop = '2px solid var(--sb-accent)'; group.style.borderBottom = '';
+          } else {
+            group.style.borderBottom = '2px solid var(--sb-accent)'; group.style.borderTop = '';
+          }
+        });
+        group.addEventListener('dragleave', () => {
+          group.style.borderTop = ''; group.style.borderBottom = '';
+        });
+        group.addEventListener('drop', (e) => {
+          e.preventDefault();
+          group.style.borderTop = ''; group.style.borderBottom = '';
+          if (dragType !== 'section' || dragNode === group) return;
+          const rect = group.getBoundingClientRect();
+          const dir = e.clientY < rect.top + rect.height / 2 ? 0 : 1;
+          
+          const secs = cur().sections;
+          const fromIdx = secs.findIndex(s => s.id === dragSecId);
+          let toIdx = secs.findIndex(s => s.id === sec.id);
+          if (fromIdx === -1 || toIdx === -1) return;
+          
+          if (toIdx > fromIdx) toIdx--; // Adjust if moving down
+          toIdx += dir;
+          
+          secs.splice(toIdx, 0, secs.splice(fromIdx, 1)[0]);
+          markBlocksDirty(); renderAll(); push();
+        });
+      }
       
       const eyeBtn = document.createElement('button');
       eyeBtn.type = 'button';
@@ -1925,17 +1987,83 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       group.append(b);
 
       // Block children
+      const renderTreeBlocks = (blocksArr, parentDiv, secId) => {
+        blocksArr.forEach(blk => {
+          const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
+          const icon = blk.type === 'image' ? '🖼' : (blk.type === 'button' ? '🔘' : (blk.type === 'container' ? '📦' : (blk.type === 'divider' ? '➖' : 'T')));
+          const label = blk.type === 'text' ? (blk.text || '').substring(0, 25).replace(/<[^>]+>/g, '') : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
+          bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + (label || blk.type) + '</span>';
+          if (selected.s === secId && selected.b === blk.id) bb.classList.add('active');
+          bb.addEventListener('click', (e) => { e.stopPropagation(); selected = { s: secId, b: blk.id }; renderAll(); push(); });
+          
+          bb.draggable = true;
+          bb.addEventListener('dragstart', (e) => {
+            e.stopPropagation();
+            dragNode = bb; dragType = 'block'; dragSecId = secId; dragBlkId = blk.id;
+            e.dataTransfer.effectAllowed = 'move';
+            bb.style.opacity = '0.4';
+          });
+          bb.addEventListener('dragend', (e) => {
+            e.stopPropagation(); bb.style.opacity = '';
+            document.querySelectorAll('.nav-tree-item').forEach(el => { el.style.borderTop = ''; el.style.borderBottom = ''; });
+          });
+          bb.addEventListener('dragover', (e) => {
+            if (dragType !== 'block' || dragSecId !== secId || dragNode === bb) return;
+            e.preventDefault(); e.stopPropagation();
+            const rect = bb.getBoundingClientRect();
+            if (e.clientY < rect.top + rect.height / 2) { bb.style.borderTop = '2px solid var(--sb-accent)'; bb.style.borderBottom = ''; } 
+            else { bb.style.borderBottom = '2px solid var(--sb-accent)'; bb.style.borderTop = ''; }
+          });
+          bb.addEventListener('dragleave', (e) => { e.stopPropagation(); bb.style.borderTop = ''; bb.style.borderBottom = ''; });
+          bb.addEventListener('drop', (e) => {
+            e.stopPropagation(); e.preventDefault(); bb.style.borderTop = ''; bb.style.borderBottom = '';
+            if (dragType !== 'block' || dragSecId !== secId || dragNode === bb) return;
+            const rect = bb.getBoundingClientRect();
+            const dir = e.clientY < rect.top + rect.height / 2 ? 0 : 1;
+            
+            // Find the array that contains dragBlkId and remove it
+            let srcArr = null, fromIdx = -1, draggedBlk = null;
+            const findAndRemove = (arr) => {
+              for (let j = 0; j < arr.length; j++) {
+                if (arr[j].id === dragBlkId) { srcArr = arr; fromIdx = j; draggedBlk = arr.splice(j, 1)[0]; return true; }
+                if (arr[j].type === 'container' && arr[j].blocks) { if (findAndRemove(arr[j].blocks)) return true; }
+              }
+            };
+            findAndRemove(sec.blocks);
+            if (!draggedBlk) return;
+            
+            // Insert into the array that contains blk.id
+            const insertInto = (arr) => {
+              for (let j = 0; j < arr.length; j++) {
+                if (arr[j].id === blk.id) {
+                  let toIdx = j + dir;
+                  arr.splice(toIdx, 0, draggedBlk);
+                  return true;
+                }
+                if (arr[j].type === 'container' && arr[j].blocks) { if (insertInto(arr[j].blocks)) return true; }
+              }
+            };
+            insertInto(sec.blocks);
+            
+            markBlocksDirty(); renderAll(); push();
+          });
+          
+          parentDiv.append(bb);
+          
+          if (blk.type === 'container' && blk.blocks && blk.blocks.length) {
+            const nestedDiv = document.createElement('div');
+            nestedDiv.className = 'nav-tree-blocks';
+            nestedDiv.style.marginLeft = '12px';
+            nestedDiv.style.borderLeft = '1px solid var(--sb-border)';
+            renderTreeBlocks(blk.blocks, nestedDiv, secId);
+            parentDiv.append(nestedDiv);
+          }
+        });
+      };
+
       if (sec.blocks && sec.blocks.length && !sec._hidden) {
         const blocksDiv = document.createElement('div'); blocksDiv.className = 'nav-tree-blocks';
-        sec.blocks.forEach(blk => {
-          const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
-          const icon = blk.type === 'image' ? '🖼' : blk.type === 'button' ? '🔘' : 'T';
-          const label = blk.type === 'text' ? (blk.text || '').substring(0, 25) : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
-          bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + label + '</span>';
-          if (selected.s === sec.id && selected.b === blk.id) bb.classList.add('active');
-          bb.addEventListener('click', () => { selected = { s: sec.id, b: blk.id }; renderAll(); push(); });
-          blocksDiv.append(bb);
-        });
+        renderTreeBlocks(sec.blocks, blocksDiv, sec.id);
         group.append(blocksDiv);
       }
       listEl.append(group);
@@ -1988,9 +2116,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       }, 0, 400)));
       const acts = document.createElement('div'); acts.className = 'inspector-actions';
       acts.append(
-        actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
-        actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
-        actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
+        actionBtn('👁️ Hide Section', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
       inspector.append(acts);
       return;
@@ -2069,6 +2195,18 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         cb.addEventListener('change', () => { blk.bold = cb.checked; upd(); });
         boldWrap.append(cb, boldLabel);
         panelS.append(field('Bold', boldWrap));
+      } else if (blk.type === 'divider') {
+        panelS.append(field('Line color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
+        panelS.append(field('Thickness (px)', numInput(blk.height, (v) => { blk.height = v; upd(); }, 1, 20)));
+        panelS.append(field('Line style', selInput([{v:'solid',l:'Solid'},{v:'dashed',l:'Dashed'},{v:'dotted',l:'Dotted'}], blk.lineStyle || 'solid', (v) => { blk.lineStyle = v; upd(); })));
+      } else if (blk.type === 'container') {
+        panelS.append(field('Layout Direction', selInput([{v:'column',l:'Column (Vertical)'},{v:'row',l:'Row (Horizontal)'}], blk.flexDirection || 'column', (v) => { blk.flexDirection = v; upd(); })));
+        panelS.append(field('Gap (px)', numInput(blk.gap, (v) => { blk.gap = v; upd(); }, 0, 100)));
+        panelS.append(field('Padding (px)', numInput(blk.padding, (v) => { blk.padding = v; upd(); }, 0, 100)));
+        panelS.append(field('Align Items', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'stretch',l:'Stretch'}], blk.alignItems || 'stretch', (v) => { blk.alignItems = v; upd(); })));
+        panelS.append(field('Justify Content', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'space-between',l:'Space Between'}], blk.justifyContent || 'flex-start', (v) => { blk.justifyContent = v; upd(); })));
+        panelS.append(field('Background', colorInput(blk.bg, (v) => { blk.bg = v; upd(); })));
+        panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
       }
       panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
     }
@@ -2093,14 +2231,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const acts = document.createElement('div'); acts.className = 'inspector-actions';
     if (!blk) {
       acts.append(
-        actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
-        actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
         actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
     } else {
       acts.append(
-        actionBtn('◀ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: -1 })),
-        actionBtn('▶ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: 1 })),
         actionBtn('⬆ Parent', () => { selected = { s: sec.id, b: null }; renderAll(); push(); }),
         actionBtn('✕ Delete', () => handleOp({ op: 'deleteBlock', sectionId: sec.id, blockId: blk.id }), true),
       );

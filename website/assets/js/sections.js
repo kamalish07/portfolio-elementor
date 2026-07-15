@@ -325,6 +325,13 @@
         ph.textContent = 'Image — choose or upload one in the CMS panel';
         wrap.appendChild(ph);
       }
+    } else if (b.type === 'divider') {
+      var div = document.createElement('hr');
+      div.style.border = 'none';
+      div.style.borderTop = (b.height || 1) + 'px ' + (b.lineStyle || 'solid') + ' ' + (b.color || '#e5e7eb');
+      div.style.margin = '0';
+      div.style.width = '100%';
+      wrap.appendChild(div);
     } else {
       var d = TAGS[b.tag] || TAGS.p;
       var el = document.createElement(TAGS[b.tag] ? b.tag : 'p');
@@ -403,6 +410,19 @@
         over.style.inset = '0';
         over.style.zIndex = '50';
         over.style.cursor = 'pointer';
+        over.style.display = 'flex';
+        over.style.alignItems = 'flex-start';
+        over.style.justifyContent = 'flex-end';
+        over.style.padding = '8px';
+        
+        var badge = document.createElement('span');
+        badge.textContent = '🔒 Theme Section (Content Editable)';
+        badge.style.cssText = 'background: rgba(147, 51, 234, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-family: system-ui; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.2s;';
+        over.appendChild(badge);
+        
+        over.addEventListener('mouseenter', function() { badge.style.opacity = '1'; });
+        over.addEventListener('mouseleave', function() { badge.style.opacity = '0'; });
+        
         secEl.style.position = 'relative'; // Ensure overlay is contained
         secEl.appendChild(over);
       }
@@ -414,23 +434,27 @@
       select(sec.id, null);
     });
     if (state.selected.s !== sec.id || state.selected.b) return;
+    
     secEl.classList.add('ploy-sel-sec');
+    if (sec.type === 'default_section') {
+      secEl.style.outlineColor = 'rgba(147, 51, 234, 0.8)';
+    } else {
+      secEl.style.outlineColor = 'var(--ploy-sel, #3b82f6)';
+    }
 
     var bar = document.createElement('div');
     bar.className = 'ploy-toolbar ploy-toolbar--sec';
     
     if (sec.type === 'default_section') {
       bar.append(
-        toolbarButton('↑', 'Move section up', function () { post({ type: 'ploy-blocks-op', op: 'moveSection', sectionId: sec.id, dir: -1 }); }),
-        toolbarButton('↓', 'Move section down', function () { post({ type: 'ploy-blocks-op', op: 'moveSection', sectionId: sec.id, dir: 1 }); }),
-        toolbarButton('✕', 'Delete section', function () { post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id }); })
+        toolbarButton('✕', 'Hide section', function () { post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id }); })
       );
     } else {
       bar.append(
-        toolbarButton('↑', 'Move section up', function () { post({ type: 'ploy-blocks-op', op: 'moveSection', sectionId: sec.id, dir: -1 }); }),
-        toolbarButton('↓', 'Move section down', function () { post({ type: 'ploy-blocks-op', op: 'moveSection', sectionId: sec.id, dir: 1 }); }),
-        toolbarButton('+ Text', 'Add a text block', function () { post({ type: 'ploy-blocks-op', op: 'addBlock', sectionId: sec.id, blockType: 'text' }); }),
-        toolbarButton('+ Image', 'Add an image block', function () { post({ type: 'ploy-blocks-op', op: 'addBlock', sectionId: sec.id, blockType: 'image' }); }),
+        toolbarButton('+ Add Widget', 'Open Elements Panel', function () { 
+          // Post message to open elements tab
+          post({ type: 'ploy-blocks-select', sectionId: sec.id, blockId: null });
+        }),
         toolbarButton('✕', 'Delete section', function () { post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id }); })
       );
     }
