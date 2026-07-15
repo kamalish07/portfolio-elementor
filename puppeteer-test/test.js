@@ -1,1 +1,0 @@
-const puppeteer = require('puppeteer'); (async () => { const browser = await puppeteer.launch(); const page = await browser.newPage(); let errs = 0; page.on('pageerror', e => { console.log('ERR:', e); errs++; }); await page.goto('http://localhost:4174', { waitUntil: 'networkidle0' }); console.log('Errors:', errs); await browser.close(); })();
