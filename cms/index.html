@@ -3,278 +3,999 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMS — Kamalish Portfolio</title>
+<title>CMS Studio — Kamalish Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
-  // Single place this tool points at the site it edits. Change this (and
-  // the matching ALLOWED_PREVIEW_ORIGINS entry in website/assets/js/theme-apply.js)
-  // if you run the website server on a different port.
   window.WEBSITE_ORIGIN = 'http://localhost:4173';
 </script>
 <style>
-  :root {
-    --ink: #171412;
-    --paper: #f5f1ea;
-    --card: #fffdf9;
-    --line: #d9d2c6;
-    --muted: #7a7266;
-    --accent: #a4271e;
-    --ok: #1e6f43;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.55 "Segoe UI", system-ui, sans-serif; background: var(--paper); color: var(--ink); }
-  header.bar { display: none; }
-  .layout { display: grid; grid-template-columns: 230px 1fr; max-width: 1200px; margin: 0 auto; gap: 28px; padding: 28px; }
-  nav.toc { position: sticky; top: 72px; align-self: start; display: flex; flex-direction: column; gap: 2px; }
-  nav.toc a { padding: 7px 12px; font-size: 13.5px; color: var(--muted); text-decoration: none; border-left: 2px solid transparent; }
-  nav.toc a:hover { color: var(--ink); }
-  nav.toc a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
-  section.panel { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 22px 26px 26px; margin-bottom: 26px; }
-  section.panel > h2 { margin: 0 0 4px; font-size: 19px; }
-  section.panel > p.hint { margin: 0 0 18px; font-size: 13px; color: var(--muted); }
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-  .field input[type=text], .field textarea {
-    width: 100%; padding: 9px 11px; font: inherit; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink);
-  }
-  .field textarea { min-height: 74px; resize: vertical; }
-  .field input:focus, .field textarea:focus { outline: 2px solid rgba(164,39,30,.35); border-color: var(--accent); }
-  .imgfield { display: flex; gap: 12px; align-items: flex-start; }
-  .imgfield .thumbwrap { flex: 0 0 118px; }
-  .imgfield img.thumb { width: 118px; height: 78px; object-fit: cover; border: 1px solid var(--line); border-radius: 4px; background: #eee; display: block; }
-  .imgfield .grow { flex: 1; }
-  .imgfield .uploadrow { display: flex; gap: 8px; margin-top: 6px; }
-  .btn-sm { background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 5px 12px; font-size: 12.5px; }
-  .btn-sm:hover { border-color: var(--ink); }
-  .list-item { border: 1px solid var(--line); border-radius: 5px; padding: 16px 16px 6px; margin-bottom: 12px; background: #fbf8f2; position: relative; }
-  .list-item .itemtools { position: absolute; top: 8px; right: 10px; display: flex; gap: 6px; }
-  .itemtools button { background: #fff; border: 1px solid var(--line); border-radius: 3px; width: 26px; height: 24px; font-size: 12px; line-height: 1; color: var(--muted); }
-  .itemtools button:hover { color: var(--ink); border-color: var(--ink); }
-  .itemtools button.del:hover { color: var(--accent); border-color: var(--accent); }
-  .addbtn { background: none; border: 1px dashed var(--muted); color: var(--muted); width: 100%; padding: 9px; border-radius: 5px; font-size: 13.5px; }
-  .addbtn:hover { color: var(--accent); border-color: var(--accent); }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 5px; font-size: 14px; opacity: 0; transform: translateY(8px); transition: all .25s; pointer-events: none; z-index: 9999; }
-  .toast.show { opacity: 1; transform: none; }
-  .toast.err { background: var(--accent); }
+/* ======================================================
+   ELEMENTOR-STYLE CMS — COMPLETE DESIGN SYSTEM
+   ====================================================== */
+:root {
+  /* Sidebar dark theme */
+  --sb-bg: #1e1e1e;
+  --sb-bg-light: #272727;
+  --sb-bg-hover: #333333;
+  --sb-bg-active: #404040;
+  --sb-border: #3a3a3a;
+  --sb-text: #bfbfbf;
+  --sb-text-bright: #e0e0e0;
+  --sb-text-muted: #808080;
+  --sb-accent: #93c5fd;
+  --sb-accent-bg: rgba(147,197,253,0.12);
+  --sb-danger: #f87171;
 
-  /* Appearance section */
-  .appearance { border-bottom: 1px solid var(--line); background: #efe9de; }
-  .appearance__inner { max-width: 1200px; margin: 0 auto; padding: 26px 28px 34px; display: grid; grid-template-columns: 380px 1fr; gap: 28px; }
-  .appearance__inner h2 { margin: 0 0 4px; font-size: 19px; }
-  .appearance__inner > .appearance__controls > p.hint { margin: 0 0 18px; font-size: 13px; color: var(--muted); }
-  .colorfield, .fontfield { margin-bottom: 16px; }
-  .colorfield label, .fontfield label, .field label { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-  .colorfield__row { display: flex; gap: 8px; align-items: center; }
-  .colorfield__row input[type=color] { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
-  .colorfield__row input[type=text] { flex: 1; padding: 8px 10px; font: 13px/1.4 ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .fontfield select { width: 100%; padding: 8px 10px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .fontfield input[type=text] { width: 100%; margin-top: 8px; padding: 8px 10px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .appearance__actions { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
-  .appearance__actions #themeStatus { font-size: 13px; color: var(--muted); }
-  .appearance__actions #themeStatus.dirty { color: #a3690a; }
-  .appearance__actions #themeStatus.saved { color: var(--ok); }
-  #themeSaveBtn { background: var(--accent); color: #fff; border: 0; padding: 9px 20px; font-size: 14px; font-weight: 600; border-radius: 3px; }
-  #themeSaveBtn:disabled { opacity: .45; cursor: default; }
-  .appearance__pagebar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
-  .appearance__pagebar button { background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 6px 13px; font-size: 12.5px; }
-  .appearance__pagebar button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  #themeFrame { width: 100%; height: 70vh; min-height: 480px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  /* Header bar */
+  --hdr-bg: #000000;
+  --hdr-border: #2a2a2a;
 
-  /* Design studio tabs + sections editor */
-  .studio-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-  .studio-tabs button { background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 7px 16px; font-size: 13.5px; }
-  .studio-tabs button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  #sectionsList { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  #sectionsList button { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; font-size: 13px; }
-  #sectionsList button.active { border-color: #2563eb; color: #2563eb; font-weight: 600; }
-  #sectionsList button.default-sec { border-left: 3px solid #7c3aed; }
-  #sectionsList button.default-sec.active { border-color: #7c3aed; color: #7c3aed; }
-  #blocksInspector { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
-  #blocksInspector h3 { margin: 0 0 12px; font-size: 15px; }
-  #blocksInspector p.hint { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
-  .insp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  #blocksSaveBtn { background: #2563eb; color: #fff; border: 0; padding: 9px 20px; font-size: 14px; font-weight: 600; border-radius: 3px; }
-  #blocksSaveBtn:disabled { opacity: .45; cursor: default; }
-  #blocksStatus { font-size: 13px; color: var(--muted); }
-  #blocksStatus.dirty { color: #a3690a; }
-  #blocksStatus.saved { color: var(--ok); }
-  .field input[type=number], .field select { width: 100%; padding: 8px 10px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .field input[type=checkbox] { width: 16px; height: 16px; }
+  /* Preview area */
+  --preview-bg: #e5e7eb;
 
-  /* Per-text style (Aa) controls */
-  .aa-btn { margin-left: auto; background: #fff; border: 1px solid var(--line); border-radius: 3px; font-size: 11px; padding: 2px 8px; cursor: pointer; color: var(--muted); text-transform: none; letter-spacing: 0; }
-  .aa-btn.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  .stylerow { border: 1px dashed var(--line); border-radius: 4px; padding: 10px; margin: 6px 0 8px; background: #faf7f1; }
-  .stylerow .row { display: flex; gap: 8px; margin-bottom: 8px; }
-  .stylerow select, .stylerow input[type=number], .stylerow input[type=text] { flex: 1; min-width: 0; padding: 7px 9px; font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .stylerow input[type=color] { width: 40px; height: 33px; padding: 2px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  /* Inspector */
+  --inp-bg: #2a2a2a;
+  --inp-border: #3e3e3e;
+  --inp-text: #e0e0e0;
+  --inp-focus: #93c5fd;
 
-  /* CMS Fullscreen Layout (Elementor Style) */
-  body { overflow: hidden; }
-  .appearance { position: fixed; inset: 0; z-index: 100; background: #1a1816; border: none; }
-  .appearance__inner { display: flex; height: 100vh; width: 100vw; max-width: none; padding: 0; gap: 0; grid-template-columns: none; }
-  .appearance__controls { width: 320px; flex-shrink: 0; z-index: 110; background: #fff; border-right: 1px solid var(--line); overflow-y: auto; padding: 0; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,.05); transition: transform .25s; }
-  
-  /* Sidebar Header */
-  .sidebar-header { padding: 16px; background: #1f2937; color: #fff; display: flex; align-items: center; justify-content: space-between; }
-  .sidebar-header h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; }
-  .sidebar-header .hamburger { cursor: pointer; font-size: 18px; line-height: 1; }
-  
-  /* Sidebar Tabs */
-  .studio-tabs { display: flex; border-bottom: 1px solid var(--line); margin: 0; padding: 0; }
-  .studio-tabs button { flex: 1; background: #f9fafb; border: none; border-right: 1px solid var(--line); border-bottom: 2px solid transparent; border-radius: 0; padding: 10px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .studio-tabs button:last-child { border-right: none; }
-  .studio-tabs button.active { background: #fff; color: #2563eb; border-bottom-color: #2563eb; }
-  
-  /* Sidebar Panels */
-  .sidebar-panel { padding: 20px; flex: 1; overflow-y: auto; }
-  .sidebar-panel h2 { margin: 0 0 10px; font-size: 14px; text-transform: uppercase; color: #111827; letter-spacing: 0.5px; }
-  .sidebar-panel .hint { font-size: 12px; margin-bottom: 16px; color: #6b7280; }
-  
-  /* Widget Grid */
-  .widget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-  .widget-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #f9fafb; border: 1px solid var(--line); border-radius: 6px; padding: 16px 8px; font-size: 12px; font-weight: 500; color: #374151; transition: all 0.2s; }
-  .widget-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; transform: translateY(-1px); }
-  .widget-btn i { font-size: 20px; font-style: normal; }
+  /* Status colors */
+  --green: #10b981;
+  --green-dark: #059669;
+  --amber: #f59e0b;
+  --red: #ef4444;
+}
 
-  /* Properties Inspector */
-  .props-tabs { display: flex; border-bottom: 1px solid var(--line); margin: -20px -20px 16px -20px; background: #f9fafb; }
-  .props-tabs button { flex: 1; background: none; border: none; padding: 12px; font-size: 12px; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; }
-  .props-tabs button.active { color: #111827; border-bottom-color: #111827; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  overflow: hidden;
+  height: 100vh;
+}
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
 
-  .appearance__preview { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #e5e7eb; }
-  .appearance__pagebar { padding: 12px 16px; background: #fff; border-bottom: 1px solid #d1d5db; margin: 0; display: flex; gap: 8px; align-items: center; }
-  .appearance__pagebar button { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 500; }
-  .appearance__pagebar button.active { background: #111827; color: #fff; border-color: #111827; }
-  #themeFrame { flex: 1; border: none; width: 100%; height: 100%; background: #fff; }
-  
-  /* Top Save Bar */
-  .save-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #1f2937; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #374151; }
-  .save-bar span { color: #9ca3af; font-size: 12px; }
-  .save-bar button { background: #10b981; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; }
-  .save-bar button:disabled { background: #4b5563; color: #9ca3af; }
+/* ---- MAIN LAYOUT ---- */
+.cms-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
-  /* Section divider labels */
-  .sec-divider { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); padding: 10px 0 4px; }
+/* ---- TOP HEADER BAR ---- */
+.cms-header {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  background: var(--hdr-bg);
+  border-bottom: 1px solid var(--hdr-border);
+  padding: 0 12px;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.cms-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #93c5fd;
+  border-radius: 4px;
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  border: none;
+  transition: opacity 0.15s;
+}
+.cms-header__logo:hover { opacity: 0.9; }
+.cms-header__logo svg { width: 18px; height: 18px; }
+.cms-header__sep { width: 1px; height: 28px; background: var(--hdr-border); margin: 0 4px; }
 
-  /* Add page modal */
-  .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; }
-  .modal { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 28px 30px 24px; width: 420px; max-width: 90vw; box-shadow: 0 16px 48px rgba(0,0,0,.2); }
-  .modal h3 { margin: 0 0 6px; font-size: 18px; }
-  .modal p { margin: 0 0 16px; font-size: 13px; color: var(--muted); }
-  .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-  .modal .modal-actions button { padding: 8px 18px; font-size: 14px; border-radius: 4px; font-weight: 600; }
-  .modal .modal-cancel { background: #fff; border: 1px solid var(--line); color: var(--ink); }
-  .modal .modal-confirm { background: var(--accent); border: none; color: #fff; }
+/* Responsive preview toggles */
+.cms-header__responsive {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+.cms-header__responsive button {
+  width: 36px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: #666;
+  border-radius: 4px; transition: all 0.15s;
+  font-size: 16px;
+}
+.cms-header__responsive button:hover { color: #999; background: rgba(255,255,255,0.06); }
+.cms-header__responsive button.active { color: var(--sb-accent); background: var(--sb-accent-bg); }
 
-  /* Add page button */
-  .add-page-btn { background: none; border: 1px dashed var(--muted); color: var(--muted); border-radius: 3px; padding: 5px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-  .add-page-btn:hover { color: var(--accent); border-color: var(--accent); }
+.cms-header__spacer { flex: 1; }
 
-  @media (max-width: 900px) { .appearance__inner { grid-template-columns: 1fr; } }
-  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } nav.toc { position: static; flex-direction: row; flex-wrap: wrap; } }
+/* Page selector pills */
+.cms-header__pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 50vw;
+  scrollbar-width: none;
+}
+.cms-header__pages::-webkit-scrollbar { display: none; }
+.page-pill {
+  padding: 5px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--sb-bg-light);
+  border: 1px solid var(--sb-border);
+  color: var(--sb-text);
+  transition: all 0.15s;
+}
+.page-pill:hover { background: var(--sb-bg-hover); color: var(--sb-text-bright); }
+.page-pill.active { background: var(--sb-accent); color: #000; border-color: var(--sb-accent); font-weight: 600; }
+.page-pill--add {
+  background: none;
+  border: 1px dashed var(--sb-text-muted);
+  color: var(--sb-text-muted);
+  font-size: 12px;
+}
+.page-pill--add:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
+
+/* Header actions */
+.cms-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+}
+.btn-publish {
+  padding: 7px 20px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+.btn-publish:hover { background: var(--green-dark); }
+.btn-publish:disabled { background: #374151; color: #6b7280; cursor: default; }
+.status-dot {
+  font-size: 11px;
+  color: var(--sb-text-muted);
+  white-space: nowrap;
+}
+.status-dot.dirty { color: var(--amber); }
+.status-dot.saved { color: var(--green); }
+
+/* ---- BODY: SIDEBAR + PREVIEW ---- */
+.cms-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- LEFT SIDEBAR ---- */
+.cms-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--sb-bg);
+  border-right: 1px solid var(--sb-border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s, transform 0.25s;
+  z-index: 50;
+  overflow: hidden;
+}
+.cms-sidebar.collapsed { width: 0; border-right: none; }
+
+/* Sidebar tabs */
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--sb-border);
+  flex-shrink: 0;
+}
+.sidebar-tabs button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 4px 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--sb-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.sidebar-tabs button svg { width: 20px; height: 20px; opacity: 0.5; transition: opacity 0.15s; }
+.sidebar-tabs button:hover { color: var(--sb-text); background: var(--sb-bg-light); }
+.sidebar-tabs button:hover svg { opacity: 0.8; }
+.sidebar-tabs button.active { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
+.sidebar-tabs button.active svg { opacity: 1; }
+
+/* Sidebar panels */
+.sidebar-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-bg-active) transparent;
+}
+.sidebar-panel::-webkit-scrollbar { width: 5px; }
+.sidebar-panel::-webkit-scrollbar-track { background: transparent; }
+.sidebar-panel::-webkit-scrollbar-thumb { background: var(--sb-bg-active); border-radius: 3px; }
+
+.sidebar-panel h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sb-text-muted);
+  margin-bottom: 12px;
+}
+.sidebar-panel .hint {
+  font-size: 11px;
+  color: var(--sb-text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* ---- WIDGET GRID (Elements Tab) ---- */
+.widget-search {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-border);
+  border-radius: 6px;
+  color: var(--inp-text);
+  font-size: 12px;
+  margin-bottom: 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.widget-search:focus { border-color: var(--sb-accent); }
+.widget-search::placeholder { color: var(--sb-text-muted); }
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.widget-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 6px;
+  background: var(--sb-bg-light);
+  border: 1px solid var(--sb-border);
+  border-radius: 6px;
+  color: var(--sb-text);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.2s;
+}
+.widget-card:hover {
+  background: var(--sb-accent-bg);
+  border-color: var(--sb-accent);
+  color: var(--sb-accent);
+  transform: translateY(-1px);
+}
+.widget-card svg { width: 22px; height: 22px; opacity: 0.7; }
+.widget-card:hover svg { opacity: 1; }
+
+/* Pulse animation on successful add */
+@keyframes widgetPulse {
+  0% { box-shadow: 0 0 0 0 rgba(147,197,253,0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(147,197,253,0); }
+  100% { box-shadow: 0 0 0 0 rgba(147,197,253,0); }
+}
+.widget-card.pulse { animation: widgetPulse 0.6s ease-out; }
+
+/* ---- NAVIGATOR TREE ---- */
+.nav-tree { display: flex; flex-direction: column; gap: 2px; }
+.nav-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--sb-text);
+  font-size: 12px;
+  text-align: left;
+  width: 100%;
+  transition: all 0.12s;
+}
+.nav-tree-item:hover { background: var(--sb-bg-hover); }
+.nav-tree-item.active { background: var(--sb-accent-bg); color: var(--sb-accent); }
+.nav-tree-item.default { border-left: 3px solid #a78bfa; padding-left: 7px; }
+.nav-tree-item.default.active { border-left-color: var(--sb-accent); }
+.nav-tree-item__icon { width: 16px; font-size: 12px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+.nav-tree-item__label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-tree-item__badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--sb-bg-active);
+  color: var(--sb-text-muted);
+  flex-shrink: 0;
+}
+
+.nav-tree-section { margin-bottom: 4px; }
+.nav-tree-blocks { margin-left: 22px; display: flex; flex-direction: column; gap: 1px; }
+.nav-tree-blocks .nav-tree-item { font-size: 11px; padding: 5px 8px; }
+
+.nav-add-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  margin-top: 8px;
+  background: none;
+  border: 1px dashed var(--sb-border);
+  border-radius: 6px;
+  color: var(--sb-text-muted);
+  font-size: 12px;
+  width: 100%;
+  transition: all 0.15s;
+}
+.nav-add-section:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
+
+/* ---- SETTINGS PANEL ---- */
+.settings-group {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--sb-border);
+}
+.settings-group:last-child { border-bottom: none; }
+.settings-group h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sb-text-bright);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.settings-actions button {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.15s;
+}
+.settings-actions .btn-save-theme {
+  background: var(--sb-accent);
+  color: #000;
+}
+.settings-actions .btn-save-theme:hover { opacity: 0.9; }
+.settings-actions .btn-save-theme:disabled { opacity: 0.4; cursor: default; }
+.settings-actions .btn-reset-theme {
+  background: var(--sb-bg-hover);
+  color: var(--sb-text);
+  border: 1px solid var(--sb-border);
+}
+.settings-actions .btn-reset-theme:hover { background: var(--sb-bg-active); }
+.settings-status { font-size: 11px; color: var(--sb-text-muted); margin-left: 8px; }
+.settings-status.dirty { color: var(--amber); }
+.settings-status.saved { color: var(--green); }
+
+/* ---- FORM CONTROLS (dark theme) ---- */
+.ctl-field { margin-bottom: 14px; }
+.ctl-field > label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--sb-text-muted);
+  margin-bottom: 6px;
+}
+.ctl-input, .ctl-textarea, .ctl-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  color: var(--inp-text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ctl-input:focus, .ctl-textarea:focus, .ctl-select:focus { border-color: var(--inp-focus); }
+.ctl-textarea { min-height: 60px; resize: vertical; }
+.ctl-select { cursor: pointer; }
+.ctl-color-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.ctl-color-row input[type="color"] {
+  width: 36px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  background: var(--inp-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ctl-color-row input[type="text"] {
+  flex: 1;
+  padding: 7px 9px;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  color: var(--inp-text);
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  outline: none;
+}
+.ctl-color-row input[type="text"]:focus { border-color: var(--inp-focus); }
+.ctl-color-row .ctl-clear {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  color: var(--sb-text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.ctl-color-row .ctl-clear:hover { border-color: var(--sb-danger); color: var(--sb-danger); }
+.ctl-number { width: 100%; }
+.ctl-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctl-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--sb-accent);
+}
+
+/* ---- INSPECTOR (replaces default widgets when something selected) ---- */
+.inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--sb-border);
+}
+.inspector-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sb-text-bright);
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.inspector-header .inspector-back {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sb-bg-hover);
+  border: none;
+  border-radius: 4px;
+  color: var(--sb-text);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.inspector-header .inspector-back:hover { background: var(--sb-bg-active); }
+
+/* Props tabs */
+.props-tabs {
+  display: flex;
+  margin: -16px -16px 16px -16px;
+  border-bottom: 1px solid var(--sb-border);
+  background: rgba(0,0,0,0.2);
+}
+.props-tabs button {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--sb-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.12s;
+}
+.props-tabs button:hover { color: var(--sb-text); }
+.props-tabs button.active { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
+
+/* Inspector actions */
+.inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sb-border);
+}
+.inspector-actions button {
+  padding: 5px 10px;
+  background: var(--sb-bg-hover);
+  border: 1px solid var(--sb-border);
+  border-radius: 4px;
+  color: var(--sb-text);
+  font-size: 11px;
+  transition: all 0.12s;
+}
+.inspector-actions button:hover { background: var(--sb-bg-active); border-color: var(--sb-text-muted); }
+.inspector-actions button.danger { color: var(--sb-danger); }
+.inspector-actions button.danger:hover { border-color: var(--sb-danger); background: rgba(248,113,113,0.1); }
+
+/* Image control (dark themed) */
+.img-control { display: flex; gap: 10px; align-items: flex-start; }
+.img-control__thumb { width: 80px; height: 56px; object-fit: cover; border: 1px solid var(--inp-border); border-radius: 4px; background: var(--inp-bg); }
+.img-control__body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.img-control__upload {
+  padding: 5px 10px;
+  background: var(--sb-bg-hover);
+  border: 1px solid var(--sb-border);
+  border-radius: 4px;
+  color: var(--sb-text);
+  font-size: 11px;
+  align-self: flex-start;
+}
+.img-control__upload:hover { background: var(--sb-bg-active); }
+
+/* ---- PREVIEW AREA ---- */
+.cms-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--preview-bg);
+}
+.cms-preview__toolbar {
+  display: none; /* page pills are in header now */
+}
+.cms-preview__frame-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  overflow: hidden;
+  transition: padding 0.3s;
+}
+.cms-preview__frame-wrap.tablet { padding: 16px; }
+.cms-preview__frame-wrap.mobile { padding: 16px; }
+
+.cms-preview__frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+  transition: max-width 0.3s, border-radius 0.3s, box-shadow 0.3s;
+}
+.cms-preview__frame-wrap.tablet .cms-preview__frame {
+  max-width: 768px;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.cms-preview__frame-wrap.mobile .cms-preview__frame {
+  max-width: 375px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+/* ---- BOTTOM BAR ---- */
+.cms-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--hdr-bg);
+  border-top: 1px solid var(--hdr-border);
+  flex-shrink: 0;
+}
+.cms-bottom__status {
+  font-size: 11px;
+  color: var(--sb-text-muted);
+}
+.cms-bottom__status.dirty { color: var(--amber); }
+.cms-bottom__status.saved { color: var(--green); }
+.cms-bottom__btn {
+  padding: 5px 16px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cms-bottom__btn:disabled { background: #374151; color: #6b7280; cursor: default; }
+.cms-bottom__btn:not(:disabled):hover { background: var(--green-dark); }
+
+/* ---- ADD PAGE MODAL ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal {
+  background: #1e1e1e;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  padding: 28px 30px 24px;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+.modal h3 { color: #e0e0e0; font-size: 18px; margin-bottom: 6px; }
+.modal p { color: #808080; font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
+.modal .ctl-field { margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-actions button { padding: 8px 18px; font-size: 13px; border-radius: 6px; font-weight: 600; }
+.modal-cancel { background: var(--sb-bg-hover); border: 1px solid var(--sb-border); color: var(--sb-text); }
+.modal-confirm { background: var(--sb-accent); border: none; color: #000; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 60px;
+  right: 24px;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s;
+  pointer-events: none;
+  z-index: 9999;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: none; }
+.toast.err { border-color: var(--red); }
+
+/* ---- PAGE DATA EDITOR (inside Settings) ---- */
+.page-data-section { margin-top: 8px; }
+.page-data-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.page-data-toc a {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: var(--sb-bg-light);
+  color: var(--sb-text-muted);
+  text-decoration: none;
+  border: 1px solid var(--sb-border);
+  transition: all 0.12s;
+}
+.page-data-toc a:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+.page-data-toc a.active { color: var(--sb-accent); border-color: var(--sb-accent); background: var(--sb-accent-bg); }
+
+.page-data-panel {
+  background: var(--sb-bg-light);
+  border: 1px solid var(--sb-border);
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.page-data-panel h4 {
+  font-size: 12px;
+  color: var(--sb-text-bright);
+  margin-bottom: 4px;
+}
+.page-data-panel .hint {
+  font-size: 11px;
+  color: var(--sb-text-muted);
+  margin-bottom: 12px;
+}
+
+/* List items in page data */
+.list-item {
+  background: var(--sb-bg);
+  border: 1px solid var(--sb-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.list-item .itemtools {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+.itemtools button {
+  width: 24px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sb-bg-light);
+  border: 1px solid var(--sb-border);
+  border-radius: 3px;
+  color: var(--sb-text-muted);
+  font-size: 11px;
+}
+.itemtools button:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+.itemtools button.del:hover { color: var(--sb-danger); border-color: var(--sb-danger); }
+
+.addbtn {
+  background: none;
+  border: 1px dashed var(--sb-border);
+  color: var(--sb-text-muted);
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.addbtn:hover { color: var(--sb-accent); border-color: var(--sb-accent); }
+
+/* Style row (Aa overrides) */
+.aa-btn {
+  margin-left: auto;
+  background: var(--sb-bg-hover);
+  border: 1px solid var(--sb-border);
+  border-radius: 3px;
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  color: var(--sb-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.aa-btn.on { border-color: var(--sb-accent); color: var(--sb-accent); }
+.stylerow {
+  border: 1px solid var(--sb-border);
+  border-radius: 4px;
+  padding: 10px;
+  margin: 6px 0 8px;
+  background: var(--sb-bg);
+}
+.stylerow .row { display: flex; gap: 6px; margin-bottom: 6px; }
+.stylerow select, .stylerow input[type=number], .stylerow input[type=text] {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 11px;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  color: var(--inp-text);
+  outline: none;
+}
+.stylerow input[type=color] {
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  background: var(--inp-bg);
+}
+
+/* Font field */
+.fontfield { margin-bottom: 14px; }
+.fontfield label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sb-text-muted); margin-bottom: 6px; }
+.fontfield select, .fontfield input[type=text] {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--inp-bg);
+  border: 1px solid var(--inp-border);
+  border-radius: 4px;
+  color: var(--inp-text);
+  font-size: 12px;
+  outline: none;
+}
+.fontfield input[type=text] { margin-top: 6px; }
+
+/* Color field */
+.colorfield { margin-bottom: 14px; }
+.colorfield label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sb-text-muted); margin-bottom: 6px; }
+.colorfield__row { display: flex; gap: 6px; align-items: center; }
+.colorfield__row input[type=color] { width: 36px; height: 32px; padding: 2px; border: 1px solid var(--inp-border); border-radius: 4px; background: var(--inp-bg); }
+.colorfield__row input[type=text] { flex: 1; padding: 7px 9px; font: 12px/1.4 'SF Mono', 'Cascadia Code', monospace; background: var(--inp-bg); border: 1px solid var(--inp-border); border-radius: 4px; color: var(--inp-text); outline: none; }
 </style>
 </head>
 <body>
 
-<header class="bar">
-  <h1>Kamalish CMS</h1>
-  <div class="links">
-    <a href="#appearance">Appearance</a>
-    <a data-site-link="/" target="_blank">Home ↗</a>
-    <a data-site-link="/work/product-wireframes/" target="_blank">Wireframes ↗</a>
-    <a data-site-link="/work/product-decks/" target="_blank">Decks ↗</a>
-    <a data-site-link="/work/visual-systems/" target="_blank">Visual Systems ↗</a>
-  </div>
-  <div class="spacer"></div>
-  <button class="fullscreen-btn" id="fullscreenBtn" type="button">⛶ Fullscreen</button>
-  <span id="status">Loading…</span>
-  <button id="saveBtn" disabled>Save changes</button>
-</header>
-<script>
-  document.querySelectorAll('[data-site-link]').forEach((a) => {
-    a.href = window.WEBSITE_ORIGIN + a.getAttribute('data-site-link');
-  });
-</script>
+<!-- ========== APP SHELL ========== -->
+<div class="cms-app">
 
-<section class="appearance" id="appearance">
-  <div class="appearance__inner">
-    <div class="appearance__controls" id="sidebar">
-      <div class="sidebar-header">
-        <h1>CMS Studio</h1>
-        <div class="hamburger">☰</div>
-      </div>
-      <div class="studio-tabs">
-        <button id="tabElementsBtn" class="active" type="button">Elements</button>
-        <button id="tabSectionsBtn" type="button">Navigator</button>
-        <button id="tabSettingsBtn" type="button">Settings</button>
+  <!-- HEADER -->
+  <header class="cms-header">
+    <button class="cms-header__logo" type="button" id="sidebarToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      CMS
+    </button>
+    <div class="cms-header__sep"></div>
+
+    <!-- Responsive toggles -->
+    <div class="cms-header__responsive">
+      <button type="button" data-view="desktop" class="active" title="Desktop">🖥️</button>
+      <button type="button" data-view="tablet" title="Tablet">📱</button>
+      <button type="button" data-view="mobile" title="Mobile">📲</button>
+    </div>
+
+    <div class="cms-header__spacer"></div>
+
+    <!-- Page pills -->
+    <div class="cms-header__pages" id="pageBar"></div>
+
+    <div class="cms-header__sep"></div>
+
+    <!-- Actions -->
+    <div class="cms-header__actions">
+      <span class="status-dot" id="status">Loading…</span>
+      <button class="btn-publish" id="saveBtn" disabled>Publish</button>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="cms-body">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="cms-sidebar" id="sidebar">
+      <div class="sidebar-tabs">
+        <button id="tabElementsBtn" class="active" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Elements
+        </button>
+        <button id="tabSectionsBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
+          Navigator
+        </button>
+        <button id="tabSettingsBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </button>
       </div>
 
-      <!-- Elements Panel -->
+      <!-- ELEMENTS PANEL -->
       <div id="tab-elements" class="sidebar-panel">
         <div id="defaultWidgets">
-          <h2>Basic Widgets</h2>
-          <p class="hint">Click a widget to add it to the selected section.</p>
-          <div class="widget-grid">
-            <button class="widget-btn" onclick="addSelectedWidget('text')">
-              <i>T</i> Text
+          <input type="text" class="widget-search" id="widgetSearch" placeholder="Search widgets...">
+          <h3>Basic Widgets</h3>
+          <div class="widget-grid" id="widgetGrid">
+            <button class="widget-card" data-widget="heading" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16M20 4v16M4 12h16"/></svg>
+              Heading
             </button>
-            <button class="widget-btn" onclick="addSelectedWidget('image')">
-              <i>🖼️</i> Image
+            <button class="widget-card" data-widget="text" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+              Text
             </button>
-            <button class="widget-btn" onclick="addSelectedWidget('button')">
-              <i>🔘</i> Button
+            <button class="widget-card" data-widget="image" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              Image
             </button>
-            <button class="widget-btn" onclick="addSelectedWidget('section')">
-              <i>⬚</i> Section
+            <button class="widget-card" data-widget="button" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="5"/><path d="M10 12h4"/></svg>
+              Button
+            </button>
+            <button class="widget-card" data-widget="divider" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>
+              Divider
+            </button>
+            <button class="widget-card" data-widget="section" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg>
+              Section
             </button>
           </div>
-          <p class="hint" style="color: #a1a1aa">Select a section in the preview first to add widgets to it.</p>
+          <p class="hint">Click a widget to add it to the selected section. Select a section first in the Navigator or preview.</p>
         </div>
-        
-        <div id="blocksInspector" style="display:none">
-          <!-- Inspector UI gets rendered here -->
-        </div>
+        <div id="blocksInspector" style="display:none"></div>
       </div>
 
-      <!-- Navigator Panel -->
+      <!-- NAVIGATOR PANEL -->
       <div id="tab-sections" class="sidebar-panel" style="display:none">
-        <h2>Page Structure</h2>
-        <p class="hint">Reorder sections or select them to edit.</p>
-        <div id="secList"></div>
+        <h3>Page Structure</h3>
+        <div id="secList" class="nav-tree"></div>
+        <button class="nav-add-section" id="navAddSection" type="button">+ Add Section</button>
       </div>
 
-      <!-- Settings Panel -->
+      <!-- SETTINGS PANEL -->
       <div id="tab-settings" class="sidebar-panel" style="display:none">
-        <h2>Global Appearance</h2>
-        <div style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center">
-          <button id="themeSaveBtn" type="button" class="btn-sm" style="background:#111827;color:#fff;border-radius:4px;padding:6px 12px;font-size:13px;border:none;cursor:pointer;">Save Theme</button>
-          <button id="themeResetBtn" type="button" class="btn-sm" style="background:#f3f4f6;color:#374151;border-radius:4px;padding:6px 12px;font-size:13px;border:1px solid #d1d5db;cursor:pointer;">Reset</button>
-          <span id="themeStatus" style="font-size:13px;color:#6b7280;margin-left:auto;"></span>
+        <h3>Global Design</h3>
+        <div class="settings-group">
+          <h4>🎨 Theme Colors</h4>
+          <div class="settings-actions">
+            <button class="btn-save-theme" id="themeSaveBtn" type="button" disabled>Save Theme</button>
+            <button class="btn-reset-theme" id="themeResetBtn" type="button">Reset</button>
+            <span class="settings-status" id="themeStatus"></span>
+          </div>
+          <div id="appearanceControls"></div>
         </div>
-        <div id="appearanceControls"></div>
-        <div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:20px">
-          <h2>Page Data</h2>
-          <nav class="toc" id="toc" style="margin-bottom:15px;display:flex;flex-wrap:wrap;gap:8px"></nav>
-          <div id="editor"></div>
+        <div class="settings-group">
+          <h4>📄 Page Data</h4>
+          <nav class="page-data-toc" id="toc"></nav>
+          <div id="editor" class="page-data-section"></div>
         </div>
       </div>
+    </aside>
 
-      <div class="save-bar">
-        <span id="blocksStatus">All saved</span>
-        <button id="blocksSaveBtn" disabled type="button">UPDATE</button>
+    <!-- PREVIEW -->
+    <main class="cms-preview">
+      <div class="cms-preview__frame-wrap" id="previewWrap">
+        <iframe id="themeFrame" class="cms-preview__frame" title="Live preview"></iframe>
       </div>
-    </div>
-    <div class="appearance__preview">
-      <div class="appearance__pagebar" id="pageBar">
-        <!-- Populated dynamically -->
-      </div>
-      <iframe id="themeFrame" title="Live theme preview"></iframe>
-    </div>
+    </main>
   </div>
-</section>
+
+  <!-- BOTTOM BAR -->
+  <footer class="cms-bottom">
+    <span class="cms-bottom__status" id="blocksStatus">All changes saved</span>
+    <button class="cms-bottom__btn" id="blocksSaveBtn" disabled type="button">UPDATE</button>
+  </footer>
+</div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ========== JAVASCRIPT ========== -->
+
+<!-- Responsive preview toggle -->
+<script>
+(function() {
+  const wrap = document.getElementById('previewWrap');
+  const btns = document.querySelectorAll('.cms-header__responsive button');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      wrap.className = 'cms-preview__frame-wrap ' + (btn.dataset.view || '');
+    });
+  });
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  });
+})();
+</script>
+
+<!-- Page data SCHEMA + content editor -->
 <script>
 const SCHEMA = [
   {
@@ -330,7 +1051,7 @@ const SCHEMA = [
   },
   {
     id: 'projects', title: 'Home — Projects',
-    hint: 'Cards in the "Selected work" grid. The slug is the /work/… page it links to.',
+    hint: 'Cards in the "Selected work" grid.',
     fields: [
       { path: 'home.projectsTitle', label: 'Section title' },
       { path: 'home.projects', label: 'Project cards', type: 'list', itemLabel: 'Project', item: [
@@ -367,7 +1088,7 @@ const SCHEMA = [
   },
   {
     id: 'decks', title: 'Product Decks Gallery',
-    hint: 'Cards on the /work/product-decks page. Add a PDF URL to make a card clickable.',
+    hint: 'Cards on the /work/product-decks page.',
     fields: [
       { path: 'deckGallery.title', label: 'Page title' },
       { path: 'deckGallery.backLabel', label: 'Back link label' },
@@ -397,8 +1118,8 @@ function caseStudyFields(slug) {
     { path: p + 'deliverables', label: 'Deliverables (one per line)', type: 'stringlist' },
     { path: p + 'pdfTitle', label: 'PDF section heading' },
     { path: p + 'pdfBody', label: 'PDF section text', type: 'textarea' },
-    { path: p + 'pdfStatus', label: 'PDF status badge (shown when no PDF URL)' },
-    { path: p + 'pdfUrl', label: 'PDF URL (shows a "View PDF" button when set)' },
+    { path: p + 'pdfStatus', label: 'PDF status badge' },
+    { path: p + 'pdfUrl', label: 'PDF URL' },
   ];
 }
 
@@ -424,7 +1145,7 @@ function markDirty() {
   dirty = true;
   saveBtn.disabled = false;
   statusEl.textContent = 'Unsaved changes';
-  statusEl.className = 'dirty';
+  statusEl.className = 'status-dot dirty';
 }
 
 function toast(msg, isErr) {
@@ -438,6 +1159,7 @@ function toast(msg, isErr) {
 function textInput(value, onInput, isArea) {
   const el = document.createElement(isArea ? 'textarea' : 'input');
   if (!isArea) el.type = 'text';
+  el.className = isArea ? 'ctl-textarea' : 'ctl-input';
   el.value = value == null ? '' : value;
   el.addEventListener('input', () => onInput(el.value));
   return el;
@@ -451,8 +1173,6 @@ function pushStylesPreview() {
 }
 window.pushStylesPreview = pushStylesPreview;
 
-// Font/size/color override editor for one piece of site text, stored in
-// styles.json under the text's content path.
 function styleRow(key) {
   const box = document.createElement('div');
   box.className = 'stylerow';
@@ -466,7 +1186,6 @@ function styleRow(key) {
     markDirty();
     pushStylesPreview();
   };
-
   const sel = document.createElement('select');
   [{ id: '', label: 'Default font' }].concat(window.PloyTheme ? window.PloyTheme.FONT_OPTIONS : []).forEach((f) => {
     const op = document.createElement('option');
@@ -485,72 +1204,39 @@ function styleRow(key) {
     setO({ font: sel.value });
   });
   custom.addEventListener('input', () => setO({ fontCustom: custom.value }));
-
   const size = document.createElement('input');
-  size.type = 'number';
-  size.min = 8;
-  size.max = 200;
-  size.placeholder = 'Size px';
-  size.title = 'Font size in px (empty = default)';
+  size.type = 'number'; size.min = 8; size.max = 200;
+  size.placeholder = 'Size px'; size.title = 'Font size in px';
   size.value = cur().size || '';
   size.addEventListener('input', () => setO({ size: parseFloat(size.value) || 0 }));
-
   const colRow = document.createElement('div');
-  colRow.className = 'row';
-  colRow.style.marginBottom = '0';
-  const sw = document.createElement('input');
-  sw.type = 'color';
-  sw.style.flex = 'none';
+  colRow.className = 'row'; colRow.style.marginBottom = '0';
+  const sw = document.createElement('input'); sw.type = 'color'; sw.style.flex = 'none';
   sw.value = /^#[0-9a-fA-F]{6}$/.test(cur().color || '') ? cur().color : '#000000';
-  const hx = document.createElement('input');
-  hx.type = 'text';
-  hx.placeholder = 'Color (empty = default)';
-  hx.value = cur().color || '';
+  const hx = document.createElement('input'); hx.type = 'text'; hx.placeholder = 'Color hex'; hx.value = cur().color || '';
   sw.addEventListener('input', () => { hx.value = sw.value; setO({ color: sw.value }); });
-  hx.addEventListener('input', () => {
-    if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value;
-    setO({ color: hx.value });
-  });
-  const clr = document.createElement('button');
-  clr.type = 'button';
-  clr.className = 'btn-sm';
-  clr.textContent = 'Clear';
-  clr.title = 'Remove all style overrides for this text';
+  hx.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value; setO({ color: hx.value }); });
+  const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'ctl-clear'; clr.textContent = '✕';
   clr.addEventListener('click', () => {
-    delete stylesData.overrides[key];
-    stylesDirty = true;
-    markDirty();
-    pushStylesPreview();
-    sel.value = '';
-    custom.value = '';
-    custom.style.display = 'none';
-    size.value = '';
-    hx.value = '';
+    delete stylesData.overrides[key]; stylesDirty = true; markDirty(); pushStylesPreview();
+    sel.value = ''; custom.value = ''; custom.style.display = 'none'; size.value = ''; hx.value = '';
   });
   colRow.append(sw, hx, clr);
-
-  const r1 = document.createElement('div');
-  r1.className = 'row';
-  r1.append(sel, size);
+  const r1 = document.createElement('div'); r1.className = 'row'; r1.append(sel, size);
   box.append(r1, custom, colRow);
   return box;
 }
 
 function fieldWrap(labelText, control, styleKey) {
   const w = document.createElement('div');
-  w.className = 'field';
+  w.className = 'ctl-field';
   const l = document.createElement('label');
   l.textContent = labelText;
   w.append(l);
   if (styleKey) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'aa-btn';
-    btn.textContent = 'Aa';
-    btn.title = 'Font, size & color for this text';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'aa-btn'; btn.textContent = 'Aa';
     if (stylesData.overrides[styleKey]) btn.classList.add('on');
-    l.style.display = 'flex';
-    l.style.alignItems = 'center';
+    l.style.display = 'flex'; l.style.alignItems = 'center';
     l.append(btn);
     const row = styleRow(styleKey);
     row.style.display = stylesData.overrides[styleKey] ? '' : 'none';
@@ -567,68 +1253,39 @@ function fieldWrap(labelText, control, styleKey) {
 
 function imageControl(value, onChange) {
   const wrap = document.createElement('div');
-  wrap.className = 'imgfield';
-  const thumbwrap = document.createElement('div');
-  thumbwrap.className = 'thumbwrap';
+  wrap.className = 'img-control';
   const img = document.createElement('img');
-  img.className = 'thumb';
+  img.className = 'img-control__thumb';
   img.src = value || '';
   img.onerror = () => { img.style.visibility = 'hidden'; };
   img.onload = () => { img.style.visibility = 'visible'; };
-  thumbwrap.append(img);
-
-  const grow = document.createElement('div');
-  grow.className = 'grow';
+  const body = document.createElement('div');
+  body.className = 'img-control__body';
   const input = textInput(value, (v) => { onChange(v); img.src = v; });
-
-  const uploadrow = document.createElement('div');
-  uploadrow.className = 'uploadrow';
-  const file = document.createElement('input');
-  file.type = 'file';
-  file.accept = '.webp,.png,.jpg,.jpeg,.gif,.svg';
-  file.style.display = 'none';
-  const btn = document.createElement('button');
-  btn.className = 'btn-sm';
-  btn.textContent = 'Upload image…';
+  const file = document.createElement('input'); file.type = 'file'; file.accept = '.webp,.png,.jpg,.jpeg,.gif,.svg'; file.style.display = 'none';
+  const btn = document.createElement('button'); btn.className = 'img-control__upload'; btn.textContent = '📁 Upload…';
   btn.addEventListener('click', () => file.click());
   file.addEventListener('change', async () => {
-    const f = file.files[0];
-    if (!f) return;
-    btn.textContent = 'Uploading…';
+    const f = file.files[0]; if (!f) return;
+    btn.textContent = '⏳ Uploading…';
     try {
-      const dataBase64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(',')[1]);
-        r.onerror = rej;
-        r.readAsDataURL(f);
-      });
-      const resp = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: f.name, dataBase64 }),
-      });
+      const dataBase64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+      const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, dataBase64 }) });
       const out = await resp.json();
       if (!resp.ok) throw new Error(out.error || 'Upload failed');
-      input.value = out.path;
-      img.src = out.path;
-      onChange(out.path);
+      input.value = out.path; img.src = out.path; onChange(out.path);
       toast('Image uploaded: ' + out.path);
-    } catch (e) {
-      toast('Upload failed: ' + e.message, true);
-    }
-    btn.textContent = 'Upload image…';
-    file.value = '';
+    } catch (e) { toast('Upload failed: ' + e.message, true); }
+    btn.textContent = '📁 Upload…'; file.value = '';
   });
-  uploadrow.append(btn, file);
-  grow.append(input, uploadrow);
-  wrap.append(thumbwrap, grow);
+  body.append(input, btn, file);
+  wrap.append(img, body);
   return wrap;
 }
 
 function renderItemFields(container, arr, idx, itemSchema, rerender, basePath) {
   itemSchema.forEach((f) => {
-    let control;
-    let styleKey = null;
+    let control, styleKey = null;
     if (f.type === 'image') {
       control = imageControl(arr[idx][f.key], (v) => { arr[idx][f.key] = v; markDirty(); });
     } else {
@@ -642,21 +1299,14 @@ function renderItemFields(container, arr, idx, itemSchema, rerender, basePath) {
 function listControl(field) {
   const outer = document.createElement('div');
   const arr = get(field.path) || [];
-
   function rerender() {
     outer.innerHTML = '';
     arr.forEach((item, idx) => {
-      const card = document.createElement('div');
-      card.className = 'list-item';
-      const tools = document.createElement('div');
-      tools.className = 'itemtools';
+      const card = document.createElement('div'); card.className = 'list-item';
+      const tools = document.createElement('div'); tools.className = 'itemtools';
       const mk = (txt, title, fn, cls) => {
-        const b = document.createElement('button');
-        b.textContent = txt;
-        b.title = title;
-        if (cls) b.className = cls;
-        b.addEventListener('click', () => { fn(); markDirty(); rerender(); });
-        return b;
+        const b = document.createElement('button'); b.textContent = txt; b.title = title; if (cls) b.className = cls;
+        b.addEventListener('click', () => { fn(); markDirty(); rerender(); }); return b;
       };
       tools.append(
         mk('↑', 'Move up', () => { if (idx > 0) arr.splice(idx - 1, 0, arr.splice(idx, 1)[0]); }),
@@ -667,15 +1317,10 @@ function listControl(field) {
       renderItemFields(card, arr, idx, field.item, rerender, field.path);
       outer.append(card);
     });
-    const add = document.createElement('button');
-    add.className = 'addbtn';
-    add.textContent = '+ Add ' + (field.itemLabel || 'item');
+    const add = document.createElement('button'); add.className = 'addbtn'; add.textContent = '+ Add ' + (field.itemLabel || 'item');
     add.addEventListener('click', () => {
-      const blank = {};
-      field.item.forEach((f) => (blank[f.key] = ''));
-      arr.push(blank);
-      markDirty();
-      rerender();
+      const blank = {}; field.item.forEach((f) => (blank[f.key] = ''));
+      arr.push(blank); markDirty(); rerender();
     });
     outer.append(add);
   }
@@ -686,95 +1331,42 @@ function listControl(field) {
 function buildEditor() {
   const editor = $('#editor');
   const toc = $('#toc');
-  editor.innerHTML = '';
-  toc.innerHTML = '';
-
+  editor.innerHTML = ''; toc.innerHTML = '';
   SCHEMA.forEach((section) => {
-    const panel = document.createElement('section');
-    panel.className = 'panel';
-    panel.id = 'sec-' + section.id;
-    const h = document.createElement('h2');
-    h.textContent = section.title;
-    panel.append(h);
-    if (section.hint) {
-      const p = document.createElement('p');
-      p.className = 'hint';
-      p.textContent = section.hint;
-      panel.append(p);
-    }
-
+    const panel = document.createElement('div'); panel.className = 'page-data-panel'; panel.id = 'sec-' + section.id;
+    const h = document.createElement('h4'); h.textContent = section.title; panel.append(h);
+    if (section.hint) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = section.hint; panel.append(p); }
     section.fields.forEach((field) => {
-      if (field.type === 'list') {
-        panel.append(fieldWrap(field.label, listControl(field)));
-      } else if (field.type === 'stringlist') {
-        const area = textInput((get(field.path) || []).join('\n'), (v) => {
-          set(field.path, v.split('\n').map((s) => s.trim()).filter(Boolean));
-        }, true);
-        panel.append(fieldWrap(field.label, area));
-      } else if (field.type === 'image') {
-        panel.append(fieldWrap(field.label, imageControl(get(field.path), (v) => set(field.path, v))));
-      } else {
-        panel.append(fieldWrap(field.label, textInput(get(field.path), (v) => set(field.path, v), field.type === 'textarea'), field.path));
-      }
+      if (field.type === 'list') { panel.append(fieldWrap(field.label, listControl(field))); }
+      else if (field.type === 'stringlist') { panel.append(fieldWrap(field.label, textInput((get(field.path) || []).join('\n'), (v) => { set(field.path, v.split('\n').map(s => s.trim()).filter(Boolean)); }, true))); }
+      else if (field.type === 'image') { panel.append(fieldWrap(field.label, imageControl(get(field.path), (v) => set(field.path, v)))); }
+      else { panel.append(fieldWrap(field.label, textInput(get(field.path), (v) => set(field.path, v), field.type === 'textarea'), field.path)); }
     });
-
     editor.append(panel);
-
-    const link = document.createElement('a');
-    link.href = '#sec-' + section.id;
-    link.textContent = section.title;
-    toc.append(link);
+    const link = document.createElement('a'); link.href = '#sec-' + section.id; link.textContent = section.title; toc.append(link);
   });
-
-  // highlight toc while scrolling
-  const links = Array.from(toc.querySelectorAll('a'));
-  const panels = Array.from(editor.querySelectorAll('section.panel'));
-  const onScroll = () => {
-    let active = 0;
-    panels.forEach((p, i) => { if (p.getBoundingClientRect().top < 140) active = i; });
-    links.forEach((l, i) => l.classList.toggle('active', i === active));
-  };
-  document.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
 }
 
 async function save() {
   if (!dirty) return;
-  saveBtn.disabled = true;
-  statusEl.textContent = 'Saving…';
+  saveBtn.disabled = true; statusEl.textContent = 'Saving…';
   try {
-    const resp = await fetch('/api/content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const out = await resp.json();
-    if (!resp.ok) throw new Error(out.error || 'Save failed');
+    const resp = await fetch('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
     if (stylesDirty) {
-      const r2 = await fetch('/api/styles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(stylesData),
-      });
+      const r2 = await fetch('/api/styles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(stylesData) });
       if (!r2.ok) throw new Error('Text styles save failed');
       stylesDirty = false;
     }
-    dirty = false;
-    statusEl.textContent = 'All changes saved';
-    statusEl.className = 'saved';
+    dirty = false; statusEl.textContent = 'All saved'; statusEl.className = 'status-dot saved';
     toast('Saved. Reload any open site tab to see it.');
   } catch (e) {
-    saveBtn.disabled = false;
-    statusEl.textContent = 'Save failed';
-    statusEl.className = 'dirty';
+    saveBtn.disabled = false; statusEl.textContent = 'Save failed'; statusEl.className = 'status-dot dirty';
     toast('Save failed: ' + e.message, true);
   }
 }
-
 saveBtn.addEventListener('click', save);
-document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); }
-});
+document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); } });
 window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 
 (async function init() {
@@ -788,79 +1380,27 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     if (stylesResp.ok) stylesData = await stylesResp.json();
     if (!stylesData.overrides) stylesData.overrides = {};
     buildEditor();
-    statusEl.textContent = 'All changes saved';
-    statusEl.className = 'saved';
+    statusEl.textContent = 'All saved'; statusEl.className = 'status-dot saved';
   } catch (e) {
     statusEl.textContent = 'Could not load content';
-    toast('Run this through server.js (node server.js), not as a plain file.', true);
+    toast('Run through server.js, not as a plain file.', true);
   }
 })();
 </script>
 
+<!-- Theme core (font options etc.) -->
 <script src="/assets/js/theme-core.js"></script>
+
+<!-- Theme / Appearance editor -->
 <script>
-/* ==================== FULLSCREEN PREVIEW ==================== */
-(function () {
-  const appearance = document.getElementById('appearance');
-  const controls = document.querySelector('.appearance__controls');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  let isFullscreen = false;
-  let closeBtn = null;
-  let sidebarBtn = null;
-
-  function enterFullscreen() {
-    isFullscreen = true;
-    appearance.classList.add('appearance--fullscreen');
-    // Create close button
-    closeBtn = document.createElement('button');
-    closeBtn.className = 'fs-close';
-    closeBtn.textContent = '✕ Exit';
-    closeBtn.addEventListener('click', exitFullscreen);
-    document.body.appendChild(closeBtn);
-    // Create sidebar toggle
-    sidebarBtn = document.createElement('button');
-    sidebarBtn.className = 'fs-toggle-sidebar';
-    sidebarBtn.textContent = '☰';
-    sidebarBtn.title = 'Toggle sidebar';
-    sidebarBtn.addEventListener('click', () => {
-      controls.classList.toggle('collapsed');
-    });
-    document.body.appendChild(sidebarBtn);
-    fullscreenBtn.textContent = '⊠ Exit Fullscreen';
-  }
-
-  function exitFullscreen() {
-    isFullscreen = false;
-    appearance.classList.remove('appearance--fullscreen');
-    controls.classList.remove('collapsed');
-    if (closeBtn) { closeBtn.remove(); closeBtn = null; }
-    if (sidebarBtn) { sidebarBtn.remove(); sidebarBtn = null; }
-    fullscreenBtn.textContent = '⛶ Fullscreen';
-  }
-
-  fullscreenBtn.addEventListener('click', () => {
-    if (isFullscreen) exitFullscreen();
-    else enterFullscreen();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isFullscreen) exitFullscreen();
-  });
-})();
-</script>
-
-<script>
-/* ==================== APPEARANCE / THEME ==================== */
 (function () {
   const DEFAULT_THEME = {
     colors: { background: '#f4f1ec', surface: '#e9e6e0', ink: '#090706', onDark: '#ffffff', accent: '#89221c', bg: '#f5f1ea', headerBg: '#171412', footerBg: '#171412' },
     fonts: { headingPreset: 'playfair', headingCustom: '', bodyPreset: 'inter', bodyCustom: '' },
   };
   const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-
   let theme = null;
   let themeDirty = false;
-
   const themeStatus = document.getElementById('themeStatus');
   const themeSaveBtn = document.getElementById('themeSaveBtn');
   const themeResetBtn = document.getElementById('themeResetBtn');
@@ -868,183 +1408,105 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   const frame = document.getElementById('themeFrame');
 
   function markThemeDirty() {
-    themeDirty = true;
-    themeSaveBtn.disabled = false;
-    themeStatus.textContent = 'Unsaved changes';
-    themeStatus.className = 'dirty';
+    themeDirty = true; themeSaveBtn.disabled = false;
+    themeStatus.textContent = 'Unsaved changes'; themeStatus.className = 'settings-status dirty';
   }
-
   function applyToPreview() {
     if (!theme) return;
-    try {
-      frame.contentWindow.postMessage({ type: 'ploy-theme-preview', theme: theme }, window.WEBSITE_ORIGIN);
-    } catch (e) {}
+    try { frame.contentWindow.postMessage({ type: 'ploy-theme-preview', theme: theme }, window.WEBSITE_ORIGIN); } catch (e) {}
   }
-
   function colorRow(label, key, hint) {
-    const wrap = document.createElement('div');
-    wrap.className = 'colorfield';
-    const l = document.createElement('label');
-    l.textContent = label;
-    if (hint) {
-      const p = document.createElement('p');
-      p.className = 'hint';
-      p.style.cssText = 'margin:0 0 6px;font-size:12px';
-      p.textContent = hint;
-      wrap.append(l, p);
-    } else {
-      wrap.append(l);
-    }
-    const row = document.createElement('div');
-    row.className = 'colorfield__row';
-    const swatch = document.createElement('input');
-    swatch.type = 'color';
+    const wrap = document.createElement('div'); wrap.className = 'colorfield';
+    const l = document.createElement('label'); l.textContent = label;
+    wrap.append(l);
+    if (hint) { const p = document.createElement('p'); p.className = 'hint'; p.style.cssText = 'margin:0 0 6px;font-size:11px'; p.textContent = hint; wrap.append(p); }
+    const row = document.createElement('div'); row.className = 'colorfield__row';
+    const swatch = document.createElement('input'); swatch.type = 'color';
     swatch.value = HEX_RE.test(theme.colors[key] || '') ? theme.colors[key].slice(0, 7) : '#000000';
-    const hex = document.createElement('input');
-    hex.type = 'text';
-    hex.value = theme.colors[key] || '';
-    function commit(v) {
-      theme.colors[key] = v;
-      if (HEX_RE.test(v)) swatch.value = v;
-      markThemeDirty();
-      applyToPreview();
-    }
+    const hex = document.createElement('input'); hex.type = 'text'; hex.value = theme.colors[key] || '';
+    function commit(v) { theme.colors[key] = v; if (HEX_RE.test(v)) swatch.value = v; markThemeDirty(); applyToPreview(); }
     swatch.addEventListener('input', () => { hex.value = swatch.value; commit(swatch.value); });
     hex.addEventListener('input', () => commit(hex.value));
     row.append(swatch, hex);
     wrap.append(row);
     return wrap;
   }
-
   function fontRow(label, presetKey, customKey) {
-    const wrap = document.createElement('div');
-    wrap.className = 'fontfield';
-    const l = document.createElement('label');
-    l.textContent = label;
+    const wrap = document.createElement('div'); wrap.className = 'fontfield';
+    const l = document.createElement('label'); l.textContent = label;
     const select = document.createElement('select');
     window.PloyTheme.FONT_OPTIONS.forEach((o) => {
-      const opt = document.createElement('option');
-      opt.value = o.id;
-      opt.textContent = o.label;
-      if (theme.fonts[presetKey] === o.id) opt.selected = true;
-      select.append(opt);
+      const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.label;
+      if (theme.fonts[presetKey] === o.id) opt.selected = true; select.append(opt);
     });
-    const custom = document.createElement('input');
-    custom.type = 'text';
-    custom.placeholder = 'e.g. "Roboto", sans-serif';
+    const custom = document.createElement('input'); custom.type = 'text'; custom.placeholder = 'e.g. "Roboto", sans-serif';
     custom.value = theme.fonts[customKey] || '';
     custom.style.display = theme.fonts[presetKey] === 'custom' ? '' : 'none';
-    select.addEventListener('change', () => {
-      theme.fonts[presetKey] = select.value;
-      custom.style.display = select.value === 'custom' ? '' : 'none';
-      markThemeDirty();
-      applyToPreview();
-    });
-    custom.addEventListener('input', () => {
-      theme.fonts[customKey] = custom.value;
-      markThemeDirty();
-      applyToPreview();
-    });
+    select.addEventListener('change', () => { theme.fonts[presetKey] = select.value; custom.style.display = select.value === 'custom' ? '' : 'none'; markThemeDirty(); applyToPreview(); });
+    custom.addEventListener('input', () => { theme.fonts[customKey] = custom.value; markThemeDirty(); applyToPreview(); });
     wrap.append(l, select, custom);
     return wrap;
   }
-
   function buildAppearanceForm() {
     controls.innerHTML = '';
     controls.append(
       colorRow('Page background', 'background'),
-      colorRow('Card & panel background', 'surface'),
-      colorRow('Ink — headings, body text, dark sections', 'ink'),
-      colorRow('Text on dark sections', 'onDark'),
+      colorRow('Card & panel', 'surface'),
+      colorRow('Ink (text)', 'ink'),
+      colorRow('Text on dark', 'onDark'),
       colorRow('Accent', 'accent'),
-      colorRow('Global Background', 'bg', 'Overall page background color.'),
-      colorRow('Header Background', 'headerBg'),
-      colorRow('Footer Background', 'footerBg'),
+      colorRow('Global BG', 'bg', 'Overall page background.'),
+      colorRow('Header BG', 'headerBg'),
+      colorRow('Footer BG', 'footerBg'),
       fontRow('Heading font', 'headingPreset', 'headingCustom'),
       fontRow('Body font', 'bodyPreset', 'bodyCustom'),
     );
   }
-
-  // Page bar is now built dynamically — see the Sections editor script below.
-  // We just wire frame load here.
   frame.addEventListener('load', applyToPreview);
-
-  themeResetBtn.addEventListener('click', () => {
-    theme = JSON.parse(JSON.stringify(DEFAULT_THEME));
-    buildAppearanceForm();
-    markThemeDirty();
-    applyToPreview();
-  });
-
+  themeResetBtn.addEventListener('click', () => { theme = JSON.parse(JSON.stringify(DEFAULT_THEME)); buildAppearanceForm(); markThemeDirty(); applyToPreview(); });
   async function saveTheme() {
     if (!themeDirty) return;
     const badColor = Object.entries(theme.colors).find(([, v]) => !HEX_RE.test(v || ''));
-    if (badColor) {
-      themeStatus.textContent = 'Fix invalid color value before saving';
-      themeStatus.className = 'dirty';
-      return;
-    }
-    themeSaveBtn.disabled = true;
-    themeStatus.textContent = 'Saving…';
+    if (badColor) { themeStatus.textContent = 'Fix invalid color'; themeStatus.className = 'settings-status dirty'; return; }
+    themeSaveBtn.disabled = true; themeStatus.textContent = 'Saving…';
     try {
-      const resp = await fetch('/api/theme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(theme),
-      });
-      const out = await resp.json();
-      if (!resp.ok) throw new Error(out.error || 'Save failed');
-      themeDirty = false;
-      themeStatus.textContent = 'All changes saved';
-      themeStatus.className = 'saved';
-    } catch (e) {
-      themeSaveBtn.disabled = false;
-      themeStatus.textContent = 'Save failed';
-      themeStatus.className = 'dirty';
-    }
+      const resp = await fetch('/api/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(theme) });
+      const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
+      themeDirty = false; themeStatus.textContent = 'All saved'; themeStatus.className = 'settings-status saved';
+    } catch (e) { themeSaveBtn.disabled = false; themeStatus.textContent = 'Save failed'; themeStatus.className = 'settings-status dirty'; }
   }
   themeSaveBtn.addEventListener('click', saveTheme);
   window.addEventListener('beforeunload', (e) => { if (themeDirty) e.preventDefault(); });
-
   (async function initTheme() {
-    try {
-      const resp = await fetch('/api/theme', { cache: 'no-store' });
-      theme = resp.ok ? await resp.json() : JSON.parse(JSON.stringify(DEFAULT_THEME));
-    } catch (e) {
-      theme = JSON.parse(JSON.stringify(DEFAULT_THEME));
-    }
+    try { const resp = await fetch('/api/theme', { cache: 'no-store' }); theme = resp.ok ? await resp.json() : JSON.parse(JSON.stringify(DEFAULT_THEME)); }
+    catch (e) { theme = JSON.parse(JSON.stringify(DEFAULT_THEME)); }
     buildAppearanceForm();
-    themeStatus.textContent = 'All changes saved';
-    themeStatus.className = 'saved';
+    themeStatus.textContent = 'All saved'; themeStatus.className = 'settings-status saved';
     applyToPreview();
   })();
 })();
 </script>
 
+<!-- Sections / Blocks editor -->
 <script>
-/* ==================== SECTIONS EDITOR (blocks.json) ==================== */
 (function () {
   const frame = document.getElementById('themeFrame');
   const ORIGIN = window.WEBSITE_ORIGIN;
 
-  // Dynamic pages — loaded from /api/pages
   let pagesData = { pages: [] };
   let currentPage = 'home';
   let currentPagePath = '/';
 
   const TAG_OPTIONS = [
-    { v: 'h1', l: 'Heading 1' },
-    { v: 'h2', l: 'Heading 2' },
-    { v: 'h3', l: 'Heading 3' },
-    { v: 'p', l: 'Paragraph' },
-    { v: 'small', l: 'Small text' },
+    { v: 'h1', l: 'Heading 1' }, { v: 'h2', l: 'Heading 2' }, { v: 'h3', l: 'Heading 3' },
+    { v: 'p', l: 'Paragraph' }, { v: 'small', l: 'Small text' },
   ];
 
   let blocksData = null;
   let blocksDirty = false;
   let selected = { s: null, b: null };
   let editMode = false;
-  let knownDefaultSections = []; // sent from the preview iframe
+  let knownDefaultSections = [];
 
   const statusEl = document.getElementById('blocksStatus');
   const saveBtn = document.getElementById('blocksSaveBtn');
@@ -1063,42 +1525,29 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   const findBlk = (sec, id) => (sec ? (sec.blocks || []).find((x) => x.id === id) : null);
 
   function markBlocksDirty() {
-    blocksDirty = true;
-    saveBtn.disabled = false;
-    statusEl.textContent = 'Unsaved changes';
-    statusEl.className = 'dirty';
+    blocksDirty = true; saveBtn.disabled = false;
+    statusEl.textContent = 'Unsaved changes'; statusEl.className = 'cms-bottom__status dirty';
   }
 
   function push() {
     if (!blocksData) return;
     try {
       frame.contentWindow.postMessage({
-        type: 'ploy-blocks-preview',
-        sections: cur().sections,
-        editMode,
-        selected,
-        defaultOverrides: cur().defaultOverrides || {},
+        type: 'ploy-blocks-preview', sections: cur().sections,
+        editMode, selected, defaultOverrides: cur().defaultOverrides || {},
       }, ORIGIN);
     } catch (e) {}
   }
 
-  function newTextBlock() {
-    return { id: uid('b'), type: 'text', tag: 'p', text: 'New text — click in the preview to edit.', font: '', fontCustom: '', size: 0, color: '', bold: false, align: 'left', width: 100 };
+  function newTextBlock(tag) {
+    return { id: uid('b'), type: 'text', tag: tag || 'p', text: 'New text — click to edit.', font: '', fontCustom: '', size: 0, color: '', bold: false, align: 'left', width: 100 };
   }
-  function newImageBlock() {
-    return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 };
-  }
-  function newContainerBlock() {
-    return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] };
-  }
-  function newButtonBlock() {
-    return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 };
-  }
-  function newSection() {
-    return { id: uid('s'), bg: '', paddingY: 64, gap: 24, maxWidth: 1152, minHeight: 0, align: 'start', blocks: [newTextBlock()] };
-  }
+  function newImageBlock() { return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 }; }
+  function newContainerBlock() { return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] }; }
+  function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 }; }
+  function newSection() { return { id: uid('s'), bg: '', paddingY: 64, gap: 24, maxWidth: 1152, minHeight: 0, align: 'start', blocks: [newTextBlock()] }; }
 
-  // ---- tabs ----
+  // ---- TABS ----
   const tabElementsBtn = document.getElementById('tabElementsBtn');
   const tabSectionsBtn = document.getElementById('tabSectionsBtn');
   const tabSettingsBtn = document.getElementById('tabSettingsBtn');
@@ -1120,250 +1569,199 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   tabSectionsBtn.addEventListener('click', () => setTab('sections'));
   tabSettingsBtn.addEventListener('click', () => setTab('settings'));
 
-  // ---- dynamic page bar ----
+  // ---- PAGE BAR ----
   function buildPageBar() {
     pageBar.innerHTML = '';
     pagesData.pages.forEach((pg) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = pg.label;
-      b.dataset.page = pg.path;
-      b.dataset.slug = pg.slug;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'page-pill';
+      b.textContent = pg.label; b.dataset.page = pg.path; b.dataset.slug = pg.slug;
       if (pg.slug === currentPage) b.classList.add('active');
       b.addEventListener('click', () => {
-        currentPage = pg.slug;
-        currentPagePath = pg.path;
-        pageBar.querySelectorAll('button').forEach((x) => x.classList.remove('active'));
+        currentPage = pg.slug; currentPagePath = pg.path;
+        pageBar.querySelectorAll('.page-pill').forEach((x) => x.classList.remove('active'));
         b.classList.add('active');
         frame.src = ORIGIN + pg.path;
-        selected = { s: null, b: null };
-        knownDefaultSections = [];
+        selected = { s: null, b: null }; knownDefaultSections = [];
         renderAll();
       });
       pageBar.append(b);
     });
-
-    // Add page button
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'add-page-btn';
+    const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.className = 'page-pill page-pill--add';
     addBtn.textContent = '+ Add page';
     addBtn.addEventListener('click', showAddPageModal);
     pageBar.append(addBtn);
   }
 
   function showAddPageModal() {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    const modal = document.createElement('div');
-    modal.className = 'modal';
+    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    const modal = document.createElement('div'); modal.className = 'modal';
     modal.innerHTML = `
       <h3>Add New Page</h3>
-      <p>Create a new work page. It will appear in the page bar and can be linked from your navigation.</p>
-      <div class="field">
-        <label>Page title</label>
-        <input type="text" id="newPageTitle" placeholder="e.g. Brand Guidelines" autofocus>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-cancel" type="button">Cancel</button>
-        <button class="modal-confirm" type="button">Create page</button>
-      </div>
+      <p>Create a new work page. It will appear in the page bar.</p>
+      <div class="ctl-field"><label>Page title</label><input type="text" class="ctl-input" id="newPageTitle" placeholder="e.g. Brand Guidelines" autofocus></div>
+      <div class="modal-actions"><button class="modal-cancel" type="button">Cancel</button><button class="modal-confirm" type="button">Create page</button></div>
     `;
-    overlay.append(modal);
-    document.body.append(overlay);
-
+    overlay.append(modal); document.body.append(overlay);
     const titleInput = modal.querySelector('#newPageTitle');
     const cancelBtn = modal.querySelector('.modal-cancel');
     const confirmBtn = modal.querySelector('.modal-confirm');
-
     cancelBtn.addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-
     confirmBtn.addEventListener('click', async () => {
-      const title = titleInput.value.trim();
-      if (!title) { titleInput.focus(); return; }
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Creating…';
+      const title = titleInput.value.trim(); if (!title) { titleInput.focus(); return; }
+      confirmBtn.disabled = true; confirmBtn.textContent = 'Creating…';
       try {
-        const resp = await fetch('/api/pages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title }),
-        });
-        const out = await resp.json();
-        if (!resp.ok) throw new Error(out.error || 'Failed');
-        // Add to local pages data
+        const resp = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) });
+        const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Failed');
         pagesData.pages.push({ slug: out.slug, path: out.path, label: out.label, builtin: false });
         buildPageBar();
-        toast('Page "' + title + '" created! Switch to it in the page bar.');
+        toast('Page "' + title + '" created!');
         overlay.remove();
-      } catch (e) {
-        toast('Failed: ' + e.message, true);
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Create page';
-      }
+      } catch (e) { toast('Failed: ' + e.message, true); confirmBtn.disabled = false; confirmBtn.textContent = 'Create page'; }
     });
-
-    titleInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') confirmBtn.click();
-      if (e.key === 'Escape') overlay.remove();
-    });
-
+    titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmBtn.click(); if (e.key === 'Escape') overlay.remove(); });
     setTimeout(() => titleInput.focus(), 50);
   }
 
-  // Load the initial frame after building the page bar
-  function loadInitialFrame() {
-    frame.src = ORIGIN + currentPagePath;
-  }
+  function loadInitialFrame() { frame.src = ORIGIN + currentPagePath; }
 
-  // ---- messages from the preview ----
+  // ---- MESSAGES FROM PREVIEW ----
   window.addEventListener('message', (ev) => {
     if (ev.origin !== ORIGIN) return;
     const d = ev.data || {};
     if (d.type === 'ploy-blocks-ready') {
-      // The preview page announces what default sections it has
       if (d.defaultSections) {
         knownDefaultSections = d.defaultSections;
         if (!cur().migrated) {
           cur().migrated = true;
-          // If there are custom sections already (from previous non-migrated CMS usage),
-          // they would normally just sit in the middle. For simplicity, we just append them.
-          // The best approach is: if we have existing custom sections, we don't know where to put them, 
-          // so we'll just put the defaults first.
-          const oldSecs = cur().sections.slice();
-          cur().sections = [];
-          knownDefaultSections.forEach((ds) => {
-            cur().sections.push({ id: ds.id, type: 'default_section', key: ds.key });
-          });
-          cur().sections.push(...oldSecs);
-          markBlocksDirty();
+          const oldSecs = cur().sections.slice(); cur().sections = [];
+          knownDefaultSections.forEach((ds) => { cur().sections.push({ id: ds.id, type: 'default_section', key: ds.key }); });
+          cur().sections.push(...oldSecs); markBlocksDirty();
         }
       }
-      push();
-      if (window.pushStylesPreview) window.pushStylesPreview();
-      renderAll();
-    } else if (d.type === 'ploy-blocks-select') {
-      selected = { s: d.sectionId, b: d.blockId };
-      renderAll();
-    } else if (d.type === 'ploy-blocks-text') {
-      const blk = findBlk(findSec(d.sectionId), d.blockId);
-      if (!blk) return;
-      blk.text = d.text;
-      markBlocksDirty();
-      const ta = inspector.querySelector('[data-role=blocktext]');
-      if (ta && document.activeElement !== ta) ta.value = d.text;
+      push(); if (window.pushStylesPreview) window.pushStylesPreview(); renderAll();
+    } else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
+    else if (d.type === 'ploy-blocks-text') {
+      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
+      blk.text = d.text; markBlocksDirty();
+      const ta = inspector.querySelector('[data-role=blocktext]'); if (ta && document.activeElement !== ta) ta.value = d.text;
     } else if (d.type === 'ploy-blocks-resize') {
-      const blk = findBlk(findSec(d.sectionId), d.blockId);
-      if (!blk) return;
-      blk.width = d.width;
-      markBlocksDirty();
-      const wi = inspector.querySelector('[data-role=blockwidth]');
-      if (wi && document.activeElement !== wi) wi.value = Math.round(d.width);
+      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
+      blk.width = d.width; markBlocksDirty();
+      const wi = inspector.querySelector('[data-role=blockwidth]'); if (wi && document.activeElement !== wi) wi.value = Math.round(d.width);
     } else if (d.type === 'ploy-blocks-section-resize') {
-      const sec = findSec(d.sectionId);
-      if (!sec) return;
-      sec.minHeight = d.minHeight;
-      markBlocksDirty();
-      const mh = inspector.querySelector('[data-role=secminh]');
-      if (mh && document.activeElement !== mh) mh.value = d.minHeight;
-    } else if (d.type === 'ploy-blocks-op') {
-      handleOp(d);
-    }
+      const sec = findSec(d.sectionId); if (!sec) return;
+      sec.minHeight = d.minHeight; markBlocksDirty();
+      const mh = inspector.querySelector('[data-role=secminh]'); if (mh && document.activeElement !== mh) mh.value = d.minHeight;
+    } else if (d.type === 'ploy-blocks-op') { handleOp(d); }
   });
 
   function handleOp(d) {
     const secs = cur().sections;
-    const si = secs.findIndex((s) => s.id === d.sectionId);
-    if (si === -1) return;
+    const si = secs.findIndex((s) => s.id === d.sectionId); if (si === -1) return;
     const sec = secs[si];
-    if (d.op === 'moveSection') {
-      const ni = si + d.dir;
-      if (ni < 0 || ni >= secs.length) return;
-      secs.splice(ni, 0, secs.splice(si, 1)[0]);
-    } else if (d.op === 'deleteSection') {
-      if (!confirm('Delete this section and everything in it?')) return;
-      secs.splice(si, 1);
-      selected = { s: null, b: null };
-    } else if (d.op === 'addBlock') {
+    if (d.op === 'moveSection') { const ni = si + d.dir; if (ni < 0 || ni >= secs.length) return; secs.splice(ni, 0, secs.splice(si, 1)[0]); }
+    else if (d.op === 'deleteSection') { if (!confirm('Delete this section?')) return; secs.splice(si, 1); selected = { s: null, b: null }; }
+    else if (d.op === 'addBlock') {
       let blk;
       if (d.blockType === 'image') blk = newImageBlock();
       else if (d.blockType === 'button') blk = newButtonBlock();
       else if (d.blockType === 'container') blk = newContainerBlock();
       else blk = newTextBlock();
-      sec.blocks = sec.blocks || [];
-      sec.blocks.push(blk);
+      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
       selected = { s: sec.id, b: blk.id };
     } else if (d.op === 'moveBlock' || d.op === 'deleteBlock') {
-      const bi = sec.blocks.findIndex((x) => x.id === d.blockId);
-      if (bi === -1) return;
-      if (d.op === 'moveBlock') {
-        const nb = bi + d.dir;
-        if (nb < 0 || nb >= sec.blocks.length) return;
-        sec.blocks.splice(nb, 0, sec.blocks.splice(bi, 1)[0]);
-      } else {
-        sec.blocks.splice(bi, 1);
-        if (selected.b === d.blockId) selected = { s: sec.id, b: null };
-      }
+      const bi = sec.blocks.findIndex((x) => x.id === d.blockId); if (bi === -1) return;
+      if (d.op === 'moveBlock') { const nb = bi + d.dir; if (nb < 0 || nb >= sec.blocks.length) return; sec.blocks.splice(nb, 0, sec.blocks.splice(bi, 1)[0]); }
+      else { sec.blocks.splice(bi, 1); if (selected.b === d.blockId) selected = { s: sec.id, b: null }; }
     }
-    markBlocksDirty();
-    renderAll();
-    push();
+    markBlocksDirty(); renderAll(); push();
   }
 
-  // addSectionBtn replaced by addSelectedWidget('section')
+  // ---- WIDGET ADD HANDLERS ----
+  document.querySelectorAll('.widget-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.widget;
+      if (type === 'section') {
+        if (!blocksData) return;
+        const s = newSection();
+        cur().sections.push(s);
+        selected = { s: s.id, b: s.blocks[0].id };
+        markBlocksDirty(); renderAll();
+        if (!editMode) setTab('sections');
+        else push();
+        btn.classList.add('pulse');
+        setTimeout(() => btn.classList.remove('pulse'), 600);
+        return;
+      }
+      if (!selected.s) { toast('Select a section first.', true); return; }
+      const sec = findSec(selected.s);
+      if (!sec || sec.type === 'default_section') { toast('Cannot add widgets to this section.', true); return; }
+      let blk;
+      if (type === 'heading') blk = newTextBlock('h2');
+      else if (type === 'text') blk = newTextBlock('p');
+      else if (type === 'image') blk = newImageBlock();
+      else if (type === 'button') blk = newButtonBlock();
+      else if (type === 'divider') blk = { id: uid('b'), type: 'text', tag: 'small', text: '———', font: '', fontCustom: '', size: 0, color: '#999', bold: false, align: 'center', width: 100 };
+      else blk = newTextBlock();
+      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
+      selected = { s: sec.id, b: blk.id };
+      markBlocksDirty(); renderAll(); push();
+      btn.classList.add('pulse');
+      setTimeout(() => btn.classList.remove('pulse'), 600);
+    });
+  });
 
-  // ---- inspector controls ----
+  // Widget search
+  document.getElementById('widgetSearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.widget-card').forEach(card => {
+      card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+
+  // Navigator "Add Section" button
+  document.getElementById('navAddSection').addEventListener('click', () => {
+    if (!blocksData) return;
+    const s = newSection();
+    cur().sections.push(s);
+    selected = { s: s.id, b: s.blocks[0].id };
+    markBlocksDirty(); renderAll();
+    if (!editMode) setTab('sections');
+    else push();
+  });
+
+  // ---- INSPECTOR HELPERS ----
   function field(label, control, role) {
-    const w = document.createElement('div');
-    w.className = 'field';
-    const l = document.createElement('label');
-    l.textContent = label;
+    const w = document.createElement('div'); w.className = 'ctl-field';
+    const l = document.createElement('label'); l.textContent = label;
     if (role) control.dataset.role = role;
-    w.append(l, control);
-    return w;
+    w.append(l, control); return w;
   }
   function numInput(val, onCh, min, max) {
-    const i = document.createElement('input');
-    i.type = 'number';
-    if (min != null) i.min = min;
-    if (max != null) i.max = max;
+    const i = document.createElement('input'); i.type = 'number'; i.className = 'ctl-input ctl-number';
+    if (min != null) i.min = min; if (max != null) i.max = max;
     i.value = val != null ? val : '';
     i.addEventListener('input', () => onCh(parseFloat(i.value) || 0));
     return i;
   }
   function selInput(options, val, onCh) {
-    const s = document.createElement('select');
+    const s = document.createElement('select'); s.className = 'ctl-select';
     options.forEach((o) => {
-      const op = document.createElement('option');
-      op.value = o.v;
-      op.textContent = o.l;
-      if (o.v === val) op.selected = true;
-      s.append(op);
+      const op = document.createElement('option'); op.value = o.v; op.textContent = o.l;
+      if (o.v === val) op.selected = true; s.append(op);
     });
     s.addEventListener('change', () => onCh(s.value));
     return s;
   }
   function colorInput(val, onCh) {
-    const row = document.createElement('div');
-    row.className = 'colorfield__row';
-    const sw = document.createElement('input');
-    sw.type = 'color';
+    const row = document.createElement('div'); row.className = 'ctl-color-row';
+    const sw = document.createElement('input'); sw.type = 'color';
     sw.value = /^#[0-9a-fA-F]{6}$/.test(val || '') ? val : '#ffffff';
-    const hx = document.createElement('input');
-    hx.type = 'text';
-    hx.placeholder = 'empty = default';
-    hx.value = val || '';
+    const hx = document.createElement('input'); hx.type = 'text'; hx.placeholder = 'empty = default'; hx.value = val || '';
     sw.addEventListener('input', () => { hx.value = sw.value; onCh(sw.value); });
-    hx.addEventListener('input', () => {
-      if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value;
-      onCh(hx.value);
-    });
-    const clr = document.createElement('button');
-    clr.type = 'button';
-    clr.className = 'btn-sm';
-    clr.textContent = '✕';
-    clr.title = 'Clear (use default)';
+    hx.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value; onCh(hx.value); });
+    const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'ctl-clear'; clr.textContent = '✕';
     clr.addEventListener('click', () => { hx.value = ''; onCh(''); });
     row.append(sw, hx, clr);
     return row;
@@ -1372,152 +1770,136 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const wrap = document.createElement('div');
     const sel = selInput(
       [{ v: '', l: 'Default font' }].concat((window.PloyTheme ? window.PloyTheme.FONT_OPTIONS : []).map((f) => ({ v: f.id, l: f.label }))),
-      obj.font || '',
-      (v) => {
-        obj.font = v;
-        custom.style.display = v === 'custom' ? '' : 'none';
-        onChange();
-      },
+      obj.font || '', (v) => { obj.font = v; custom.style.display = v === 'custom' ? '' : 'none'; onChange(); },
     );
-    const custom = document.createElement('input');
-    custom.type = 'text';
-    custom.placeholder = 'e.g. "Roboto", sans-serif';
-    custom.style.marginTop = '8px';
-    custom.value = obj.fontCustom || '';
-    custom.style.display = obj.font === 'custom' ? '' : 'none';
+    const custom = document.createElement('input'); custom.type = 'text'; custom.className = 'ctl-input';
+    custom.placeholder = 'e.g. "Roboto", sans-serif'; custom.style.marginTop = '6px';
+    custom.value = obj.fontCustom || ''; custom.style.display = obj.font === 'custom' ? '' : 'none';
     custom.addEventListener('input', () => { obj.fontCustom = custom.value; onChange(); });
     wrap.append(sel, custom);
     return wrap;
   }
-  function actionBtn(label, fn) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn-sm';
+  function actionBtn(label, fn, isDanger) {
+    const b = document.createElement('button'); b.type = 'button';
     b.textContent = label;
+    if (isDanger) b.className = 'danger';
     b.addEventListener('click', fn);
     return b;
   }
 
-  function renderAll() {
-    const pg = pagesData.pages.find((p) => p.slug === currentPage);
-    renderList();
-    renderInspector();
-  }
+  // ---- RENDER ----
+  function renderAll() { renderList(); renderInspector(); }
 
   function renderList() {
     listEl.innerHTML = '';
     if (!blocksData) return;
     cur().sections.forEach((sec, i) => {
-      const b = document.createElement('button');
-      b.type = 'button';
+      const group = document.createElement('div'); group.className = 'nav-tree-section';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-tree-item';
       if (sec.type === 'default_section') {
         const dInfo = knownDefaultSections.find(x => x.id === sec.id);
-        b.textContent = '📌 ' + (dInfo ? dInfo.label : sec.key || 'Default section');
-        b.className = 'default-sec';
+        b.innerHTML = '<span class="nav-tree-item__icon">📌</span><span class="nav-tree-item__label">' + (dInfo ? dInfo.label : sec.key || 'Default') + '</span><span class="nav-tree-item__badge">built-in</span>';
+        b.classList.add('default');
       } else {
-        b.textContent = 'Section ' + (i + 1) + ' — ' + (sec.blocks || []).length + ' block' + ((sec.blocks || []).length === 1 ? '' : 's');
+        const blkCount = (sec.blocks || []).length;
+        b.innerHTML = '<span class="nav-tree-item__icon">▦</span><span class="nav-tree-item__label">Section ' + (i + 1) + '</span><span class="nav-tree-item__badge">' + blkCount + '</span>';
       }
-      if (selected.s === sec.id) b.classList.add('active');
+      if (selected.s === sec.id && !selected.b) b.classList.add('active');
       b.addEventListener('click', () => {
-        selected = { s: sec.id, b: null };
-        renderAll();
-        push();
-        // Scroll the preview to the default section if it is one
+        selected = { s: sec.id, b: null }; renderAll(); push();
         if (sec.type === 'default_section') {
-          try {
-            frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN);
-          } catch (e) {}
+          try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
         }
       });
-      listEl.append(b);
+      group.append(b);
+
+      // Block children
+      if (sec.blocks && sec.blocks.length && sec.type !== 'default_section') {
+        const blocksDiv = document.createElement('div'); blocksDiv.className = 'nav-tree-blocks';
+        sec.blocks.forEach(blk => {
+          const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
+          const icon = blk.type === 'image' ? '🖼' : blk.type === 'button' ? '🔘' : 'T';
+          const label = blk.type === 'text' ? (blk.text || '').substring(0, 25) : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
+          bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + label + '</span>';
+          if (selected.s === sec.id && selected.b === blk.id) bb.classList.add('active');
+          bb.addEventListener('click', () => { selected = { s: sec.id, b: blk.id }; renderAll(); push(); });
+          blocksDiv.append(bb);
+        });
+        group.append(blocksDiv);
+      }
+      listEl.append(group);
     });
   }
-
-  window.addSelectedWidget = function(type) {
-    if (!selected.s) {
-      toast('Please select a section first.', true);
-      return;
-    }
-    const sec = findSec(selected.s);
-    if (!sec || sec.type === 'default_section') {
-      toast('Cannot add widgets to this section type.', true);
-      return;
-    }
-    handleOp({ op: 'addBlock', sectionId: sec.id, blockType: type });
-  };
 
   function renderInspector() {
     inspector.innerHTML = '';
     const defaultWidgets = document.getElementById('defaultWidgets');
     if (!blocksData || !selected.s) {
       if (defaultWidgets) defaultWidgets.style.display = 'block';
-      inspector.style.display = 'none';
-      return;
+      inspector.style.display = 'none'; return;
     }
-    
     if (defaultWidgets) defaultWidgets.style.display = 'none';
     inspector.style.display = 'block';
-    
-    // Switch to elements tab automatically if we just selected something in Navigator
-    if (!editMode) {
-      document.getElementById('tabElementsBtn').click();
-    }
+    // Auto-switch to elements tab to show inspector
+    if (!editMode) { document.getElementById('tabElementsBtn').click(); }
 
     const sec = findSec(selected.s);
     if (!sec) { selected.s = null; renderInspector(); return; }
-
     const blk = findBlk(sec, selected.b);
     const upd = () => { markBlocksDirty(); push(); };
     const targetData = blk || sec;
 
-    // Default Section logic (has very limited edits)
+    // Inspector header
+    const hdr = document.createElement('div'); hdr.className = 'inspector-header';
+    const backBtn = document.createElement('button'); backBtn.className = 'inspector-back'; backBtn.textContent = '←';
+    backBtn.addEventListener('click', () => {
+      if (blk) { selected = { s: sec.id, b: null }; }
+      else { selected = { s: null, b: null }; }
+      renderAll(); push();
+    });
+    const title = document.createElement('h3');
+    hdr.append(backBtn, title);
+    inspector.append(hdr);
+
+    // Default Section
     if (sec.type === 'default_section') {
       const sKey = selected.s.replace('default:', '');
       const ds = knownDefaultSections.find((d) => d.key === sKey);
       const ov = cur().defaultOverrides[sKey] || {};
-      
-      const h = document.createElement('h3');
-      h.textContent = '📌 ' + (ds ? ds.label : 'Default Section');
-      inspector.append(h);
-      
-      inspector.append(field('Background color (empty = default)', colorInput(ov.bg || '', (v) => {
+      title.textContent = '📌 ' + (ds ? ds.label : 'Default Section');
+      inspector.append(field('Background color', colorInput(ov.bg || '', (v) => {
         if (!cur().defaultOverrides[sKey]) cur().defaultOverrides[sKey] = {};
-        cur().defaultOverrides[sKey].bg = v;
-        if (!v) delete cur().defaultOverrides[sKey].bg;
-        upd();
+        cur().defaultOverrides[sKey].bg = v; if (!v) delete cur().defaultOverrides[sKey].bg; upd();
       })));
-      inspector.append(field('Vertical padding (px, empty = default)', numInput(ov.paddingY || '', (v) => {
+      inspector.append(field('Vertical padding (px)', numInput(ov.paddingY || '', (v) => {
         if (!cur().defaultOverrides[sKey]) cur().defaultOverrides[sKey] = {};
-        cur().defaultOverrides[sKey].paddingY = v || 0;
-        if (!v) delete cur().defaultOverrides[sKey].paddingY;
-        upd();
+        cur().defaultOverrides[sKey].paddingY = v || 0; if (!v) delete cur().defaultOverrides[sKey].paddingY; upd();
       }, 0, 400)));
-
-      const acts = document.createElement('div');
-      acts.className = 'insp-actions';
+      const acts = document.createElement('div'); acts.className = 'inspector-actions';
       acts.append(
         actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
         actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
-        actionBtn('✕ Delete section', () => handleOp({ op: 'deleteSection', sectionId: sec.id })),
+        actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
       inspector.append(acts);
       return;
     }
 
-    // Tab Header
-    const tabsRow = document.createElement('div');
-    tabsRow.className = 'props-tabs';
+    title.textContent = blk ? (blk.type.charAt(0).toUpperCase() + blk.type.slice(1) + ' Widget') : 'Section';
+
+    // Props tabs
+    const tabsRow = document.createElement('div'); tabsRow.className = 'props-tabs';
     const btnC = document.createElement('button'); btnC.textContent = 'Content'; btnC.className = 'active';
     const btnS = document.createElement('button'); btnS.textContent = 'Style';
     const btnA = document.createElement('button'); btnA.textContent = 'Advanced';
     tabsRow.append(btnC, btnS, btnA);
     inspector.append(tabsRow);
-    
+
     const panelC = document.createElement('div');
     const panelS = document.createElement('div'); panelS.style.display = 'none';
     const panelA = document.createElement('div'); panelA.style.display = 'none';
     inspector.append(panelC, panelS, panelA);
-    
+
     const switchPropsTab = (t) => {
       btnC.className = t === 'c' ? 'active' : '';
       btnS.className = t === 's' ? 'active' : '';
@@ -1530,14 +1912,14 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     btnS.addEventListener('click', () => switchPropsTab('s'));
     btnA.addEventListener('click', () => switchPropsTab('a'));
 
-    // --- Content Tab ---
+    // Content Tab
     if (!blk) {
-      panelC.innerHTML = '<p class="hint">Sections do not have content fields. Add widgets from the grid above.</p>';
+      panelC.innerHTML = '<p class="hint">Sections hold widgets. Add widgets from Elements tab or use the widget grid.</p>';
     } else {
       if (blk.type === 'image') {
         panelC.append(field('Image URL', imageControl(blk.src, (v) => { blk.src = v; upd(); })));
         panelC.append(field('Alt text', textInput(blk.alt, (v) => { blk.alt = v; upd(); })));
-        panelC.append(field('Link URL', textInput(blk.url, (v) => { blk.url = v; upd(); })));
+        panelC.append(field('Link URL', textInput(blk.url || '', (v) => { blk.url = v; upd(); })));
       } else if (blk.type === 'button') {
         panelC.append(field('Button text', textInput(blk.text, (v) => { blk.text = v; upd(); })));
         panelC.append(field('Link URL', textInput(blk.url, (v) => { blk.url = v; upd(); })));
@@ -1547,13 +1929,13 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       }
     }
 
-    // --- Style Tab ---
+    // Style Tab
     if (!blk) {
       panelS.append(field('Background color', colorInput(sec.bg, (v) => { sec.bg = v; upd(); })));
       panelS.append(field('Vertical padding (px)', numInput(sec.paddingY, (v) => { sec.paddingY = v; upd(); }, 0, 400)));
       panelS.append(field('Gap between blocks (px)', numInput(sec.gap, (v) => { sec.gap = v; upd(); }, 0, 120)));
       panelS.append(field('Content max width (px)', numInput(sec.maxWidth, (v) => { sec.maxWidth = v || 1152; upd(); }, 320, 2400)));
-      panelS.append(field('Min height (px, 0 = auto)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000)));
+      panelS.append(field('Min height (px)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000), 'secminh'));
       panelS.append(field('Block alignment', selInput(
         [{ v: 'start', l: 'Top' }, { v: 'center', l: 'Center' }, { v: 'end', l: 'Bottom' }, { v: 'stretch', l: 'Stretch' }],
         sec.align || 'start', (v) => { sec.align = v; upd(); }
@@ -1562,7 +1944,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       if (blk.type === 'image') {
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
       } else if (blk.type === 'text') {
-        panelS.append(field('Typography Style', selInput(TAG_OPTIONS, blk.tag || 'p', (v) => { blk.tag = v; upd(); })));
+        panelS.append(field('Typography', selInput(TAG_OPTIONS, blk.tag || 'p', (v) => { blk.tag = v; upd(); })));
         panelS.append(field('Font Family', fontInputs(blk, upd)));
         panelS.append(field('Size (px, 0 = default)', numInput(blk.size, (v) => { blk.size = v; upd(); }, 0, 200)));
         panelS.append(field('Color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
@@ -1570,76 +1952,64 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           [{ v: 'left', l: 'Left' }, { v: 'center', l: 'Center' }, { v: 'right', l: 'Right' }],
           blk.align || 'left', (v) => { blk.align = v; upd(); }
         )));
-        const boldWrap = document.createElement('div');
+        const boldWrap = document.createElement('div'); boldWrap.className = 'ctl-checkbox-row';
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!blk.bold;
+        const boldLabel = document.createElement('span'); boldLabel.textContent = 'Enable bold'; boldLabel.style.cssText = 'font-size:12px;color:var(--sb-text)';
         cb.addEventListener('change', () => { blk.bold = cb.checked; upd(); });
-        boldWrap.append(cb);
+        boldWrap.append(cb, boldLabel);
         panelS.append(field('Bold', boldWrap));
       }
-      panelS.append(field('Width (% of row)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100)));
+      panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
     }
 
-    // --- Advanced Tab ---
+    // Advanced Tab
     panelA.append(field('Entrance Animation', selInput([
-      { v: '', l: 'None' },
-      { v: 'fade', l: 'Fade In' },
-      { v: 'slide-up', l: 'Slide Up' },
-      { v: 'slide-left', l: 'Slide Left' },
-      { v: 'slide-right', l: 'Slide Right' },
-      { v: 'zoom-in', l: 'Zoom In' }
+      { v: '', l: 'None' }, { v: 'fade', l: 'Fade In' },
+      { v: 'slide-up', l: 'Slide Up' }, { v: 'slide-left', l: 'Slide Left' },
+      { v: 'slide-right', l: 'Slide Right' }, { v: 'zoom-in', l: 'Zoom In' },
+      { v: 'bounce', l: 'Bounce' }, { v: 'flip', l: 'Flip' },
     ], targetData.animation || '', (v) => { targetData.animation = v; upd(); })));
-    
-    panelA.append(field('Animation Duration (s)', numInput(targetData.animDuration || 0.6, (v) => { targetData.animDuration = v; upd(); }, 0.1, 5)));
-    panelA.append(field('Animation Delay (s)', numInput(targetData.animDelay || 0, (v) => { targetData.animDelay = v; upd(); }, 0, 5)));
-    
+    panelA.append(field('Duration (s)', numInput(targetData.animDuration || 0.6, (v) => { targetData.animDuration = v; upd(); }, 0.1, 5)));
+    panelA.append(field('Delay (s)', numInput(targetData.animDelay || 0, (v) => { targetData.animDelay = v; upd(); }, 0, 5)));
+
+    // Hover effect
+    panelA.append(field('Hover Effect', selInput([
+      { v: '', l: 'None' }, { v: 'grow', l: 'Grow' }, { v: 'shrink', l: 'Shrink' },
+      { v: 'float', l: 'Float' }, { v: 'glow', l: 'Glow' }, { v: 'pulse', l: 'Pulse' },
+    ], targetData.hoverEffect || '', (v) => { targetData.hoverEffect = v; upd(); })));
+
     // Actions
-    const acts = document.createElement('div');
-    acts.className = 'insp-actions';
-    acts.style.marginTop = '24px';
-    acts.style.paddingTop = '16px';
-    acts.style.borderTop = '1px solid var(--line)';
+    const acts = document.createElement('div'); acts.className = 'inspector-actions';
     if (!blk) {
       acts.append(
         actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
         actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
-        actionBtn('✕ Delete section', () => handleOp({ op: 'deleteSection', sectionId: sec.id })),
+        actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
     } else {
       acts.append(
-        actionBtn('◀ Move left', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: -1 })),
-        actionBtn('▶ Move right', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: 1 })),
-        actionBtn('Select parent section', () => { selected = { s: sec.id, b: null }; renderAll(); push(); }),
-        actionBtn('✕ Delete element', () => handleOp({ op: 'deleteBlock', sectionId: sec.id, blockId: blk.id })),
+        actionBtn('◀ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: -1 })),
+        actionBtn('▶ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: 1 })),
+        actionBtn('⬆ Parent', () => { selected = { s: sec.id, b: null }; renderAll(); push(); }),
+        actionBtn('✕ Delete', () => handleOp({ op: 'deleteBlock', sectionId: sec.id, blockId: blk.id }), true),
       );
     }
     inspector.append(acts);
   }
 
-  // ---- save ----
+  // ---- SAVE ----
   saveBtn.addEventListener('click', async () => {
     if (!blocksDirty || !blocksData) return;
-    saveBtn.disabled = true;
-    statusEl.textContent = 'Saving…';
+    saveBtn.disabled = true; statusEl.textContent = 'Saving…';
     try {
-      const resp = await fetch('/api/blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blocksData),
-      });
-      const out = await resp.json();
-      if (!resp.ok) throw new Error(out.error || 'Save failed');
-      blocksDirty = false;
-      statusEl.textContent = 'All changes saved';
-      statusEl.className = 'saved';
-    } catch (e) {
-      saveBtn.disabled = false;
-      statusEl.textContent = 'Save failed';
-      statusEl.className = 'dirty';
-    }
+      const resp = await fetch('/api/blocks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blocksData) });
+      const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
+      blocksDirty = false; statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
+    } catch (e) { saveBtn.disabled = false; statusEl.textContent = 'Save failed'; statusEl.className = 'cms-bottom__status dirty'; }
   });
   window.addEventListener('beforeunload', (e) => { if (blocksDirty) e.preventDefault(); });
 
-  // ---- init ----
+  // ---- INIT ----
   (async function initBlocks() {
     try {
       const [blocksResp, pagesResp] = await Promise.all([
@@ -1648,9 +2018,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       ]);
       blocksData = blocksResp.ok ? await blocksResp.json() : { pages: {} };
       if (pagesResp.ok) pagesData = await pagesResp.json();
-    } catch (e) {
-      blocksData = { pages: {} };
-    }
+    } catch (e) { blocksData = { pages: {} }; }
     if (!blocksData.pages) blocksData.pages = {};
     if (!pagesData.pages || !pagesData.pages.length) {
       pagesData = {
@@ -1662,11 +2030,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         ]
       };
     }
-    statusEl.textContent = 'All changes saved';
-    statusEl.className = 'saved';
-    buildPageBar();
-    loadInitialFrame();
-    renderAll();
+    statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
+    buildPageBar(); loadInitialFrame(); renderAll();
   })();
 })();
 </script>
