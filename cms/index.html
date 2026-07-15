@@ -1752,7 +1752,36 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       else if (type === 'button') blk = newButtonBlock();
       else if (type === 'divider') blk = { id: uid('b'), type: 'text', tag: 'small', text: '———', font: '', fontCustom: '', size: 0, color: '#999', bold: false, align: 'center', width: 100 };
       else blk = newTextBlock();
-      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
+      
+      sec.blocks = sec.blocks || [];
+      if (!selected.b) {
+        sec.blocks.push(blk);
+      } else {
+        const selBlk = findBlk(sec, selected.b);
+        if (selBlk && selBlk.type === 'container') {
+          selBlk.blocks = selBlk.blocks || [];
+          selBlk.blocks.push(blk);
+        } else {
+          // Find parent array and index to insert after
+          let parentArr = sec.blocks;
+          let idx = sec.blocks.findIndex(x => x.id === selected.b);
+          if (idx === -1) {
+            // Might be inside a container
+            sec.blocks.forEach(b => {
+              if (b.type === 'container' && b.blocks) {
+                const i = b.blocks.findIndex(x => x.id === selected.b);
+                if (i !== -1) { parentArr = b.blocks; idx = i; }
+              }
+            });
+          }
+          if (idx !== -1) {
+            parentArr.splice(idx + 1, 0, blk);
+          } else {
+            sec.blocks.push(blk); // Fallback
+          }
+        }
+      }
+      
       selected = { s: sec.id, b: blk.id };
       markBlocksDirty(); renderAll(); push();
       btn.classList.add('pulse');

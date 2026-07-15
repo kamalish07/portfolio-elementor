@@ -330,13 +330,16 @@
       var el = document.createElement(TAGS[b.tag] ? b.tag : 'p');
       el.className = 'ploy-blk__text';
       if (!state.editMode && b.text) {
-        // Parse simple markdown links: [text](url)
+        // Parse simple markdown links: [text](url) and **bold** / *italic*
         var html = b.text
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape
-          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+          .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+          .replace(/\*([^*]+)\*/g, '<i>$1</i>')
+          .replace(/__([^_]+)__/g, '<u>$1</u>');
         el.innerHTML = html;
       } else {
-        el.textContent = b.text || '';
+        el.innerHTML = b.text || ''; // Let them see raw HTML when editing
       }
       el.style.margin = '0';
       el.style.whiteSpace = 'pre-wrap';
@@ -458,10 +461,36 @@
 
     if (b.type === 'text') {
       var el = wrap.querySelector('.ploy-blk__text');
-      try { el.contentEditable = 'plaintext-only'; } catch (e) { el.contentEditable = 'true'; }
+      el.contentEditable = 'true';
       el.addEventListener('input', function () {
-        b.text = el.innerText;
+        b.text = el.innerHTML;
         post({ type: 'ploy-blocks-text', sectionId: sec.id, blockId: b.id, text: b.text });
+      });
+      // Add floating rich text toolbar on focus
+      el.addEventListener('focus', function() {
+        if (wrap.querySelector('.ploy-rt-toolbar')) return;
+        var rt = document.createElement('div');
+        rt.className = 'ploy-rt-toolbar ploy-toolbar';
+        rt.style.top = '-60px'; rt.style.left = '0'; rt.style.zIndex = '80';
+        rt.append(
+          toolbarButton('B', 'Bold (Ctrl+B)', function() { document.execCommand('bold'); el.focus(); }),
+          toolbarButton('I', 'Italic (Ctrl+I)', function() { document.execCommand('italic'); el.focus(); }),
+          toolbarButton('U', 'Underline (Ctrl+U)', function() { document.execCommand('underline'); el.focus(); }),
+          toolbarButton('🔗', 'Add Link', function() { 
+            var url = prompt('Enter link URL:'); 
+            if (url) { document.execCommand('createLink', false, url); }
+            else { document.execCommand('unlink'); }
+            el.focus();
+          }),
+          toolbarButton('</>', 'Clear Format', function() { document.execCommand('removeFormat'); el.focus(); })
+        );
+        wrap.appendChild(rt);
+      });
+      el.addEventListener('blur', function() {
+        setTimeout(function() {
+          var rt = wrap.querySelector('.ploy-rt-toolbar');
+          if (rt && !rt.contains(document.activeElement)) rt.remove();
+        }, 200);
       });
     }
 
@@ -470,6 +499,11 @@
 
     var bar = document.createElement('div');
     bar.className = 'ploy-toolbar ploy-toolbar--blk';
+    if (b.type === 'container') {
+       bar.append(
+         toolbarButton('⬆ Parent', 'Select parent section', function() { select(sec.id, null); }),
+       );
+    }
     bar.append(
       toolbarButton('◀', 'Move block left', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: -1 }); }),
       toolbarButton('▶', 'Move block right', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: 1 }); }),

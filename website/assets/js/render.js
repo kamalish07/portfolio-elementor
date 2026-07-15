@@ -38,17 +38,48 @@
   document.querySelectorAll('[data-cms]').forEach((el) => {
     const path = el.dataset.cms;
     const v = get(path);
-    if (v != null) el.textContent = v;
+    if (v != null) el.innerHTML = v;
 
     if (inCMS) {
       el.setAttribute('contenteditable', 'true');
       el.style.outline = 'none';
-      el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+      el.addEventListener('focus', function() { 
+        el.style.boxShadow = '0 0 0 2px #3b82f6'; 
+        
+        // Add RT toolbar
+        if (el.parentNode.querySelector('.ploy-rt-toolbar-cms')) return;
+        const rt = document.createElement('div');
+        rt.className = 'ploy-rt-toolbar-cms';
+        rt.style.cssText = 'position:absolute; top:-35px; left:0; z-index:90; display:flex; gap:4px; background:#1f2937; padding:4px; border-radius:4px; font-family:system-ui;';
+        
+        const btn = (l, fn) => {
+          const b = document.createElement('button');
+          b.textContent = l;
+          b.style.cssText = 'background:transparent; border:none; color:#fff; cursor:pointer; font-size:12px; padding:2px 6px;';
+          b.onmousedown = (e) => { e.preventDefault(); fn(); };
+          return b;
+        };
+        rt.append(
+          btn('B', () => document.execCommand('bold')),
+          btn('I', () => document.execCommand('italic')),
+          btn('U', () => document.execCommand('underline')),
+          btn('🔗', () => { const u = prompt('Link URL:'); if (u) document.execCommand('createLink', false, u); else document.execCommand('unlink'); }),
+          btn('</>', () => document.execCommand('removeFormat'))
+        );
+        el.style.position = 'relative';
+        el.appendChild(rt);
+      });
       el.addEventListener('blur', function() { 
         el.style.boxShadow = 'none';
-        window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: el.textContent }, '*');
+        const rt = el.querySelector('.ploy-rt-toolbar-cms');
+        if (rt) rt.remove();
+        // Remove toolbar from HTML before saving
+        const clone = el.cloneNode(true);
+        const rtClone = clone.querySelector('.ploy-rt-toolbar-cms');
+        if (rtClone) rtClone.remove();
+        window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: clone.innerHTML }, '*');
       });
-      el.addEventListener('click', function(e) { e.preventDefault(); });
+      el.addEventListener('click', function(e) { if(e.target.tagName !== 'A') e.preventDefault(); });
     }
   });
   document.querySelectorAll('[data-cms-src]').forEach((el) => {
@@ -94,17 +125,42 @@
       node.querySelectorAll('[data-f]').forEach((el) => {
         const path = container.dataset.cmsList + '.' + Array.prototype.indexOf.call(container.children, node) + '.' + el.dataset.f;
         const v = item[el.dataset.f];
-        if (v != null) el.textContent = v;
+        if (v != null) el.innerHTML = v;
         
         if (inCMS) {
           el.setAttribute('contenteditable', 'true');
           el.style.outline = 'none';
-          el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+          el.addEventListener('focus', function() { 
+            el.style.boxShadow = '0 0 0 2px #3b82f6'; 
+            if (el.parentNode.querySelector('.ploy-rt-toolbar-cms')) return;
+            const rt = document.createElement('div');
+            rt.className = 'ploy-rt-toolbar-cms';
+            rt.style.cssText = 'position:absolute; top:-35px; left:0; z-index:90; display:flex; gap:4px; background:#1f2937; padding:4px; border-radius:4px; font-family:system-ui;';
+            const btn = (l, fn) => {
+              const b = document.createElement('button');
+              b.textContent = l; b.style.cssText = 'background:transparent; border:none; color:#fff; cursor:pointer; font-size:12px; padding:2px 6px;';
+              b.onmousedown = (e) => { e.preventDefault(); fn(); }; return b;
+            };
+            rt.append(
+              btn('B', () => document.execCommand('bold')),
+              btn('I', () => document.execCommand('italic')),
+              btn('U', () => document.execCommand('underline')),
+              btn('🔗', () => { const u = prompt('Link URL:'); if (u) document.execCommand('createLink', false, u); else document.execCommand('unlink'); }),
+              btn('</>', () => document.execCommand('removeFormat'))
+            );
+            el.style.position = 'relative';
+            el.appendChild(rt);
+          });
           el.addEventListener('blur', function() { 
             el.style.boxShadow = 'none';
-            window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: el.textContent }, '*');
+            const rt = el.querySelector('.ploy-rt-toolbar-cms');
+            if (rt) rt.remove();
+            const clone = el.cloneNode(true);
+            const rtClone = clone.querySelector('.ploy-rt-toolbar-cms');
+            if (rtClone) rtClone.remove();
+            window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: clone.innerHTML }, '*');
           });
-          el.addEventListener('click', function(e) { e.preventDefault(); });
+          el.addEventListener('click', function(e) { if(e.target.tagName !== 'A') e.preventDefault(); });
         }
       });
       node.querySelectorAll('[data-f-src]').forEach((el) => {
