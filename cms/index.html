@@ -289,7 +289,12 @@ function push() {
 window.addEventListener('message', ev => {
   if (ev.origin !== ORIGIN) return;
   const d = ev.data || {};
-  if (d.type === 'ploy-blocks-ready') { push(); renderAll(); }
+  if (d.type === 'ploy-blocks-ready') { 
+    document.getElementById('status').textContent = 'Live';
+    document.getElementById('status').style.color = '#10b981';
+    push(); 
+    renderAll(); 
+  }
   else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
   else if (d.type === 'ploy-blocks-text') {
     const blk = findBlk(findSec(d.sectionId), d.blockId);
@@ -515,13 +520,48 @@ document.getElementById('blocksSaveBtn').onclick = async () => {
   document.getElementById('blocksStatus').textContent = 'Saved';
 };
 
+function loadPage(pageId, path) {
+  currentPage = pageId;
+  currentPagePath = path;
+  selected = { s: null, b: null };
+  document.getElementById('status').textContent = 'Loading...';
+  document.getElementById('status').style.color = '#f87171';
+  
+  // Update UI
+  document.querySelectorAll('.page-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.id === pageId);
+  });
+  
+  // Load iframe
+  frame.src = ORIGIN + path;
+}
+
 (async function init() {
   try {
-    const r = await fetch('/api/blocks');
-    if (r.ok) blocksData = await r.json();
-  } catch(e) {}
+    const r1 = await fetch('/api/pages');
+    if (r1.ok) pagesData = await r1.json();
+    
+    const r2 = await fetch('/api/blocks');
+    if (r2.ok) blocksData = await r2.json();
+  } catch(e) {
+    console.error('Failed to load data', e);
+  }
+  
   if (!blocksData.pages) blocksData.pages = {};
-  renderAll();
+  
+  // Render page pills
+  const bar = document.getElementById('pageBar');
+  bar.innerHTML = '';
+  (pagesData.pages || []).forEach(p => {
+    const btn = el('button', 'page-pill', p.title);
+    btn.dataset.id = p.id;
+    if (p.id === currentPage) btn.classList.add('active');
+    btn.onclick = () => loadPage(p.id, p.path);
+    bar.appendChild(btn);
+  });
+
+  // Initial load
+  loadPage(currentPage, currentPagePath);
 })();
 </script>
 </body>
