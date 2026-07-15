@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMS Studio — Kamalish Portfolio</title>
+<title>CMS Studio — Canva/Figma Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
@@ -14,7 +14,6 @@
    ELEMENTOR-STYLE CMS — COMPLETE DESIGN SYSTEM
    ====================================================== */
 :root {
-  /* Sidebar dark theme */
   --sb-bg: #1e1e1e;
   --sb-bg-light: #272727;
   --sb-bg-hover: #333333;
@@ -26,21 +25,13 @@
   --sb-accent: #93c5fd;
   --sb-accent-bg: rgba(147,197,253,0.12);
   --sb-danger: #f87171;
-
-  /* Header bar */
   --hdr-bg: #000000;
   --hdr-border: #2a2a2a;
-
-  /* Preview area */
   --preview-bg: #e5e7eb;
-
-  /* Inspector */
   --inp-bg: #2a2a2a;
   --inp-border: #3e3e3e;
   --inp-text: #e0e0e0;
   --inp-focus: #93c5fd;
-
-  /* Status colors */
   --green: #10b981;
   --green-dark: #059669;
   --amber: #f59e0b;
@@ -60,814 +51,106 @@ button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
 
 /* ---- MAIN LAYOUT ---- */
-.cms-app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-/* ---- TOP HEADER BAR ---- */
-.cms-header {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  background: var(--hdr-bg);
-  border-bottom: 1px solid var(--hdr-border);
-  padding: 0 12px;
-  gap: 8px;
-  flex-shrink: 0;
-  z-index: 100;
-}
-.cms-header__logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: #93c5fd;
-  border-radius: 4px;
-  color: #000;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.3px;
-  border: none;
-  transition: opacity 0.15s;
-}
+.cms-app { display: flex; flex-direction: column; height: 100vh; }
+.cms-header { display: flex; align-items: center; height: 48px; background: var(--hdr-bg); border-bottom: 1px solid var(--hdr-border); padding: 0 12px; gap: 8px; flex-shrink: 0; z-index: 100; }
+.cms-header__logo { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #93c5fd; border-radius: 4px; color: #000; font-weight: 700; font-size: 14px; letter-spacing: 0.3px; border: none; transition: opacity 0.15s; }
 .cms-header__logo:hover { opacity: 0.9; }
-.cms-header__logo svg { width: 18px; height: 18px; }
 .cms-header__sep { width: 1px; height: 28px; background: var(--hdr-border); margin: 0 4px; }
-
-/* Responsive preview toggles */
-.cms-header__responsive {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: 8px;
-}
-.cms-header__responsive button {
-  width: 36px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; color: #666;
-  border-radius: 4px; transition: all 0.15s;
-  font-size: 16px;
-}
+.cms-header__responsive { display: flex; align-items: center; gap: 2px; margin-left: 8px; }
+.cms-header__responsive button { width: 36px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #666; border-radius: 4px; transition: all 0.15s; font-size: 16px; }
 .cms-header__responsive button:hover { color: #999; background: rgba(255,255,255,0.06); }
 .cms-header__responsive button.active { color: var(--sb-accent); background: var(--sb-accent-bg); }
-
 .cms-header__spacer { flex: 1; }
-
-/* Page selector pills */
-.cms-header__pages {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  max-width: 50vw;
-  scrollbar-width: none;
-}
+.cms-header__pages { display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: 50vw; scrollbar-width: none; }
 .cms-header__pages::-webkit-scrollbar { display: none; }
-.page-pill {
-  padding: 5px 14px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  background: var(--sb-bg-light);
-  border: 1px solid var(--sb-border);
-  color: var(--sb-text);
-  transition: all 0.15s;
-}
+.page-pill { padding: 5px 14px; border-radius: 16px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--sb-bg-light); border: 1px solid var(--sb-border); color: var(--sb-text); transition: all 0.15s; }
 .page-pill:hover { background: var(--sb-bg-hover); color: var(--sb-text-bright); }
 .page-pill.active { background: var(--sb-accent); color: #000; border-color: var(--sb-accent); font-weight: 600; }
-.page-pill--add {
-  background: none;
-  border: 1px dashed var(--sb-text-muted);
-  color: var(--sb-text-muted);
-  font-size: 12px;
-}
-.page-pill--add:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
-
-/* Header actions */
-.cms-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 12px;
-}
-.btn-publish {
-  padding: 7px 20px;
-  background: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  transition: background 0.15s;
-}
+.cms-header__actions { display: flex; align-items: center; gap: 8px; margin-left: 12px; }
+.btn-publish { padding: 7px 20px; background: var(--green); color: #fff; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
 .btn-publish:hover { background: var(--green-dark); }
 .btn-publish:disabled { background: #374151; color: #6b7280; cursor: default; }
-.status-dot {
-  font-size: 11px;
-  color: var(--sb-text-muted);
-  white-space: nowrap;
-}
-.status-dot.dirty { color: var(--amber); }
-.status-dot.saved { color: var(--green); }
 
-/* ---- BODY: SIDEBAR + PREVIEW ---- */
-.cms-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ---- LEFT SIDEBAR ---- */
-.cms-sidebar {
-  width: 300px;
-  flex-shrink: 0;
-  background: var(--sb-bg);
-  border-right: 1px solid var(--sb-border);
-  display: flex;
-  flex-direction: column;
-  transition: width 0.25s, transform 0.25s;
-  z-index: 50;
-  overflow: hidden;
-}
+/* ---- BODY ---- */
+.cms-body { display: flex; flex: 1; min-height: 0; }
+.cms-sidebar { width: 320px; flex-shrink: 0; background: var(--sb-bg); border-right: 1px solid var(--sb-border); display: flex; flex-direction: column; transition: width 0.25s; z-index: 50; overflow: hidden; }
 .cms-sidebar.collapsed { width: 0; border-right: none; }
-
-/* Sidebar tabs */
-.sidebar-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--sb-border);
-  flex-shrink: 0;
-}
-.sidebar-tabs button {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 12px 4px 10px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--sb-text-muted);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.15s;
-}
-.sidebar-tabs button svg { width: 20px; height: 20px; opacity: 0.5; transition: opacity 0.15s; }
+.sidebar-tabs { display: flex; border-bottom: 1px solid var(--sb-border); flex-shrink: 0; }
+.sidebar-tabs button { flex: 1; padding: 12px 4px 10px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--sb-text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; transition: all 0.15s; }
 .sidebar-tabs button:hover { color: var(--sb-text); background: var(--sb-bg-light); }
-.sidebar-tabs button:hover svg { opacity: 0.8; }
 .sidebar-tabs button.active { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
-.sidebar-tabs button.active svg { opacity: 1; }
+.sidebar-panel { flex: 1; overflow-y: auto; padding: 16px; scrollbar-width: thin; scrollbar-color: var(--sb-bg-active) transparent; }
 
-/* Sidebar panels */
-.sidebar-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--sb-bg-active) transparent;
-}
-.sidebar-panel::-webkit-scrollbar { width: 5px; }
-.sidebar-panel::-webkit-scrollbar-track { background: transparent; }
-.sidebar-panel::-webkit-scrollbar-thumb { background: var(--sb-bg-active); border-radius: 3px; }
-
-.sidebar-panel h3 {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--sb-text-muted);
-  margin-bottom: 12px;
-}
-.sidebar-panel .hint {
-  font-size: 11px;
-  color: var(--sb-text-muted);
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-/* ---- WIDGET GRID (Elements Tab) ---- */
-.widget-search {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--inp-bg);
-  border: 1px solid var(--inp-border);
-  border-radius: 6px;
-  color: var(--inp-text);
-  font-size: 12px;
-  margin-bottom: 16px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.widget-search:focus { border-color: var(--sb-accent); }
-.widget-search::placeholder { color: var(--sb-text-muted); }
-
-.widget-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.widget-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 14px 6px;
-  background: var(--sb-bg-light);
-  border: 1px solid var(--sb-border);
-  border-radius: 6px;
-  color: var(--sb-text);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  transition: all 0.2s;
-}
-.widget-card:hover {
-  background: var(--sb-accent-bg);
-  border-color: var(--sb-accent);
-  color: var(--sb-accent);
-  transform: translateY(-1px);
-}
+/* ---- WIDGET GRID ---- */
+.widget-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.widget-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 6px; background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: 6px; color: var(--sb-text); font-size: 10px; font-weight: 500; transition: all 0.2s; }
+.widget-card:hover { background: var(--sb-accent-bg); border-color: var(--sb-accent); color: var(--sb-accent); transform: translateY(-1px); }
 .widget-card svg { width: 22px; height: 22px; opacity: 0.7; }
 .widget-card:hover svg { opacity: 1; }
-
-/* Pulse animation on successful add */
-@keyframes widgetPulse {
-  0% { box-shadow: 0 0 0 0 rgba(147,197,253,0.4); }
-  70% { box-shadow: 0 0 0 8px rgba(147,197,253,0); }
-  100% { box-shadow: 0 0 0 0 rgba(147,197,253,0); }
-}
+@keyframes widgetPulse { 0% { box-shadow: 0 0 0 0 rgba(147,197,253,0.4); } 70% { box-shadow: 0 0 0 8px rgba(147,197,253,0); } 100% { box-shadow: 0 0 0 0 rgba(147,197,253,0); } }
 .widget-card.pulse { animation: widgetPulse 0.6s ease-out; }
 
 /* ---- NAVIGATOR TREE ---- */
 .nav-tree { display: flex; flex-direction: column; gap: 2px; }
-.nav-tree-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: var(--sb-text);
-  font-size: 12px;
-  text-align: left;
-  width: 100%;
-  transition: all 0.12s;
-}
+.nav-tree-item { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: none; border: none; border-radius: 4px; color: var(--sb-text); font-size: 12px; text-align: left; width: 100%; transition: all 0.12s; }
 .nav-tree-item:hover { background: var(--sb-bg-hover); }
 .nav-tree-item.active { background: var(--sb-accent-bg); color: var(--sb-accent); }
-.nav-tree-item.default { border-left: 3px solid #a78bfa; padding-left: 7px; }
-.nav-tree-item.default.active { border-left-color: var(--sb-accent); }
-.nav-tree-item__icon { width: 16px; font-size: 12px; text-align: center; flex-shrink: 0; opacity: 0.6; }
-.nav-tree-item__label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-tree-item__badge {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 8px;
-  background: var(--sb-bg-active);
-  color: var(--sb-text-muted);
-  flex-shrink: 0;
-}
+.nav-tree-blocks { margin-left: 20px; display: flex; flex-direction: column; gap: 1px; }
 
-.nav-tree-section { margin-bottom: 4px; }
-.nav-tree-blocks { margin-left: 22px; display: flex; flex-direction: column; gap: 1px; }
-.nav-tree-blocks .nav-tree-item { font-size: 11px; padding: 5px 8px; }
-
-.nav-add-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px;
-  margin-top: 8px;
-  background: none;
-  border: 1px dashed var(--sb-border);
-  border-radius: 6px;
-  color: var(--sb-text-muted);
-  font-size: 12px;
-  width: 100%;
-  transition: all 0.15s;
-}
-.nav-add-section:hover { border-color: var(--sb-accent); color: var(--sb-accent); }
-
-/* ---- SETTINGS PANEL ---- */
-.settings-group {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--sb-border);
-}
-.settings-group:last-child { border-bottom: none; }
-.settings-group h4 {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--sb-text-bright);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.settings-actions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.settings-actions button {
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  border: none;
-  transition: all 0.15s;
-}
-.settings-actions .btn-save-theme {
-  background: var(--sb-accent);
-  color: #000;
-}
-.settings-actions .btn-save-theme:hover { opacity: 0.9; }
-.settings-actions .btn-save-theme:disabled { opacity: 0.4; cursor: default; }
-.settings-actions .btn-reset-theme {
-  background: var(--sb-bg-hover);
-  color: var(--sb-text);
-  border: 1px solid var(--sb-border);
-}
-.settings-actions .btn-reset-theme:hover { background: var(--sb-bg-active); }
-.settings-status { font-size: 11px; color: var(--sb-text-muted); margin-left: 8px; }
-.settings-status.dirty { color: var(--amber); }
-.settings-status.saved { color: var(--green); }
-
-/* ---- FORM CONTROLS (dark theme) ---- */
+/* ---- FORM CONTROLS ---- */
 .ctl-field { margin-bottom: 14px; }
-.ctl-field > label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--sb-text-muted);
-  margin-bottom: 6px;
-}
-.ctl-input, .ctl-textarea, .ctl-select {
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--inp-bg);
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  color: var(--inp-text);
-  font-size: 12px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.ctl-input:focus, .ctl-textarea:focus, .ctl-select:focus { border-color: var(--inp-focus); }
-.ctl-textarea { min-height: 60px; resize: vertical; }
-.ctl-select { cursor: pointer; }
-.ctl-color-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.ctl-color-row input[type="color"] {
-  width: 36px;
-  height: 32px;
-  padding: 2px;
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  background: var(--inp-bg);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.ctl-color-row input[type="text"] {
-  flex: 1;
-  padding: 7px 9px;
-  background: var(--inp-bg);
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  color: var(--inp-text);
-  font-size: 12px;
-  font-family: 'SF Mono', 'Cascadia Code', monospace;
-  outline: none;
-}
-.ctl-color-row input[type="text"]:focus { border-color: var(--inp-focus); }
-.ctl-color-row .ctl-clear {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  color: var(--sb-text-muted);
-  font-size: 10px;
-  flex-shrink: 0;
-}
-.ctl-color-row .ctl-clear:hover { border-color: var(--sb-danger); color: var(--sb-danger); }
-.ctl-number { width: 100%; }
-.ctl-checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ctl-checkbox-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--sb-accent);
-}
+.ctl-field > label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--sb-text-muted); margin-bottom: 6px; }
+.ctl-input, .ctl-textarea, .ctl-select { width: 100%; padding: 8px 10px; background: var(--inp-bg); border: 1px solid var(--inp-border); border-radius: 4px; color: var(--inp-text); font-size: 12px; outline: none; }
+.ctl-input:focus, .ctl-select:focus { border-color: var(--inp-focus); }
+.ctl-color-row { display: flex; gap: 6px; align-items: center; }
+.ctl-color-row input[type="color"] { width: 36px; height: 32px; padding: 2px; border: 1px solid var(--inp-border); border-radius: 4px; background: var(--inp-bg); cursor: pointer; }
+.ctl-color-row input[type="text"] { flex: 1; padding: 7px 9px; background: var(--inp-bg); border: 1px solid var(--inp-border); border-radius: 4px; color: var(--inp-text); font-family: monospace; outline: none; }
+.ctl-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.ctl-row > div { flex: 1; }
 
-/* ---- INSPECTOR (replaces default widgets when something selected) ---- */
-.inspector-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--sb-border);
-}
-.inspector-header h3 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--sb-text-bright);
-  margin: 0;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.inspector-header .inspector-back {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sb-bg-hover);
-  border: none;
-  border-radius: 4px;
-  color: var(--sb-text);
-  font-size: 14px;
-  flex-shrink: 0;
-}
-.inspector-header .inspector-back:hover { background: var(--sb-bg-active); }
-
-/* Props tabs */
-.props-tabs {
-  display: flex;
-  margin: -16px -16px 16px -16px;
-  border-bottom: 1px solid var(--sb-border);
-  background: rgba(0,0,0,0.2);
-}
-.props-tabs button {
-  flex: 1;
-  padding: 10px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--sb-text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.12s;
-}
+/* ---- INSPECTOR ---- */
+.inspector-header { display: flex; align-items: center; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--sb-border); }
+.inspector-back { width: 28px; height: 28px; background: var(--sb-bg-hover); border: none; border-radius: 4px; color: var(--sb-text); }
+.props-tabs { display: flex; margin: -16px -16px 16px -16px; border-bottom: 1px solid var(--sb-border); background: rgba(0,0,0,0.2); }
+.props-tabs button { flex: 1; padding: 10px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--sb-text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .props-tabs button:hover { color: var(--sb-text); }
 .props-tabs button.active { color: var(--sb-accent); border-bottom-color: var(--sb-accent); }
-
-/* Inspector actions */
-.inspector-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--sb-border);
-}
-.inspector-actions button {
-  padding: 5px 10px;
-  background: var(--sb-bg-hover);
-  border: 1px solid var(--sb-border);
-  border-radius: 4px;
-  color: var(--sb-text);
-  font-size: 11px;
-  transition: all 0.12s;
-}
-.inspector-actions button:hover { background: var(--sb-bg-active); border-color: var(--sb-text-muted); }
+.inspector-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sb-border); }
+.inspector-actions button { padding: 5px 10px; background: var(--sb-bg-hover); border: 1px solid var(--sb-border); border-radius: 4px; color: var(--sb-text); font-size: 11px; }
 .inspector-actions button.danger { color: var(--sb-danger); }
-.inspector-actions button.danger:hover { border-color: var(--sb-danger); background: rgba(248,113,113,0.1); }
-
-/* Image control (dark themed) */
-.img-control { display: flex; gap: 10px; align-items: flex-start; }
-.img-control__thumb { width: 80px; height: 56px; object-fit: cover; border: 1px solid var(--inp-border); border-radius: 4px; background: var(--inp-bg); }
-.img-control__body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.img-control__upload {
-  padding: 5px 10px;
-  background: var(--sb-bg-hover);
-  border: 1px solid var(--sb-border);
-  border-radius: 4px;
-  color: var(--sb-text);
-  font-size: 11px;
-  align-self: flex-start;
-}
-.img-control__upload:hover { background: var(--sb-bg-active); }
 
 /* ---- PREVIEW AREA ---- */
-.cms-preview {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  background: var(--preview-bg);
-}
-.cms-preview__toolbar {
-  display: none; /* page pills are in header now */
-}
-.cms-preview__frame-wrap {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 0;
-  overflow: hidden;
-  transition: padding 0.3s;
-}
+.cms-preview { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--preview-bg); }
+.cms-preview__frame-wrap { flex: 1; display: flex; justify-content: center; padding: 0; transition: padding 0.3s; }
 .cms-preview__frame-wrap.tablet { padding: 16px; }
 .cms-preview__frame-wrap.mobile { padding: 16px; }
-
-.cms-preview__frame {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #fff;
-  transition: max-width 0.3s, border-radius 0.3s, box-shadow 0.3s;
-}
-.cms-preview__frame-wrap.tablet .cms-preview__frame {
-  max-width: 768px;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-}
-.cms-preview__frame-wrap.mobile .cms-preview__frame {
-  max-width: 375px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-}
+.cms-preview__frame { width: 100%; height: 100%; border: none; background: #fff; transition: max-width 0.3s; }
+.cms-preview__frame-wrap.tablet .cms-preview__frame { max-width: 768px; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+.cms-preview__frame-wrap.mobile .cms-preview__frame { max-width: 375px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
 
 /* ---- BOTTOM BAR ---- */
-.cms-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 40px;
-  padding: 0 16px;
-  background: var(--hdr-bg);
-  border-top: 1px solid var(--hdr-border);
-  flex-shrink: 0;
-}
-.cms-bottom__status {
-  font-size: 11px;
-  color: var(--sb-text-muted);
-}
+.cms-bottom { display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 16px; background: var(--hdr-bg); border-top: 1px solid var(--hdr-border); }
+.cms-bottom__status { font-size: 11px; color: var(--sb-text-muted); }
 .cms-bottom__status.dirty { color: var(--amber); }
 .cms-bottom__status.saved { color: var(--green); }
-.cms-bottom__btn {
-  padding: 5px 16px;
-  background: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.cms-bottom__btn:disabled { background: #374151; color: #6b7280; cursor: default; }
-.cms-bottom__btn:not(:disabled):hover { background: var(--green-dark); }
-
-/* ---- ADD PAGE MODAL ---- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 999;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.modal {
-  background: #1e1e1e;
-  border: 1px solid #3a3a3a;
-  border-radius: 12px;
-  padding: 28px 30px 24px;
-  width: 420px;
-  max-width: 90vw;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
-}
-.modal h3 { color: #e0e0e0; font-size: 18px; margin-bottom: 6px; }
-.modal p { color: #808080; font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
-.modal .ctl-field { margin-bottom: 16px; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.modal-actions button { padding: 8px 18px; font-size: 13px; border-radius: 6px; font-weight: 600; }
-.modal-cancel { background: var(--sb-bg-hover); border: 1px solid var(--sb-border); color: var(--sb-text); }
-.modal-confirm { background: var(--sb-accent); border: none; color: #000; }
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 60px;
-  right: 24px;
-  background: #1e1e1e;
-  color: #e0e0e0;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: all 0.25s;
-  pointer-events: none;
-  z-index: 9999;
-  border: 1px solid #3a3a3a;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-.toast.show { opacity: 1; transform: none; }
-.toast.err { border-color: var(--red); }
-
-/* ---- PAGE DATA EDITOR (inside Settings) ---- */
-.page-data-section { margin-top: 8px; }
-.page-data-toc {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 14px;
-}
-.page-data-toc a {
-  padding: 4px 10px;
-  font-size: 11px;
-  border-radius: 4px;
-  background: var(--sb-bg-light);
-  color: var(--sb-text-muted);
-  text-decoration: none;
-  border: 1px solid var(--sb-border);
-  transition: all 0.12s;
-}
-.page-data-toc a:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
-.page-data-toc a.active { color: var(--sb-accent); border-color: var(--sb-accent); background: var(--sb-accent-bg); }
-
-.page-data-panel {
-  background: var(--sb-bg-light);
-  border: 1px solid var(--sb-border);
-  border-radius: 6px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-.page-data-panel h4 {
-  font-size: 12px;
-  color: var(--sb-text-bright);
-  margin-bottom: 4px;
-}
-.page-data-panel .hint {
-  font-size: 11px;
-  color: var(--sb-text-muted);
-  margin-bottom: 12px;
-}
-
-/* List items in page data */
-.list-item {
-  background: var(--sb-bg);
-  border: 1px solid var(--sb-border);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
-  position: relative;
-}
-.list-item .itemtools {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 4px;
-}
-.itemtools button {
-  width: 24px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sb-bg-light);
-  border: 1px solid var(--sb-border);
-  border-radius: 3px;
-  color: var(--sb-text-muted);
-  font-size: 11px;
-}
-.itemtools button:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
-.itemtools button.del:hover { color: var(--sb-danger); border-color: var(--sb-danger); }
-
-.addbtn {
-  background: none;
-  border: 1px dashed var(--sb-border);
-  color: var(--sb-text-muted);
-  width: 100%;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 11px;
-}
-.addbtn:hover { color: var(--sb-accent); border-color: var(--sb-accent); }
-
-/* Style row (Aa overrides) */
-.aa-btn {
-  margin-left: auto;
-  background: var(--sb-bg-hover);
-  border: 1px solid var(--sb-border);
-  border-radius: 3px;
-  font-size: 10px;
-  padding: 2px 7px;
-  cursor: pointer;
-  color: var(--sb-text-muted);
-  text-transform: none;
-  letter-spacing: 0;
-}
-.aa-btn.on { border-color: var(--sb-accent); color: var(--sb-accent); }
-.stylerow {
-  border: 1px solid var(--sb-border);
-  border-radius: 4px;
-  padding: 10px;
-  margin: 6px 0 8px;
-  background: var(--sb-bg);
-}
-.stylerow .row { display: flex; gap: 6px; margin-bottom: 6px; }
-.stylerow select, .stylerow input[type=number], .stylerow input[type=text] {
-  flex: 1;
-  min-width: 0;
-  padding: 6px 8px;
-  font-size: 11px;
-  background: var(--inp-bg);
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  color: var(--inp-text);
-  outline: none;
-}
-.stylerow input[type=color] {
-  width: 36px;
-  height: 30px;
-  padding: 2px;
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  background: var(--inp-bg);
-}
-
-/* Font field */
-.fontfield { margin-bottom: 14px; }
-.fontfield label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sb-text-muted); margin-bottom: 6px; }
-.fontfield select, .fontfield input[type=text] {
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--inp-bg);
-  border: 1px solid var(--inp-border);
-  border-radius: 4px;
-  color: var(--inp-text);
-  font-size: 12px;
-  outline: none;
-}
-.fontfield input[type=text] { margin-top: 6px; }
-
-/* Color field */
-.colorfield { margin-bottom: 14px; }
-.colorfield label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sb-text-muted); margin-bottom: 6px; }
-.colorfield__row { display: flex; gap: 6px; align-items: center; }
-.colorfield__row input[type=color] { width: 36px; height: 32px; padding: 2px; border: 1px solid var(--inp-border); border-radius: 4px; background: var(--inp-bg); }
-.colorfield__row input[type=text] { flex: 1; padding: 7px 9px; font: 12px/1.4 'SF Mono', 'Cascadia Code', monospace; background: var(--inp-bg); border: 1px solid var(--inp-border); border-radius: 4px; color: var(--inp-text); outline: none; }
+.cms-bottom__btn { padding: 5px 16px; background: var(--green); color: #fff; border: none; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+.cms-bottom__btn:disabled { background: #374151; color: #6b7280; }
 </style>
 </head>
 <body>
 
-<!-- ========== APP SHELL ========== -->
 <div class="cms-app">
-
   <!-- HEADER -->
   <header class="cms-header">
-    <button class="cms-header__logo" type="button" id="sidebarToggle">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      CMS
-    </button>
+    <button class="cms-header__logo" type="button" id="sidebarToggle">CMS</button>
     <div class="cms-header__sep"></div>
-
-    <!-- Responsive toggles -->
     <div class="cms-header__responsive">
       <button type="button" data-view="desktop" class="active" title="Desktop">🖥️</button>
       <button type="button" data-view="tablet" title="Tablet">📱</button>
       <button type="button" data-view="mobile" title="Mobile">📲</button>
     </div>
-
     <div class="cms-header__spacer"></div>
-
-    <!-- Page pills -->
     <div class="cms-header__pages" id="pageBar"></div>
-
-    <div class="cms-header__sep"></div>
-
-    <!-- Actions -->
     <div class="cms-header__actions">
       <span class="status-dot" id="status">Loading…</span>
       <button class="btn-publish" id="saveBtn" disabled>Publish</button>
@@ -876,84 +159,48 @@ input, select, textarea { font-family: inherit; }
 
   <!-- BODY -->
   <div class="cms-body">
-
     <!-- LEFT SIDEBAR -->
     <aside class="cms-sidebar" id="sidebar">
       <div class="sidebar-tabs">
-        <button id="tabElementsBtn" class="active" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Elements
-        </button>
-        <button id="tabSectionsBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
-          Navigator
-        </button>
-        <button id="tabSettingsBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          Settings
-        </button>
+        <button id="tabElementsBtn" class="active" type="button">Elements</button>
+        <button id="tabSectionsBtn" type="button">Navigator</button>
+        <button id="tabSettingsBtn" type="button">Settings</button>
       </div>
 
       <!-- ELEMENTS PANEL -->
       <div id="tab-elements" class="sidebar-panel">
         <div id="defaultWidgets">
-          <input type="text" class="widget-search" id="widgetSearch" placeholder="Search widgets...">
-          <h3>Basic Widgets</h3>
-          <div class="widget-grid" id="widgetGrid">
-            <button class="widget-card" data-widget="heading" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16M20 4v16M4 12h16"/></svg>
-              Heading
-            </button>
-            <button class="widget-card" data-widget="text" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-              Text
-            </button>
-            <button class="widget-card" data-widget="image" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-              Image
-            </button>
-            <button class="widget-card" data-widget="button" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="5"/><path d="M10 12h4"/></svg>
-              Button
-            </button>
-            <button class="widget-card" data-widget="divider" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>
-              Divider
-            </button>
-            <button class="widget-card" data-widget="section" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/></svg>
-              Section
-            </button>
+          <h3>Structure & Media</h3>
+          <div class="widget-grid">
+            <button class="widget-card" data-widget="section" type="button">Section</button>
+            <button class="widget-card" data-widget="container" type="button">Container</button>
+            <button class="widget-card" data-widget="heading" type="button">Heading</button>
+            <button class="widget-card" data-widget="text" type="button">Text</button>
+            <button class="widget-card" data-widget="image" type="button">Image</button>
+            <button class="widget-card" data-widget="button" type="button">Button</button>
           </div>
-          <p class="hint">Click a widget to add it to the selected section. Select a section first in the Navigator or preview.</p>
+          <h3>Shapes</h3>
+          <div class="widget-grid">
+            <button class="widget-card" data-widget="shape-rect" type="button">Rectangle</button>
+            <button class="widget-card" data-widget="shape-circle" type="button">Circle</button>
+            <button class="widget-card" data-widget="shape-polygon" type="button">Polygon</button>
+            <button class="widget-card" data-widget="shape-line" type="button">Line</button>
+          </div>
         </div>
         <div id="blocksInspector" style="display:none"></div>
       </div>
 
       <!-- NAVIGATOR PANEL -->
       <div id="tab-sections" class="sidebar-panel" style="display:none">
-        <h3>Page Structure</h3>
+        <h3>Layer Tree</h3>
         <div id="secList" class="nav-tree"></div>
-        <button class="nav-add-section" id="navAddSection" type="button">+ Add Section</button>
+        <button class="cms-bottom__btn" id="navAddSection" type="button" style="width:100%;margin-top:16px;">+ Add Section</button>
       </div>
 
       <!-- SETTINGS PANEL -->
       <div id="tab-settings" class="sidebar-panel" style="display:none">
-        <h3>Global Design</h3>
-        <div class="settings-group">
-          <h4>🎨 Theme Colors</h4>
-          <div class="settings-actions">
-            <button class="btn-save-theme" id="themeSaveBtn" type="button" disabled>Save Theme</button>
-            <button class="btn-reset-theme" id="themeResetBtn" type="button">Reset</button>
-            <span class="settings-status" id="themeStatus"></span>
-          </div>
-          <div id="appearanceControls"></div>
-        </div>
-        <div class="settings-group">
-          <h4>📄 Page Data</h4>
-          <nav class="page-data-toc" id="toc"></nav>
-          <div id="editor" class="page-data-section"></div>
-        </div>
+        <h3>Theme Colors</h3>
+        <div id="appearanceControls"></div>
       </div>
     </aside>
 
@@ -972,1067 +219,309 @@ input, select, textarea { font-family: inherit; }
   </footer>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<!-- ========== JAVASCRIPT ========== -->
-
-<!-- Responsive preview toggle -->
 <script>
-(function() {
-  const wrap = document.getElementById('previewWrap');
-  const btns = document.querySelectorAll('.cms-header__responsive button');
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      btns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      wrap.className = 'cms-preview__frame-wrap ' + (btn.dataset.view || '');
-    });
+// UI Toggles
+const wrap = document.getElementById('previewWrap');
+const btns = document.querySelectorAll('.cms-header__responsive button');
+btns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    wrap.className = 'cms-preview__frame-wrap ' + (btn.dataset.view || '');
   });
-  // Sidebar toggle
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-  });
-})();
-</script>
+});
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
 
-<!-- Page data SCHEMA + content editor -->
-<script>
-const SCHEMA = [
-  {
-    id: 'site', title: 'Site & Navigation',
-    hint: 'Global identity shown on every page.',
-    fields: [
-      { path: 'site.name', label: 'Site name' },
-      { path: 'site.title', label: 'Browser tab title (home page)' },
-      { path: 'site.description', label: 'Meta description', type: 'textarea' },
-      { path: 'site.nav.logo', label: 'Header logo text' },
-      { path: 'site.nav.links', label: 'Header links', type: 'list', itemLabel: 'Link', item: [
-        { key: 'label', label: 'Label' },
-        { key: 'href', label: 'URL' },
-      ]},
-    ],
-  },
-  {
-    id: 'footer', title: 'Footer',
-    hint: 'Shown at the bottom of every page.',
-    fields: [
-      { path: 'site.footer.title', label: 'Headline' },
-      { path: 'site.footer.copy', label: 'Copy', type: 'textarea' },
-      { path: 'site.footer.links', label: 'Footer links', type: 'list', itemLabel: 'Link', item: [
-        { key: 'label', label: 'Label' },
-        { key: 'href', label: 'URL' },
-      ]},
-      { path: 'site.footer.copyrightYear', label: 'Copyright year' },
-      { path: 'site.footer.copyrightName', label: 'Copyright name' },
-      { path: 'site.footer.linkedinUrl', label: 'LinkedIn URL (leave blank for "coming soon" badge)' },
-    ],
-  },
-  {
-    id: 'hero', title: 'Home — Hero',
-    fields: [
-      { path: 'home.hero.title', label: 'Title' },
-      { path: 'home.hero.subtitle', label: 'Subtitle', type: 'textarea' },
-      { path: 'home.hero.ctaLabel', label: 'Button label' },
-      { path: 'home.hero.ctaHref', label: 'Button link' },
-      { path: 'home.hero.image', label: 'Hero image', type: 'image' },
-      { path: 'home.hero.imageAlt', label: 'Hero image alt text' },
-    ],
-  },
-  {
-    id: 'practice', title: 'Home — Capabilities',
-    hint: 'The four capability tiles under the hero.',
-    fields: [
-      { path: 'home.practice', label: 'Capabilities', type: 'list', itemLabel: 'Capability', item: [
-        { key: 'mark', label: 'Mark (2 letters)' },
-        { key: 'title', label: 'Title' },
-        { key: 'copy', label: 'Copy' },
-      ]},
-    ],
-  },
-  {
-    id: 'projects', title: 'Home — Projects',
-    hint: 'Cards in the "Selected work" grid.',
-    fields: [
-      { path: 'home.projectsTitle', label: 'Section title' },
-      { path: 'home.projects', label: 'Project cards', type: 'list', itemLabel: 'Project', item: [
-        { key: 'slug', label: 'Slug (work page)' },
-        { key: 'discipline', label: 'Discipline' },
-        { key: 'title', label: 'Title' },
-        { key: 'summary', label: 'Summary', type: 'textarea' },
-        { key: 'image', label: 'Cover image', type: 'image' },
-        { key: 'imageAlt', label: 'Image alt text' },
-      ]},
-    ],
-  },
-  {
-    id: 'experience', title: 'Home — Experience',
-    fields: [
-      { path: 'home.experienceTitle', label: 'Section title' },
-      { path: 'home.experienceIntro', label: 'Section intro', type: 'textarea' },
-      { path: 'home.experience', label: 'Experience entries', type: 'list', itemLabel: 'Role', item: [
-        { key: 'role', label: 'Role' },
-        { key: 'organization', label: 'Organization' },
-        { key: 'period', label: 'Period' },
-        { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'skills', label: 'Skills (separate with ·)' },
-      ]},
-    ],
-  },
-  {
-    id: 'cs-wireframes', title: 'Case Study — Product Wireframes',
-    fields: caseStudyFields('product-wireframes'),
-  },
-  {
-    id: 'cs-visual', title: 'Case Study — Visual Systems',
-    fields: caseStudyFields('visual-systems'),
-  },
-  {
-    id: 'decks', title: 'Product Decks Gallery',
-    hint: 'Cards on the /work/product-decks page.',
-    fields: [
-      { path: 'deckGallery.title', label: 'Page title' },
-      { path: 'deckGallery.backLabel', label: 'Back link label' },
-      { path: 'deckGallery.items', label: 'Deck cards', type: 'list', itemLabel: 'Deck', item: [
-        { key: 'title', label: 'Title' },
-        { key: 'image', label: 'Cover image', type: 'image' },
-        { key: 'imageAlt', label: 'Image alt text' },
-        { key: 'pdfUrl', label: 'PDF URL (optional)' },
-      ]},
-    ],
-  },
-];
+// App State
+const ORIGIN = window.WEBSITE_ORIGIN;
+let pagesData = { pages: [] };
+let currentPage = 'home';
+let currentPagePath = '/';
+let blocksData = { pages: {} };
+let blocksDirty = false;
+let selected = { s: null, b: null };
+let editMode = true;
 
-function caseStudyFields(slug) {
-  const p = 'caseStudies.' + slug + '.';
-  return [
-    { path: p + 'discipline', label: 'Discipline' },
-    { path: p + 'title', label: 'Title' },
-    { path: p + 'summary', label: 'Summary', type: 'textarea' },
-    { path: p + 'year', label: 'Meta line (e.g. year)' },
-    { path: p + 'note', label: 'Meta note', type: 'textarea' },
-    { path: p + 'image', label: 'Main image', type: 'image' },
-    { path: p + 'imageAlt', label: 'Image alt text' },
-    { path: p + 'overviewTitle', label: 'Overview heading' },
-    { path: p + 'overview', label: 'Overview text', type: 'textarea' },
-    { path: p + 'deliverablesLabel', label: 'Deliverables heading' },
-    { path: p + 'deliverables', label: 'Deliverables (one per line)', type: 'stringlist' },
-    { path: p + 'pdfTitle', label: 'PDF section heading' },
-    { path: p + 'pdfBody', label: 'PDF section text', type: 'textarea' },
-    { path: p + 'pdfStatus', label: 'PDF status badge' },
-    { path: p + 'pdfUrl', label: 'PDF URL' },
-  ];
+const frame = document.getElementById('themeFrame');
+const inspector = document.getElementById('blocksInspector');
+
+function uid(p) { return p + '_' + Math.random().toString(36).slice(2, 9); }
+function cur() {
+  if (!blocksData.pages[currentPage]) blocksData.pages[currentPage] = { sections: [] };
+  return blocksData.pages[currentPage];
 }
-
-let data = null;
-let dirty = false;
-let stylesData = { overrides: {} };
-let stylesDirty = false;
-
-const $ = (s, el) => (el || document).querySelector(s);
-const statusEl = $('#status');
-const saveBtn = $('#saveBtn');
-
-const get = (path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), data);
-function set(path, value) {
-  const keys = path.split('.');
-  const last = keys.pop();
-  const target = keys.reduce((o, k) => (o[k] = o[k] || {}), data);
-  target[last] = value;
-  markDirty();
-}
-
-function markDirty() {
-  dirty = true;
-  saveBtn.disabled = false;
-  statusEl.textContent = 'Unsaved changes';
-  statusEl.className = 'status-dot dirty';
-}
-
-function toast(msg, isErr) {
-  const t = $('#toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isErr ? ' err' : '');
-  clearTimeout(t._h);
-  t._h = setTimeout(() => (t.className = 'toast'), 2600);
-}
-
-function textInput(value, onInput, isArea) {
-  const el = document.createElement(isArea ? 'textarea' : 'input');
-  if (!isArea) el.type = 'text';
-  el.className = isArea ? 'ctl-textarea' : 'ctl-input';
-  el.value = value == null ? '' : value;
-  el.addEventListener('input', () => onInput(el.value));
-  return el;
-}
-
-function pushStylesPreview() {
-  const f = document.getElementById('themeFrame');
-  try {
-    f.contentWindow.postMessage({ type: 'ploy-styles-preview', overrides: stylesData.overrides }, window.WEBSITE_ORIGIN);
-  } catch (e) {}
-}
-window.pushStylesPreview = pushStylesPreview;
-
-function styleRow(key) {
-  const box = document.createElement('div');
-  box.className = 'stylerow';
-  const cur = () => stylesData.overrides[key] || {};
-  const setO = (patch) => {
-    const next = Object.assign({}, stylesData.overrides[key] || {}, patch);
-    Object.keys(next).forEach((k) => { if (next[k] === '' || next[k] === 0 || next[k] == null) delete next[k]; });
-    if (Object.keys(next).length) stylesData.overrides[key] = next;
-    else delete stylesData.overrides[key];
-    stylesDirty = true;
-    markDirty();
-    pushStylesPreview();
-  };
-  const sel = document.createElement('select');
-  [{ id: '', label: 'Default font' }].concat(window.PloyTheme ? window.PloyTheme.FONT_OPTIONS : []).forEach((f) => {
-    const op = document.createElement('option');
-    op.value = f.id;
-    op.textContent = f.label;
-    if ((cur().font || '') === f.id) op.selected = true;
-    sel.append(op);
-  });
-  const custom = document.createElement('input');
-  custom.type = 'text';
-  custom.placeholder = 'e.g. "Roboto", sans-serif';
-  custom.value = cur().fontCustom || '';
-  custom.style.display = cur().font === 'custom' ? '' : 'none';
-  sel.addEventListener('change', () => {
-    custom.style.display = sel.value === 'custom' ? '' : 'none';
-    setO({ font: sel.value });
-  });
-  custom.addEventListener('input', () => setO({ fontCustom: custom.value }));
-  const size = document.createElement('input');
-  size.type = 'number'; size.min = 8; size.max = 200;
-  size.placeholder = 'Size px'; size.title = 'Font size in px';
-  size.value = cur().size || '';
-  size.addEventListener('input', () => setO({ size: parseFloat(size.value) || 0 }));
-  const colRow = document.createElement('div');
-  colRow.className = 'row'; colRow.style.marginBottom = '0';
-  const sw = document.createElement('input'); sw.type = 'color'; sw.style.flex = 'none';
-  sw.value = /^#[0-9a-fA-F]{6}$/.test(cur().color || '') ? cur().color : '#000000';
-  const hx = document.createElement('input'); hx.type = 'text'; hx.placeholder = 'Color hex'; hx.value = cur().color || '';
-  sw.addEventListener('input', () => { hx.value = sw.value; setO({ color: sw.value }); });
-  hx.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value; setO({ color: hx.value }); });
-  const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'ctl-clear'; clr.textContent = '✕';
-  clr.addEventListener('click', () => {
-    delete stylesData.overrides[key]; stylesDirty = true; markDirty(); pushStylesPreview();
-    sel.value = ''; custom.value = ''; custom.style.display = 'none'; size.value = ''; hx.value = '';
-  });
-  colRow.append(sw, hx, clr);
-  const r1 = document.createElement('div'); r1.className = 'row'; r1.append(sel, size);
-  box.append(r1, custom, colRow);
-  return box;
-}
-
-function fieldWrap(labelText, control, styleKey) {
-  const w = document.createElement('div');
-  w.className = 'ctl-field';
-  const l = document.createElement('label');
-  l.textContent = labelText;
-  w.append(l);
-  if (styleKey) {
-    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'aa-btn'; btn.textContent = 'Aa';
-    if (stylesData.overrides[styleKey]) btn.classList.add('on');
-    l.style.display = 'flex'; l.style.alignItems = 'center';
-    l.append(btn);
-    const row = styleRow(styleKey);
-    row.style.display = stylesData.overrides[styleKey] ? '' : 'none';
-    btn.addEventListener('click', () => {
-      const show = row.style.display === 'none';
-      row.style.display = show ? '' : 'none';
-      btn.classList.toggle('on', show || !!stylesData.overrides[styleKey]);
-    });
-    w.append(row);
+function findSec(id) { return cur().sections.find(s => s.id === id); }
+function findBlkDeep(blocks, id) {
+  if (!blocks) return null;
+  for (let i = 0; i < blocks.length; i++) {
+    if (blocks[i].id === id) return { block: blocks[i], parent: blocks, index: i };
+    if (blocks[i].blocks) {
+      const f = findBlkDeep(blocks[i].blocks, id);
+      if (f) return f;
+    }
   }
-  w.append(control);
-  return w;
+  return null;
+}
+function findBlk(sec, id) {
+  if (!sec) return null;
+  const f = findBlkDeep(sec.blocks, id);
+  return f ? f.block : null;
 }
 
-function imageControl(value, onChange) {
-  const wrap = document.createElement('div');
-  wrap.className = 'img-control';
-  const img = document.createElement('img');
-  img.className = 'img-control__thumb';
-  img.src = value || '';
-  img.onerror = () => { img.style.visibility = 'hidden'; };
-  img.onload = () => { img.style.visibility = 'visible'; };
-  const body = document.createElement('div');
-  body.className = 'img-control__body';
-  const input = textInput(value, (v) => { onChange(v); img.src = v; });
-  const file = document.createElement('input'); file.type = 'file'; file.accept = '.webp,.png,.jpg,.jpeg,.gif,.svg'; file.style.display = 'none';
-  const btn = document.createElement('button'); btn.className = 'img-control__upload'; btn.textContent = '📁 Upload…';
-  btn.addEventListener('click', () => file.click());
-  file.addEventListener('change', async () => {
-    const f = file.files[0]; if (!f) return;
-    btn.textContent = '⏳ Uploading…';
-    try {
-      const dataBase64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
-      const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, dataBase64 }) });
-      const out = await resp.json();
-      if (!resp.ok) throw new Error(out.error || 'Upload failed');
-      input.value = out.path; img.src = out.path; onChange(out.path);
-      toast('Image uploaded: ' + out.path);
-    } catch (e) { toast('Upload failed: ' + e.message, true); }
-    btn.textContent = '📁 Upload…'; file.value = '';
-  });
-  body.append(input, btn, file);
-  wrap.append(img, body);
-  return wrap;
+function markBlocksDirty() {
+  blocksDirty = true; document.getElementById('blocksSaveBtn').disabled = false;
+  document.getElementById('blocksStatus').className = 'cms-bottom__status dirty';
+  document.getElementById('blocksStatus').textContent = 'Unsaved changes';
 }
 
-function renderItemFields(container, arr, idx, itemSchema, rerender, basePath) {
-  itemSchema.forEach((f) => {
-    let control, styleKey = null;
-    if (f.type === 'image') {
-      control = imageControl(arr[idx][f.key], (v) => { arr[idx][f.key] = v; markDirty(); });
+function push() {
+  try {
+    frame.contentWindow.postMessage({
+      type: 'ploy-blocks-preview',
+      sections: cur().sections,
+      editMode, selected
+    }, ORIGIN);
+  } catch(e) {}
+}
+
+window.addEventListener('message', ev => {
+  if (ev.origin !== ORIGIN) return;
+  const d = ev.data || {};
+  if (d.type === 'ploy-blocks-ready') { push(); renderAll(); }
+  else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
+  else if (d.type === 'ploy-blocks-text') {
+    const blk = findBlk(findSec(d.sectionId), d.blockId);
+    if (blk) { blk.text = d.text; markBlocksDirty(); }
+  }
+  else if (d.type === 'ploy-blocks-move') {
+    const blk = findBlk(findSec(d.sectionId), d.blockId);
+    if (blk) { blk.x = d.x; blk.y = d.y; markBlocksDirty(); renderInspector(); }
+  }
+});
+
+// Inspector UI Helpers
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+function field(label, ctrl) { const w = el('div', 'ctl-field'); w.append(el('label', '', label), ctrl); return w; }
+function numInput(val, onCh) {
+  const i = el('input', 'ctl-input'); i.type = 'number'; i.value = val != null ? val : '';
+  i.addEventListener('input', () => onCh(i.value === '' ? null : parseFloat(i.value)));
+  return i;
+}
+function txtInput(val, onCh) {
+  const i = el('input', 'ctl-input'); i.type = 'text'; i.value = val || '';
+  i.addEventListener('input', () => onCh(i.value));
+  return i;
+}
+function selInput(opts, val, onCh) {
+  const s = el('select', 'ctl-select');
+  opts.forEach(o => { const op = el('option', '', o.l); op.value = o.v; if (o.v === val) op.selected = true; s.append(op); });
+  s.addEventListener('change', () => onCh(s.value));
+  return s;
+}
+function colorInput(val, onCh) {
+  const w = el('div', 'ctl-color-row');
+  const sw = el('input'); sw.type = 'color'; sw.value = /^#[0-9a-fA-F]{6}$/.test(val || '') ? val.slice(0,7) : '#000000';
+  const hx = el('input'); hx.type = 'text'; hx.value = val || '';
+  sw.addEventListener('input', () => { hx.value = sw.value; onCh(sw.value); });
+  hx.addEventListener('input', () => { onCh(hx.value); });
+  w.append(sw, hx); return w;
+}
+
+// Widget Handlers
+document.querySelectorAll('.widget-card').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.widget;
+    if (type === 'section') {
+      const s = { id: uid('s'), type: 'section', layoutMode: 'auto', flexDirection: 'column', paddingY: 64, gap: 24, blocks: [] };
+      cur().sections.push(s); selected = { s: s.id, b: null };
     } else {
-      control = textInput(arr[idx][f.key], (v) => { arr[idx][f.key] = v; markDirty(); }, f.type === 'textarea');
-      if (basePath) styleKey = basePath + '.' + idx + '.' + f.key;
+      if (!selected.s) return alert('Select a section or container first!');
+      const sec = findSec(selected.s);
+      let targetList = sec.blocks;
+      if (selected.b) {
+        const f = findBlkDeep(sec.blocks, selected.b);
+        if (f && f.block.type === 'container') targetList = f.block.blocks = f.block.blocks || [];
+      }
+      
+      let b;
+      if (type === 'container') b = { id: uid('b'), type: 'container', layoutMode: 'auto', flexDirection: 'column', padding: 16, gap: 16, blocks: [] };
+      else if (type === 'heading') b = { id: uid('b'), type: 'text', tag: 'h2', text: 'New Heading', size: 32 };
+      else if (type === 'text') b = { id: uid('b'), type: 'text', tag: 'p', text: 'New Text Block', size: 16 };
+      else if (type === 'image') b = { id: uid('b'), type: 'image', src: 'https://via.placeholder.com/400x300', width: 100 };
+      else if (type === 'button') b = { id: uid('b'), type: 'button', text: 'Button', url: '#' };
+      else if (type.startsWith('shape-')) b = { id: uid('b'), type: 'shape', shapeType: type.split('-')[1], width: 100, height: 100, bg: '#93c5fd' };
+      
+      if (b) { targetList.push(b); selected = { s: sec.id, b: b.id }; }
     }
-    container.append(fieldWrap(f.label, control, styleKey));
+    markBlocksDirty(); push(); renderAll();
+  });
+});
+
+// Render Inspector
+function renderInspector() {
+  inspector.innerHTML = '';
+  document.getElementById('defaultWidgets').style.display = selected.s ? 'none' : 'block';
+  if (!selected.s) return inspector.style.display = 'none';
+  
+  inspector.style.display = 'block';
+  const sec = findSec(selected.s);
+  if (!sec) { selected.s = null; return renderInspector(); }
+  const blk = findBlk(sec, selected.b);
+  const tgt = blk || sec;
+  const upd = () => { markBlocksDirty(); push(); };
+
+  // Header
+  const hdr = el('div', 'inspector-header');
+  const bk = el('button', 'inspector-back', '←');
+  bk.onclick = () => { if (blk) selected.b = null; else selected.s = null; renderAll(); push(); };
+  hdr.append(bk, el('h3', '', blk ? blk.type.toUpperCase() : 'SECTION'));
+  inspector.append(hdr);
+
+  // Tabs
+  const tabs = el('div', 'props-tabs');
+  const tbC = el('button', 'active', 'Content');
+  const tbL = el('button', '', 'Layout');
+  const tbS = el('button', '', 'Style');
+  const tbE = el('button', '', 'Effects');
+  tabs.append(tbC, tbL, tbS, tbE);
+  inspector.append(tabs);
+
+  const pC = el('div'); const pL = el('div'); const pS = el('div'); const pE = el('div');
+  pL.style.display = pS.style.display = pE.style.display = 'none';
+  inspector.append(pC, pL, pS, pE);
+
+  const switchTab = (t) => {
+    tbC.className = t === 'c' ? 'active' : ''; pC.style.display = t === 'c' ? 'block' : 'none';
+    tbL.className = t === 'l' ? 'active' : ''; pL.style.display = t === 'l' ? 'block' : 'none';
+    tbS.className = t === 's' ? 'active' : ''; pS.style.display = t === 's' ? 'block' : 'none';
+    tbE.className = t === 'e' ? 'active' : ''; pE.style.display = t === 'e' ? 'block' : 'none';
+  };
+  tbC.onclick = () => switchTab('c'); tbL.onclick = () => switchTab('l');
+  tbS.onclick = () => switchTab('s'); tbE.onclick = () => switchTab('e');
+
+  // --- CONTENT ---
+  if (!blk || blk.type === 'container') pC.append(el('p', '', 'Add widgets to this container via the grid.'));
+  else if (blk.type === 'text') pC.append(field('Text', txtInput(blk.text, v => { blk.text = v; upd(); })));
+  else if (blk.type === 'image') pC.append(field('URL', txtInput(blk.src, v => { blk.src = v; upd(); })));
+  else if (blk.type === 'button') {
+    pC.append(field('Label', txtInput(blk.text, v => { blk.text = v; upd(); })));
+    pC.append(field('Link URL', txtInput(blk.url, v => { blk.url = v; upd(); })));
+  }
+
+  // --- LAYOUT ---
+  if (!blk || blk.type === 'container') {
+    pL.append(field('Layout Mode', selInput([{v:'auto',l:'Auto Layout (Flex)'}, {v:'free',l:'Free (Absolute)'}], tgt.layoutMode || 'auto', v => { tgt.layoutMode = v; upd(); })));
+    if (tgt.layoutMode !== 'free') {
+      pL.append(field('Direction', selInput([{v:'column',l:'Vertical'}, {v:'row',l:'Horizontal'}], tgt.flexDirection || 'column', v => { tgt.flexDirection = v; upd(); })));
+      pL.append(field('Align Items', selInput([{v:'flex-start',l:'Start'}, {v:'center',l:'Center'}, {v:'flex-end',l:'End'}, {v:'stretch',l:'Stretch'}], tgt.alignItems || 'stretch', v => { tgt.alignItems = v; upd(); })));
+      pL.append(field('Justify', selInput([{v:'flex-start',l:'Start'}, {v:'center',l:'Center'}, {v:'flex-end',l:'End'}, {v:'space-between',l:'Space Between'}], tgt.justifyContent || 'flex-start', v => { tgt.justifyContent = v; upd(); })));
+      pL.append(field('Gap (px)', numInput(tgt.gap, v => { tgt.gap = v; upd(); })));
+      
+      const padRow1 = el('div', 'ctl-row');
+      padRow1.append(field('Pad Top', numInput(tgt.paddingT != null ? tgt.paddingT : tgt.paddingY, v => { tgt.paddingT = v; upd(); })));
+      padRow1.append(field('Pad Bottom', numInput(tgt.paddingB != null ? tgt.paddingB : tgt.paddingY, v => { tgt.paddingB = v; upd(); })));
+      const padRow2 = el('div', 'ctl-row');
+      padRow2.append(field('Pad Left', numInput(tgt.paddingL, v => { tgt.paddingL = v; upd(); })));
+      padRow2.append(field('Pad Right', numInput(tgt.paddingR, v => { tgt.paddingR = v; upd(); })));
+      pL.append(padRow1, padRow2);
+    }
+  }
+  
+  if (blk) {
+    pL.append(field('Width', numInput(tgt.width, v => { tgt.width = v; upd(); })));
+    pL.append(field('Height', numInput(tgt.height, v => { tgt.height = v; upd(); })));
+    const parentLayout = (findBlkDeep(sec.blocks, blk.id)?.parent === sec.blocks) ? sec.layoutMode : 'auto'; // simplistic check
+    // If in free mode, show X/Y
+    pL.append(field('X Position', numInput(tgt.x, v => { tgt.x = v; upd(); })));
+    pL.append(field('Y Position', numInput(tgt.y, v => { tgt.y = v; upd(); })));
+  }
+
+  // --- STYLE ---
+  pS.append(field('Background', colorInput(tgt.bg, v => { tgt.bg = v; upd(); })));
+  if (blk && blk.type === 'text') {
+    pS.append(field('Color', colorInput(tgt.color, v => { tgt.color = v; upd(); })));
+    pS.append(field('Font Size', numInput(tgt.size, v => { tgt.size = v; upd(); })));
+    pS.append(field('Align', selInput([{v:'left',l:'Left'}, {v:'center',l:'Center'}, {v:'right',l:'Right'}], tgt.align, v => { tgt.align = v; upd(); })));
+  }
+  if (tgt.type === 'shape' || tgt.type === 'image' || tgt.type === 'container') {
+    pS.append(field('Border Radius', numInput(tgt.radius, v => { tgt.radius = v; upd(); })));
+  }
+  if (tgt.type === 'shape' && tgt.shapeType === 'polygon') {
+    pS.append(field('Clip Path (CSS)', txtInput(tgt.clipPath, v => { tgt.clipPath = v; upd(); })));
+  }
+
+  // --- EFFECTS ---
+  pE.append(field('Animation', selInput([
+    {v:'',l:'None'},{v:'fade',l:'Fade'},{v:'slide-up',l:'Slide Up'},{v:'slide-left',l:'Slide Left'},
+    {v:'zoom-in',l:'Zoom In'},{v:'bounce',l:'Bounce'},{v:'flip',l:'Flip'}
+  ], tgt.animation, v => { tgt.animation = v; upd(); })));
+  pE.append(field('Duration (s)', numInput(tgt.animDuration || 0.6, v => { tgt.animDuration = v; upd(); })));
+  pE.append(field('Hover Effect', selInput([
+    {v:'',l:'None'},{v:'grow',l:'Grow'},{v:'shrink',l:'Shrink'},{v:'float',l:'Float'},{v:'glow',l:'Glow'}
+  ], tgt.hoverEffect, v => { tgt.hoverEffect = v; upd(); })));
+
+  // Actions
+  const acts = el('div', 'inspector-actions');
+  acts.append(el('button', 'danger', '✕ Delete'));
+  acts.lastChild.onclick = () => {
+    if (blk) {
+      const f = findBlkDeep(sec.blocks, blk.id);
+      if (f) f.parent.splice(f.index, 1);
+      selected.b = null;
+    } else {
+      cur().sections = cur().sections.filter(s => s.id !== sec.id);
+      selected.s = null;
+    }
+    upd(); renderAll();
+  };
+  inspector.append(acts);
+}
+
+// Render Navigator Tree
+function renderTree() {
+  const t = document.getElementById('secList'); t.innerHTML = '';
+  cur().sections.forEach((s, i) => {
+    const sBtn = el('button', 'nav-tree-item ' + (selected.s === s.id && !selected.b ? 'active' : ''));
+    sBtn.innerHTML = `<span>Section ${i+1}</span>`;
+    sBtn.onclick = () => { selected = {s: s.id, b: null}; renderAll(); push(); };
+    t.append(sBtn);
+
+    const drawBlocks = (blocks, depth) => {
+      if(!blocks) return;
+      blocks.forEach(b => {
+        const bBtn = el('button', 'nav-tree-item ' + (selected.b === b.id ? 'active' : ''));
+        bBtn.style.paddingLeft = (depth * 12 + 10) + 'px';
+        bBtn.innerHTML = `<span>↳ ${b.type}</span>`;
+        bBtn.onclick = () => { selected = {s: s.id, b: b.id}; renderAll(); push(); };
+        t.append(bBtn);
+        if (b.blocks) drawBlocks(b.blocks, depth + 1);
+      });
+    };
+    drawBlocks(s.blocks, 1);
   });
 }
 
-function listControl(field) {
-  const outer = document.createElement('div');
-  const arr = get(field.path) || [];
-  function rerender() {
-    outer.innerHTML = '';
-    arr.forEach((item, idx) => {
-      const card = document.createElement('div'); card.className = 'list-item';
-      const tools = document.createElement('div'); tools.className = 'itemtools';
-      const mk = (txt, title, fn, cls) => {
-        const b = document.createElement('button'); b.textContent = txt; b.title = title; if (cls) b.className = cls;
-        b.addEventListener('click', () => { fn(); markDirty(); rerender(); }); return b;
-      };
-      tools.append(
-        mk('↑', 'Move up', () => { if (idx > 0) arr.splice(idx - 1, 0, arr.splice(idx, 1)[0]); }),
-        mk('↓', 'Move down', () => { if (idx < arr.length - 1) arr.splice(idx + 1, 0, arr.splice(idx, 1)[0]); }),
-        mk('✕', 'Remove', () => { if (confirm('Remove this ' + (field.itemLabel || 'item') + '?')) arr.splice(idx, 1); }, 'del'),
-      );
-      card.append(tools);
-      renderItemFields(card, arr, idx, field.item, rerender, field.path);
-      outer.append(card);
-    });
-    const add = document.createElement('button'); add.className = 'addbtn'; add.textContent = '+ Add ' + (field.itemLabel || 'item');
-    add.addEventListener('click', () => {
-      const blank = {}; field.item.forEach((f) => (blank[f.key] = ''));
-      arr.push(blank); markDirty(); rerender();
-    });
-    outer.append(add);
-  }
-  rerender();
-  return outer;
-}
+function renderAll() { renderInspector(); renderTree(); }
 
-function buildEditor() {
-  const editor = $('#editor');
-  const toc = $('#toc');
-  editor.innerHTML = ''; toc.innerHTML = '';
-  SCHEMA.forEach((section) => {
-    const panel = document.createElement('div'); panel.className = 'page-data-panel'; panel.id = 'sec-' + section.id;
-    const h = document.createElement('h4'); h.textContent = section.title; panel.append(h);
-    if (section.hint) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = section.hint; panel.append(p); }
-    section.fields.forEach((field) => {
-      if (field.type === 'list') { panel.append(fieldWrap(field.label, listControl(field))); }
-      else if (field.type === 'stringlist') { panel.append(fieldWrap(field.label, textInput((get(field.path) || []).join('\n'), (v) => { set(field.path, v.split('\n').map(s => s.trim()).filter(Boolean)); }, true))); }
-      else if (field.type === 'image') { panel.append(fieldWrap(field.label, imageControl(get(field.path), (v) => set(field.path, v)))); }
-      else { panel.append(fieldWrap(field.label, textInput(get(field.path), (v) => set(field.path, v), field.type === 'textarea'), field.path)); }
-    });
-    editor.append(panel);
-    const link = document.createElement('a'); link.href = '#sec-' + section.id; link.textContent = section.title; toc.append(link);
-  });
-}
-
-async function save() {
-  if (!dirty) return;
-  saveBtn.disabled = true; statusEl.textContent = 'Saving…';
-  try {
-    const resp = await fetch('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
-    if (stylesDirty) {
-      const r2 = await fetch('/api/styles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(stylesData) });
-      if (!r2.ok) throw new Error('Text styles save failed');
-      stylesDirty = false;
-    }
-    dirty = false; statusEl.textContent = 'All saved'; statusEl.className = 'status-dot saved';
-    toast('Saved. Reload any open site tab to see it.');
-  } catch (e) {
-    saveBtn.disabled = false; statusEl.textContent = 'Save failed'; statusEl.className = 'status-dot dirty';
-    toast('Save failed: ' + e.message, true);
-  }
-}
-saveBtn.addEventListener('click', save);
-document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); } });
-window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
+// Init
+document.getElementById('blocksSaveBtn').onclick = async () => {
+  if (!blocksDirty) return;
+  document.getElementById('blocksSaveBtn').disabled = true;
+  await fetch('/api/blocks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blocksData) });
+  blocksDirty = false;
+  document.getElementById('blocksStatus').className = 'cms-bottom__status saved';
+  document.getElementById('blocksStatus').textContent = 'Saved';
+};
 
 (async function init() {
   try {
-    const [resp, stylesResp] = await Promise.all([
-      fetch('/api/content', { cache: 'no-store' }),
-      fetch('/api/styles', { cache: 'no-store' }),
-    ]);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    data = await resp.json();
-    if (stylesResp.ok) stylesData = await stylesResp.json();
-    if (!stylesData.overrides) stylesData.overrides = {};
-    buildEditor();
-    statusEl.textContent = 'All saved'; statusEl.className = 'status-dot saved';
-  } catch (e) {
-    statusEl.textContent = 'Could not load content';
-    toast('Run through server.js, not as a plain file.', true);
-  }
-})();
-</script>
-
-<!-- Theme core (font options etc.) -->
-<script src="/assets/js/theme-core.js"></script>
-
-<!-- Theme / Appearance editor -->
-<script>
-(function () {
-  const DEFAULT_THEME = {
-    colors: { background: '#f4f1ec', surface: '#e9e6e0', ink: '#090706', onDark: '#ffffff', accent: '#89221c', bg: '#f5f1ea', headerBg: '#171412', footerBg: '#171412' },
-    fonts: { headingPreset: 'playfair', headingCustom: '', bodyPreset: 'inter', bodyCustom: '' },
-  };
-  const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-  let theme = null;
-  let themeDirty = false;
-  const themeStatus = document.getElementById('themeStatus');
-  const themeSaveBtn = document.getElementById('themeSaveBtn');
-  const themeResetBtn = document.getElementById('themeResetBtn');
-  const controls = document.getElementById('appearanceControls');
-  const frame = document.getElementById('themeFrame');
-
-  function markThemeDirty() {
-    themeDirty = true; themeSaveBtn.disabled = false;
-    themeStatus.textContent = 'Unsaved changes'; themeStatus.className = 'settings-status dirty';
-  }
-  function applyToPreview() {
-    if (!theme) return;
-    try { frame.contentWindow.postMessage({ type: 'ploy-theme-preview', theme: theme }, window.WEBSITE_ORIGIN); } catch (e) {}
-  }
-  function colorRow(label, key, hint) {
-    const wrap = document.createElement('div'); wrap.className = 'colorfield';
-    const l = document.createElement('label'); l.textContent = label;
-    wrap.append(l);
-    if (hint) { const p = document.createElement('p'); p.className = 'hint'; p.style.cssText = 'margin:0 0 6px;font-size:11px'; p.textContent = hint; wrap.append(p); }
-    const row = document.createElement('div'); row.className = 'colorfield__row';
-    const swatch = document.createElement('input'); swatch.type = 'color';
-    swatch.value = HEX_RE.test(theme.colors[key] || '') ? theme.colors[key].slice(0, 7) : '#000000';
-    const hex = document.createElement('input'); hex.type = 'text'; hex.value = theme.colors[key] || '';
-    function commit(v) { theme.colors[key] = v; if (HEX_RE.test(v)) swatch.value = v; markThemeDirty(); applyToPreview(); }
-    swatch.addEventListener('input', () => { hex.value = swatch.value; commit(swatch.value); });
-    hex.addEventListener('input', () => commit(hex.value));
-    row.append(swatch, hex);
-    wrap.append(row);
-    return wrap;
-  }
-  function fontRow(label, presetKey, customKey) {
-    const wrap = document.createElement('div'); wrap.className = 'fontfield';
-    const l = document.createElement('label'); l.textContent = label;
-    const select = document.createElement('select');
-    window.PloyTheme.FONT_OPTIONS.forEach((o) => {
-      const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.label;
-      if (theme.fonts[presetKey] === o.id) opt.selected = true; select.append(opt);
-    });
-    const custom = document.createElement('input'); custom.type = 'text'; custom.placeholder = 'e.g. "Roboto", sans-serif';
-    custom.value = theme.fonts[customKey] || '';
-    custom.style.display = theme.fonts[presetKey] === 'custom' ? '' : 'none';
-    select.addEventListener('change', () => { theme.fonts[presetKey] = select.value; custom.style.display = select.value === 'custom' ? '' : 'none'; markThemeDirty(); applyToPreview(); });
-    custom.addEventListener('input', () => { theme.fonts[customKey] = custom.value; markThemeDirty(); applyToPreview(); });
-    wrap.append(l, select, custom);
-    return wrap;
-  }
-  function buildAppearanceForm() {
-    controls.innerHTML = '';
-    controls.append(
-      colorRow('Page background', 'background'),
-      colorRow('Card & panel', 'surface'),
-      colorRow('Ink (text)', 'ink'),
-      colorRow('Text on dark', 'onDark'),
-      colorRow('Accent', 'accent'),
-      colorRow('Global BG', 'bg', 'Overall page background.'),
-      colorRow('Header BG', 'headerBg'),
-      colorRow('Footer BG', 'footerBg'),
-      fontRow('Heading font', 'headingPreset', 'headingCustom'),
-      fontRow('Body font', 'bodyPreset', 'bodyCustom'),
-    );
-  }
-  frame.addEventListener('load', applyToPreview);
-  themeResetBtn.addEventListener('click', () => { theme = JSON.parse(JSON.stringify(DEFAULT_THEME)); buildAppearanceForm(); markThemeDirty(); applyToPreview(); });
-  async function saveTheme() {
-    if (!themeDirty) return;
-    const badColor = Object.entries(theme.colors).find(([, v]) => !HEX_RE.test(v || ''));
-    if (badColor) { themeStatus.textContent = 'Fix invalid color'; themeStatus.className = 'settings-status dirty'; return; }
-    themeSaveBtn.disabled = true; themeStatus.textContent = 'Saving…';
-    try {
-      const resp = await fetch('/api/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(theme) });
-      const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
-      themeDirty = false; themeStatus.textContent = 'All saved'; themeStatus.className = 'settings-status saved';
-    } catch (e) { themeSaveBtn.disabled = false; themeStatus.textContent = 'Save failed'; themeStatus.className = 'settings-status dirty'; }
-  }
-  themeSaveBtn.addEventListener('click', saveTheme);
-  window.addEventListener('beforeunload', (e) => { if (themeDirty) e.preventDefault(); });
-  (async function initTheme() {
-    try { const resp = await fetch('/api/theme', { cache: 'no-store' }); theme = resp.ok ? await resp.json() : JSON.parse(JSON.stringify(DEFAULT_THEME)); }
-    catch (e) { theme = JSON.parse(JSON.stringify(DEFAULT_THEME)); }
-    buildAppearanceForm();
-    themeStatus.textContent = 'All saved'; themeStatus.className = 'settings-status saved';
-    applyToPreview();
-  })();
-})();
-</script>
-
-<!-- Sections / Blocks editor -->
-<script>
-(function () {
-  const frame = document.getElementById('themeFrame');
-  const ORIGIN = window.WEBSITE_ORIGIN;
-
-  let pagesData = { pages: [] };
-  let currentPage = 'home';
-  let currentPagePath = '/';
-
-  const TAG_OPTIONS = [
-    { v: 'h1', l: 'Heading 1' }, { v: 'h2', l: 'Heading 2' }, { v: 'h3', l: 'Heading 3' },
-    { v: 'p', l: 'Paragraph' }, { v: 'small', l: 'Small text' },
-  ];
-
-  let blocksData = null;
-  let blocksDirty = false;
-  let selected = { s: null, b: null };
-  let editMode = false;
-  let knownDefaultSections = [];
-
-  const statusEl = document.getElementById('blocksStatus');
-  const saveBtn = document.getElementById('blocksSaveBtn');
-  const listEl = document.getElementById('secList');
-  const inspector = document.getElementById('blocksInspector');
-  const pageBar = document.getElementById('pageBar');
-
-  const uid = (p) => p + '_' + Math.random().toString(36).slice(2, 9);
-  function cur() {
-    if (!blocksData.pages[currentPage]) blocksData.pages[currentPage] = { sections: [], defaultOverrides: {} };
-    if (!blocksData.pages[currentPage].sections) blocksData.pages[currentPage].sections = [];
-    if (!blocksData.pages[currentPage].defaultOverrides) blocksData.pages[currentPage].defaultOverrides = {};
-    return blocksData.pages[currentPage];
-  }
-  const findSec = (id) => cur().sections.find((s) => s.id === id);
-  const findBlk = (sec, id) => (sec ? (sec.blocks || []).find((x) => x.id === id) : null);
-
-  function markBlocksDirty() {
-    blocksDirty = true; saveBtn.disabled = false;
-    statusEl.textContent = 'Unsaved changes'; statusEl.className = 'cms-bottom__status dirty';
-  }
-
-  function push() {
-    if (!blocksData) return;
-    try {
-      frame.contentWindow.postMessage({
-        type: 'ploy-blocks-preview', sections: cur().sections,
-        editMode, selected, defaultOverrides: cur().defaultOverrides || {},
-      }, ORIGIN);
-    } catch (e) {}
-  }
-
-  function newTextBlock(tag) {
-    return { id: uid('b'), type: 'text', tag: tag || 'p', text: 'New text — click to edit.', font: '', fontCustom: '', size: 0, color: '', bold: false, align: 'left', width: 100 };
-  }
-  function newImageBlock() { return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 }; }
-  function newContainerBlock() { return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] }; }
-  function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 }; }
-  function newSection() { return { id: uid('s'), bg: '', paddingY: 64, gap: 24, maxWidth: 1152, minHeight: 0, align: 'start', blocks: [newTextBlock()] }; }
-
-  // ---- TABS ----
-  const tabElementsBtn = document.getElementById('tabElementsBtn');
-  const tabSectionsBtn = document.getElementById('tabSectionsBtn');
-  const tabSettingsBtn = document.getElementById('tabSettingsBtn');
-  const paneElements = document.getElementById('tab-elements');
-  const paneSections = document.getElementById('tab-sections');
-  const paneSettings = document.getElementById('tab-settings');
-
-  function setTab(tabName) {
-    editMode = (tabName !== 'settings');
-    tabElementsBtn.classList.toggle('active', tabName === 'elements');
-    tabSectionsBtn.classList.toggle('active', tabName === 'sections');
-    tabSettingsBtn.classList.toggle('active', tabName === 'settings');
-    paneElements.style.display = tabName === 'elements' ? '' : 'none';
-    paneSections.style.display = tabName === 'sections' ? '' : 'none';
-    paneSettings.style.display = tabName === 'settings' ? '' : 'none';
-    push();
-  }
-  tabElementsBtn.addEventListener('click', () => setTab('elements'));
-  tabSectionsBtn.addEventListener('click', () => setTab('sections'));
-  tabSettingsBtn.addEventListener('click', () => setTab('settings'));
-
-  // ---- PAGE BAR ----
-  function buildPageBar() {
-    pageBar.innerHTML = '';
-    pagesData.pages.forEach((pg) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'page-pill';
-      b.textContent = pg.label; b.dataset.page = pg.path; b.dataset.slug = pg.slug;
-      if (pg.slug === currentPage) b.classList.add('active');
-      b.addEventListener('click', () => {
-        currentPage = pg.slug; currentPagePath = pg.path;
-        pageBar.querySelectorAll('.page-pill').forEach((x) => x.classList.remove('active'));
-        b.classList.add('active');
-        frame.src = ORIGIN + pg.path;
-        selected = { s: null, b: null }; knownDefaultSections = [];
-        renderAll();
-      });
-      pageBar.append(b);
-    });
-    const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.className = 'page-pill page-pill--add';
-    addBtn.textContent = '+ Add page';
-    addBtn.addEventListener('click', showAddPageModal);
-    pageBar.append(addBtn);
-  }
-
-  function showAddPageModal() {
-    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-    const modal = document.createElement('div'); modal.className = 'modal';
-    modal.innerHTML = `
-      <h3>Add New Page</h3>
-      <p>Create a new work page. It will appear in the page bar.</p>
-      <div class="ctl-field"><label>Page title</label><input type="text" class="ctl-input" id="newPageTitle" placeholder="e.g. Brand Guidelines" autofocus></div>
-      <div class="modal-actions"><button class="modal-cancel" type="button">Cancel</button><button class="modal-confirm" type="button">Create page</button></div>
-    `;
-    overlay.append(modal); document.body.append(overlay);
-    const titleInput = modal.querySelector('#newPageTitle');
-    const cancelBtn = modal.querySelector('.modal-cancel');
-    const confirmBtn = modal.querySelector('.modal-confirm');
-    cancelBtn.addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    confirmBtn.addEventListener('click', async () => {
-      const title = titleInput.value.trim(); if (!title) { titleInput.focus(); return; }
-      confirmBtn.disabled = true; confirmBtn.textContent = 'Creating…';
-      try {
-        const resp = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) });
-        const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Failed');
-        pagesData.pages.push({ slug: out.slug, path: out.path, label: out.label, builtin: false });
-        buildPageBar();
-        toast('Page "' + title + '" created!');
-        overlay.remove();
-      } catch (e) { toast('Failed: ' + e.message, true); confirmBtn.disabled = false; confirmBtn.textContent = 'Create page'; }
-    });
-    titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmBtn.click(); if (e.key === 'Escape') overlay.remove(); });
-    setTimeout(() => titleInput.focus(), 50);
-  }
-
-  function loadInitialFrame() { frame.src = ORIGIN + currentPagePath; }
-
-  // ---- MESSAGES FROM PREVIEW ----
-  window.addEventListener('message', (ev) => {
-    if (ev.origin !== ORIGIN) return;
-    const d = ev.data || {};
-    if (d.type === 'ploy-blocks-ready') {
-      if (d.defaultSections) {
-        knownDefaultSections = d.defaultSections;
-        if (!cur().migrated) {
-          cur().migrated = true;
-          const oldSecs = cur().sections.slice(); cur().sections = [];
-          knownDefaultSections.forEach((ds) => { cur().sections.push({ id: ds.id, type: 'default_section', key: ds.key }); });
-          cur().sections.push(...oldSecs); markBlocksDirty();
-        }
-      }
-      push(); if (window.pushStylesPreview) window.pushStylesPreview(); renderAll();
-    } else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
-    else if (d.type === 'ploy-blocks-text') {
-      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
-      blk.text = d.text; markBlocksDirty();
-      const ta = inspector.querySelector('[data-role=blocktext]'); if (ta && document.activeElement !== ta) ta.value = d.text;
-    } else if (d.type === 'ploy-blocks-resize') {
-      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
-      blk.width = d.width; markBlocksDirty();
-      const wi = inspector.querySelector('[data-role=blockwidth]'); if (wi && document.activeElement !== wi) wi.value = Math.round(d.width);
-    } else if (d.type === 'ploy-blocks-section-resize') {
-      const sec = findSec(d.sectionId); if (!sec) return;
-      sec.minHeight = d.minHeight; markBlocksDirty();
-      const mh = inspector.querySelector('[data-role=secminh]'); if (mh && document.activeElement !== mh) mh.value = d.minHeight;
-    } else if (d.type === 'ploy-blocks-op') { handleOp(d); }
-  });
-
-  function handleOp(d) {
-    const secs = cur().sections;
-    const si = secs.findIndex((s) => s.id === d.sectionId); if (si === -1) return;
-    const sec = secs[si];
-    if (d.op === 'moveSection') { const ni = si + d.dir; if (ni < 0 || ni >= secs.length) return; secs.splice(ni, 0, secs.splice(si, 1)[0]); }
-    else if (d.op === 'deleteSection') { if (!confirm('Delete this section?')) return; secs.splice(si, 1); selected = { s: null, b: null }; }
-    else if (d.op === 'addBlock') {
-      let blk;
-      if (d.blockType === 'image') blk = newImageBlock();
-      else if (d.blockType === 'button') blk = newButtonBlock();
-      else if (d.blockType === 'container') blk = newContainerBlock();
-      else blk = newTextBlock();
-      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
-      selected = { s: sec.id, b: blk.id };
-    } else if (d.op === 'moveBlock' || d.op === 'deleteBlock') {
-      const bi = sec.blocks.findIndex((x) => x.id === d.blockId); if (bi === -1) return;
-      if (d.op === 'moveBlock') { const nb = bi + d.dir; if (nb < 0 || nb >= sec.blocks.length) return; sec.blocks.splice(nb, 0, sec.blocks.splice(bi, 1)[0]); }
-      else { sec.blocks.splice(bi, 1); if (selected.b === d.blockId) selected = { s: sec.id, b: null }; }
-    }
-    markBlocksDirty(); renderAll(); push();
-  }
-
-  // ---- WIDGET ADD HANDLERS ----
-  document.querySelectorAll('.widget-card').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.widget;
-      if (type === 'section') {
-        if (!blocksData) return;
-        const s = newSection();
-        cur().sections.push(s);
-        selected = { s: s.id, b: s.blocks[0].id };
-        markBlocksDirty(); renderAll();
-        if (!editMode) setTab('sections');
-        else push();
-        btn.classList.add('pulse');
-        setTimeout(() => btn.classList.remove('pulse'), 600);
-        return;
-      }
-      if (!selected.s) { toast('Select a section first.', true); return; }
-      const sec = findSec(selected.s);
-      if (!sec || sec.type === 'default_section') { toast('Cannot add widgets to this section.', true); return; }
-      let blk;
-      if (type === 'heading') blk = newTextBlock('h2');
-      else if (type === 'text') blk = newTextBlock('p');
-      else if (type === 'image') blk = newImageBlock();
-      else if (type === 'button') blk = newButtonBlock();
-      else if (type === 'divider') blk = { id: uid('b'), type: 'text', tag: 'small', text: '———', font: '', fontCustom: '', size: 0, color: '#999', bold: false, align: 'center', width: 100 };
-      else blk = newTextBlock();
-      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
-      selected = { s: sec.id, b: blk.id };
-      markBlocksDirty(); renderAll(); push();
-      btn.classList.add('pulse');
-      setTimeout(() => btn.classList.remove('pulse'), 600);
-    });
-  });
-
-  // Widget search
-  document.getElementById('widgetSearch').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    document.querySelectorAll('.widget-card').forEach(card => {
-      card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-  });
-
-  // Navigator "Add Section" button
-  document.getElementById('navAddSection').addEventListener('click', () => {
-    if (!blocksData) return;
-    const s = newSection();
-    cur().sections.push(s);
-    selected = { s: s.id, b: s.blocks[0].id };
-    markBlocksDirty(); renderAll();
-    if (!editMode) setTab('sections');
-    else push();
-  });
-
-  // ---- INSPECTOR HELPERS ----
-  function field(label, control, role) {
-    const w = document.createElement('div'); w.className = 'ctl-field';
-    const l = document.createElement('label'); l.textContent = label;
-    if (role) control.dataset.role = role;
-    w.append(l, control); return w;
-  }
-  function numInput(val, onCh, min, max) {
-    const i = document.createElement('input'); i.type = 'number'; i.className = 'ctl-input ctl-number';
-    if (min != null) i.min = min; if (max != null) i.max = max;
-    i.value = val != null ? val : '';
-    i.addEventListener('input', () => onCh(parseFloat(i.value) || 0));
-    return i;
-  }
-  function selInput(options, val, onCh) {
-    const s = document.createElement('select'); s.className = 'ctl-select';
-    options.forEach((o) => {
-      const op = document.createElement('option'); op.value = o.v; op.textContent = o.l;
-      if (o.v === val) op.selected = true; s.append(op);
-    });
-    s.addEventListener('change', () => onCh(s.value));
-    return s;
-  }
-  function colorInput(val, onCh) {
-    const row = document.createElement('div'); row.className = 'ctl-color-row';
-    const sw = document.createElement('input'); sw.type = 'color';
-    sw.value = /^#[0-9a-fA-F]{6}$/.test(val || '') ? val : '#ffffff';
-    const hx = document.createElement('input'); hx.type = 'text'; hx.placeholder = 'empty = default'; hx.value = val || '';
-    sw.addEventListener('input', () => { hx.value = sw.value; onCh(sw.value); });
-    hx.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) sw.value = hx.value; onCh(hx.value); });
-    const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'ctl-clear'; clr.textContent = '✕';
-    clr.addEventListener('click', () => { hx.value = ''; onCh(''); });
-    row.append(sw, hx, clr);
-    return row;
-  }
-  function fontInputs(obj, onChange) {
-    const wrap = document.createElement('div');
-    const sel = selInput(
-      [{ v: '', l: 'Default font' }].concat((window.PloyTheme ? window.PloyTheme.FONT_OPTIONS : []).map((f) => ({ v: f.id, l: f.label }))),
-      obj.font || '', (v) => { obj.font = v; custom.style.display = v === 'custom' ? '' : 'none'; onChange(); },
-    );
-    const custom = document.createElement('input'); custom.type = 'text'; custom.className = 'ctl-input';
-    custom.placeholder = 'e.g. "Roboto", sans-serif'; custom.style.marginTop = '6px';
-    custom.value = obj.fontCustom || ''; custom.style.display = obj.font === 'custom' ? '' : 'none';
-    custom.addEventListener('input', () => { obj.fontCustom = custom.value; onChange(); });
-    wrap.append(sel, custom);
-    return wrap;
-  }
-  function actionBtn(label, fn, isDanger) {
-    const b = document.createElement('button'); b.type = 'button';
-    b.textContent = label;
-    if (isDanger) b.className = 'danger';
-    b.addEventListener('click', fn);
-    return b;
-  }
-
-  // ---- RENDER ----
-  function renderAll() { renderList(); renderInspector(); }
-
-  function renderList() {
-    listEl.innerHTML = '';
-    if (!blocksData) return;
-    cur().sections.forEach((sec, i) => {
-      const group = document.createElement('div'); group.className = 'nav-tree-section';
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-tree-item';
-      if (sec.type === 'default_section') {
-        const dInfo = knownDefaultSections.find(x => x.id === sec.id);
-        b.innerHTML = '<span class="nav-tree-item__icon">📌</span><span class="nav-tree-item__label">' + (dInfo ? dInfo.label : sec.key || 'Default') + '</span><span class="nav-tree-item__badge">built-in</span>';
-        b.classList.add('default');
-      } else {
-        const blkCount = (sec.blocks || []).length;
-        b.innerHTML = '<span class="nav-tree-item__icon">▦</span><span class="nav-tree-item__label">Section ' + (i + 1) + '</span><span class="nav-tree-item__badge">' + blkCount + '</span>';
-      }
-      if (selected.s === sec.id && !selected.b) b.classList.add('active');
-      b.addEventListener('click', () => {
-        selected = { s: sec.id, b: null }; renderAll(); push();
-        if (sec.type === 'default_section') {
-          try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
-        }
-      });
-      group.append(b);
-
-      // Block children
-      if (sec.blocks && sec.blocks.length && sec.type !== 'default_section') {
-        const blocksDiv = document.createElement('div'); blocksDiv.className = 'nav-tree-blocks';
-        sec.blocks.forEach(blk => {
-          const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
-          const icon = blk.type === 'image' ? '🖼' : blk.type === 'button' ? '🔘' : 'T';
-          const label = blk.type === 'text' ? (blk.text || '').substring(0, 25) : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
-          bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + label + '</span>';
-          if (selected.s === sec.id && selected.b === blk.id) bb.classList.add('active');
-          bb.addEventListener('click', () => { selected = { s: sec.id, b: blk.id }; renderAll(); push(); });
-          blocksDiv.append(bb);
-        });
-        group.append(blocksDiv);
-      }
-      listEl.append(group);
-    });
-  }
-
-  function renderInspector() {
-    inspector.innerHTML = '';
-    const defaultWidgets = document.getElementById('defaultWidgets');
-    if (!blocksData || !selected.s) {
-      if (defaultWidgets) defaultWidgets.style.display = 'block';
-      inspector.style.display = 'none'; return;
-    }
-    if (defaultWidgets) defaultWidgets.style.display = 'none';
-    inspector.style.display = 'block';
-    // Auto-switch to elements tab to show inspector
-    if (!editMode) { document.getElementById('tabElementsBtn').click(); }
-
-    const sec = findSec(selected.s);
-    if (!sec) { selected.s = null; renderInspector(); return; }
-    const blk = findBlk(sec, selected.b);
-    const upd = () => { markBlocksDirty(); push(); };
-    const targetData = blk || sec;
-
-    // Inspector header
-    const hdr = document.createElement('div'); hdr.className = 'inspector-header';
-    const backBtn = document.createElement('button'); backBtn.className = 'inspector-back'; backBtn.textContent = '←';
-    backBtn.addEventListener('click', () => {
-      if (blk) { selected = { s: sec.id, b: null }; }
-      else { selected = { s: null, b: null }; }
-      renderAll(); push();
-    });
-    const title = document.createElement('h3');
-    hdr.append(backBtn, title);
-    inspector.append(hdr);
-
-    // Default Section
-    if (sec.type === 'default_section') {
-      const sKey = selected.s.replace('default:', '');
-      const ds = knownDefaultSections.find((d) => d.key === sKey);
-      const ov = cur().defaultOverrides[sKey] || {};
-      title.textContent = '📌 ' + (ds ? ds.label : 'Default Section');
-      inspector.append(field('Background color', colorInput(ov.bg || '', (v) => {
-        if (!cur().defaultOverrides[sKey]) cur().defaultOverrides[sKey] = {};
-        cur().defaultOverrides[sKey].bg = v; if (!v) delete cur().defaultOverrides[sKey].bg; upd();
-      })));
-      inspector.append(field('Vertical padding (px)', numInput(ov.paddingY || '', (v) => {
-        if (!cur().defaultOverrides[sKey]) cur().defaultOverrides[sKey] = {};
-        cur().defaultOverrides[sKey].paddingY = v || 0; if (!v) delete cur().defaultOverrides[sKey].paddingY; upd();
-      }, 0, 400)));
-      const acts = document.createElement('div'); acts.className = 'inspector-actions';
-      acts.append(
-        actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
-        actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
-        actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
-      );
-      inspector.append(acts);
-      return;
-    }
-
-    title.textContent = blk ? (blk.type.charAt(0).toUpperCase() + blk.type.slice(1) + ' Widget') : 'Section';
-
-    // Props tabs
-    const tabsRow = document.createElement('div'); tabsRow.className = 'props-tabs';
-    const btnC = document.createElement('button'); btnC.textContent = 'Content'; btnC.className = 'active';
-    const btnS = document.createElement('button'); btnS.textContent = 'Style';
-    const btnA = document.createElement('button'); btnA.textContent = 'Advanced';
-    tabsRow.append(btnC, btnS, btnA);
-    inspector.append(tabsRow);
-
-    const panelC = document.createElement('div');
-    const panelS = document.createElement('div'); panelS.style.display = 'none';
-    const panelA = document.createElement('div'); panelA.style.display = 'none';
-    inspector.append(panelC, panelS, panelA);
-
-    const switchPropsTab = (t) => {
-      btnC.className = t === 'c' ? 'active' : '';
-      btnS.className = t === 's' ? 'active' : '';
-      btnA.className = t === 'a' ? 'active' : '';
-      panelC.style.display = t === 'c' ? 'block' : 'none';
-      panelS.style.display = t === 's' ? 'block' : 'none';
-      panelA.style.display = t === 'a' ? 'block' : 'none';
-    };
-    btnC.addEventListener('click', () => switchPropsTab('c'));
-    btnS.addEventListener('click', () => switchPropsTab('s'));
-    btnA.addEventListener('click', () => switchPropsTab('a'));
-
-    // Content Tab
-    if (!blk) {
-      panelC.innerHTML = '<p class="hint">Sections hold widgets. Add widgets from Elements tab or use the widget grid.</p>';
-    } else {
-      if (blk.type === 'image') {
-        panelC.append(field('Image URL', imageControl(blk.src, (v) => { blk.src = v; upd(); })));
-        panelC.append(field('Alt text', textInput(blk.alt, (v) => { blk.alt = v; upd(); })));
-        panelC.append(field('Link URL', textInput(blk.url || '', (v) => { blk.url = v; upd(); })));
-      } else if (blk.type === 'button') {
-        panelC.append(field('Button text', textInput(blk.text, (v) => { blk.text = v; upd(); })));
-        panelC.append(field('Link URL', textInput(blk.url, (v) => { blk.url = v; upd(); })));
-      } else {
-        const ta = textInput(blk.text, (v) => { blk.text = v; upd(); }, true);
-        panelC.append(field('Text (use [Text](/url) for links)', ta, 'blocktext'));
-      }
-    }
-
-    // Style Tab
-    if (!blk) {
-      panelS.append(field('Background color', colorInput(sec.bg, (v) => { sec.bg = v; upd(); })));
-      panelS.append(field('Vertical padding (px)', numInput(sec.paddingY, (v) => { sec.paddingY = v; upd(); }, 0, 400)));
-      panelS.append(field('Gap between blocks (px)', numInput(sec.gap, (v) => { sec.gap = v; upd(); }, 0, 120)));
-      panelS.append(field('Content max width (px)', numInput(sec.maxWidth, (v) => { sec.maxWidth = v || 1152; upd(); }, 320, 2400)));
-      panelS.append(field('Min height (px)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000), 'secminh'));
-      panelS.append(field('Block alignment', selInput(
-        [{ v: 'start', l: 'Top' }, { v: 'center', l: 'Center' }, { v: 'end', l: 'Bottom' }, { v: 'stretch', l: 'Stretch' }],
-        sec.align || 'start', (v) => { sec.align = v; upd(); }
-      )));
-    } else {
-      if (blk.type === 'image') {
-        panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
-      } else if (blk.type === 'text') {
-        panelS.append(field('Typography', selInput(TAG_OPTIONS, blk.tag || 'p', (v) => { blk.tag = v; upd(); })));
-        panelS.append(field('Font Family', fontInputs(blk, upd)));
-        panelS.append(field('Size (px, 0 = default)', numInput(blk.size, (v) => { blk.size = v; upd(); }, 0, 200)));
-        panelS.append(field('Color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
-        panelS.append(field('Alignment', selInput(
-          [{ v: 'left', l: 'Left' }, { v: 'center', l: 'Center' }, { v: 'right', l: 'Right' }],
-          blk.align || 'left', (v) => { blk.align = v; upd(); }
-        )));
-        const boldWrap = document.createElement('div'); boldWrap.className = 'ctl-checkbox-row';
-        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!blk.bold;
-        const boldLabel = document.createElement('span'); boldLabel.textContent = 'Enable bold'; boldLabel.style.cssText = 'font-size:12px;color:var(--sb-text)';
-        cb.addEventListener('change', () => { blk.bold = cb.checked; upd(); });
-        boldWrap.append(cb, boldLabel);
-        panelS.append(field('Bold', boldWrap));
-      }
-      panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
-    }
-
-    // Advanced Tab
-    panelA.append(field('Entrance Animation', selInput([
-      { v: '', l: 'None' }, { v: 'fade', l: 'Fade In' },
-      { v: 'slide-up', l: 'Slide Up' }, { v: 'slide-left', l: 'Slide Left' },
-      { v: 'slide-right', l: 'Slide Right' }, { v: 'zoom-in', l: 'Zoom In' },
-      { v: 'bounce', l: 'Bounce' }, { v: 'flip', l: 'Flip' },
-    ], targetData.animation || '', (v) => { targetData.animation = v; upd(); })));
-    panelA.append(field('Duration (s)', numInput(targetData.animDuration || 0.6, (v) => { targetData.animDuration = v; upd(); }, 0.1, 5)));
-    panelA.append(field('Delay (s)', numInput(targetData.animDelay || 0, (v) => { targetData.animDelay = v; upd(); }, 0, 5)));
-
-    // Hover effect
-    panelA.append(field('Hover Effect', selInput([
-      { v: '', l: 'None' }, { v: 'grow', l: 'Grow' }, { v: 'shrink', l: 'Shrink' },
-      { v: 'float', l: 'Float' }, { v: 'glow', l: 'Glow' }, { v: 'pulse', l: 'Pulse' },
-    ], targetData.hoverEffect || '', (v) => { targetData.hoverEffect = v; upd(); })));
-
-    // Actions
-    const acts = document.createElement('div'); acts.className = 'inspector-actions';
-    if (!blk) {
-      acts.append(
-        actionBtn('↑ Move up', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: -1 })),
-        actionBtn('↓ Move down', () => handleOp({ op: 'moveSection', sectionId: sec.id, dir: 1 })),
-        actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
-      );
-    } else {
-      acts.append(
-        actionBtn('◀ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: -1 })),
-        actionBtn('▶ Move', () => handleOp({ op: 'moveBlock', sectionId: sec.id, blockId: blk.id, dir: 1 })),
-        actionBtn('⬆ Parent', () => { selected = { s: sec.id, b: null }; renderAll(); push(); }),
-        actionBtn('✕ Delete', () => handleOp({ op: 'deleteBlock', sectionId: sec.id, blockId: blk.id }), true),
-      );
-    }
-    inspector.append(acts);
-  }
-
-  // ---- SAVE ----
-  saveBtn.addEventListener('click', async () => {
-    if (!blocksDirty || !blocksData) return;
-    saveBtn.disabled = true; statusEl.textContent = 'Saving…';
-    try {
-      const resp = await fetch('/api/blocks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blocksData) });
-      const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
-      blocksDirty = false; statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
-    } catch (e) { saveBtn.disabled = false; statusEl.textContent = 'Save failed'; statusEl.className = 'cms-bottom__status dirty'; }
-  });
-  window.addEventListener('beforeunload', (e) => { if (blocksDirty) e.preventDefault(); });
-
-  // ---- INIT ----
-  (async function initBlocks() {
-    try {
-      const [blocksResp, pagesResp] = await Promise.all([
-        fetch('/api/blocks', { cache: 'no-store' }),
-        fetch('/api/pages', { cache: 'no-store' }),
-      ]);
-      blocksData = blocksResp.ok ? await blocksResp.json() : { pages: {} };
-      if (pagesResp.ok) pagesData = await pagesResp.json();
-    } catch (e) { blocksData = { pages: {} }; }
-    if (!blocksData.pages) blocksData.pages = {};
-    if (!pagesData.pages || !pagesData.pages.length) {
-      pagesData = {
-        pages: [
-          { slug: 'home', path: '/', label: 'Home', builtin: true },
-          { slug: 'product-wireframes', path: '/work/product-wireframes/', label: 'Wireframes', builtin: true },
-          { slug: 'product-decks', path: '/work/product-decks/', label: 'Decks', builtin: true },
-          { slug: 'visual-systems', path: '/work/visual-systems/', label: 'Visual Systems', builtin: true },
-        ]
-      };
-    }
-    statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
-    buildPageBar(); loadInitialFrame(); renderAll();
-  })();
+    const r = await fetch('/api/blocks');
+    if (r.ok) blocksData = await r.json();
+  } catch(e) {}
+  if (!blocksData.pages) blocksData.pages = {};
+  renderAll();
 })();
 </script>
 </body>
