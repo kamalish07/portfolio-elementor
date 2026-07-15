@@ -21,6 +21,7 @@
   // whether hosted at "/" or at a subpath (GitHub Pages project sites).
   const rurl = (p) => (window.PloyTheme ? window.PloyTheme.url(p) : p);
   const base = (window.PloyTheme && window.PloyTheme.base) || '/';
+  const inCMS = window.parent !== window;
 
   let data;
   try {
@@ -35,12 +36,36 @@
     path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), data);
 
   document.querySelectorAll('[data-cms]').forEach((el) => {
-    const v = get(el.dataset.cms);
+    const path = el.dataset.cms;
+    const v = get(path);
     if (v != null) el.textContent = v;
+
+    if (inCMS) {
+      el.setAttribute('contenteditable', 'true');
+      el.style.outline = 'none';
+      el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+      el.addEventListener('blur', function() { 
+        el.style.boxShadow = 'none';
+        window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: el.textContent }, '*');
+      });
+      el.addEventListener('click', function(e) { e.preventDefault(); });
+    }
   });
   document.querySelectorAll('[data-cms-src]').forEach((el) => {
-    const v = get(el.dataset.cmsSrc);
+    const path = el.dataset.cmsSrc;
+    const v = get(path);
     if (v) el.setAttribute('src', rurl(v));
+    
+    if (inCMS) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: 'ploy-image-edit', path: path, current: el.getAttribute('src') }, '*');
+      });
+      el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #3b82f6'; });
+      el.addEventListener('mouseout', function() { el.style.outline = 'none'; });
+    }
   });
   document.querySelectorAll('[data-cms-alt]').forEach((el) => {
     const v = get(el.dataset.cmsAlt);
@@ -67,12 +92,36 @@
     items.forEach((item) => {
       const node = tpl.content.cloneNode(true);
       node.querySelectorAll('[data-f]').forEach((el) => {
+        const path = container.dataset.cmsList + '.' + Array.prototype.indexOf.call(container.children, node) + '.' + el.dataset.f;
         const v = item[el.dataset.f];
         if (v != null) el.textContent = v;
+        
+        if (inCMS) {
+          el.setAttribute('contenteditable', 'true');
+          el.style.outline = 'none';
+          el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+          el.addEventListener('blur', function() { 
+            el.style.boxShadow = 'none';
+            window.parent.postMessage({ type: 'ploy-inline-edit', path: path, value: el.textContent }, '*');
+          });
+          el.addEventListener('click', function(e) { e.preventDefault(); });
+        }
       });
       node.querySelectorAll('[data-f-src]').forEach((el) => {
+        const path = container.dataset.cmsList + '.' + Array.prototype.indexOf.call(container.children, node) + '.' + el.dataset.fSrc;
         const v = item[el.dataset.fSrc];
         if (v) el.setAttribute('src', rurl(v));
+        
+        if (inCMS) {
+          el.style.cursor = 'pointer';
+          el.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.parent.postMessage({ type: 'ploy-image-edit', path: path, current: el.getAttribute('src') }, '*');
+          });
+          el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #3b82f6'; });
+          el.addEventListener('mouseout', function() { el.style.outline = 'none'; });
+        }
       });
       node.querySelectorAll('[data-f-alt]').forEach((el) => {
         const v = item[el.dataset.fAlt];
@@ -128,4 +177,31 @@
   // list re-renders above have produced their final elements.
   window.__ployRendered = true;
   document.dispatchEvent(new CustomEvent('ploy:rendered'));
+  if (inCMS) {
+    window.addEventListener('message', (ev) => {
+      const d = ev.data || {};
+      if (d.type === 'ploy-image-updated') {
+        const rurl = (p) => (window.PloyTheme ? window.PloyTheme.url(p) : p);
+        
+        // Find the element with data-cms-src = path
+        let el = document.querySelector(`[data-cms-src="${d.path}"]`);
+        if (!el) {
+          // Check inside data-cms-list items
+          document.querySelectorAll('[data-cms-list]').forEach(container => {
+            Array.from(container.children).forEach((node, idx) => {
+              if (node.tagName === 'TEMPLATE') return;
+              node.querySelectorAll('[data-f-src]').forEach(fEl => {
+                const path = container.dataset.cmsList + '.' + (idx - 1) + '.' + fEl.dataset.fSrc;
+                if (path === d.path) el = fEl;
+              });
+            });
+          });
+        }
+        if (el) {
+          el.setAttribute('src', rurl(d.value));
+        }
+      }
+    });
+  }
+
 })();

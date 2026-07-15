@@ -1503,7 +1503,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   ];
 
   let blocksData = null;
+  let contentData = null;
   let blocksDirty = false;
+  let contentDirty = false;
   let selected = { s: null, b: null };
   let editMode = false;
   let knownDefaultSections = [];
@@ -1526,6 +1528,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
   function markBlocksDirty() {
     blocksDirty = true; saveBtn.disabled = false;
+    statusEl.textContent = 'Unsaved changes'; statusEl.className = 'cms-bottom__status dirty';
+  }
+  function markContentDirty() {
+    contentDirty = true; saveBtn.disabled = false;
     statusEl.textContent = 'Unsaved changes'; statusEl.className = 'cms-bottom__status dirty';
   }
 
@@ -1640,6 +1646,48 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         }
       }
       push(); if (window.pushStylesPreview) window.pushStylesPreview(); renderAll();
+    } else if (d.type === 'ploy-inline-edit') {
+      if (!contentData) return;
+      const parts = d.path.split('.');
+      let obj = contentData;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!obj[parts[i]]) obj[parts[i]] = {};
+        obj = obj[parts[i]];
+      }
+      obj[parts[parts.length - 1]] = d.value;
+      markContentDirty();
+    } else if (d.type === 'ploy-image-edit') {
+      if (!contentData) return;
+      const parts = d.path.split('.');
+      let obj = contentData;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!obj[parts[i]]) obj[parts[i]] = {};
+        obj = obj[parts[i]];
+      }
+      const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+      const modal = document.createElement('div'); modal.className = 'modal';
+      modal.innerHTML = `<h3>Edit Image</h3><p>Upload a new image or paste a URL.</p>`;
+      
+      let tempVal = d.current;
+      const imgWrap = field('Image', imageControl(tempVal, (v) => { tempVal = v; }));
+      modal.append(imgWrap);
+      
+      const acts = document.createElement('div'); acts.className = 'modal-actions';
+      const cancelBtn = document.createElement('button'); cancelBtn.className = 'modal-cancel'; cancelBtn.textContent = 'Cancel';
+      const confirmBtn = document.createElement('button'); confirmBtn.className = 'modal-confirm'; confirmBtn.textContent = 'Save';
+      acts.append(cancelBtn, confirmBtn);
+      modal.append(acts);
+      
+      overlay.append(modal); document.body.append(overlay);
+      
+      cancelBtn.onclick = () => overlay.remove();
+      confirmBtn.onclick = () => {
+        obj[parts[parts.length - 1]] = tempVal;
+        markContentDirty();
+        overlay.remove();
+        // Send back an update to immediately refresh the image in the iframe
+        try { frame.contentWindow.postMessage({ type: 'ploy-image-updated', path: d.path, value: tempVal }, ORIGIN); } catch (e) {}
+      };
     } else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
     else if (d.type === 'ploy-blocks-text') {
       const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
@@ -1793,28 +1841,62 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   function renderList() {
     listEl.innerHTML = '';
     if (!blocksData) return;
-    cur().sections.forEach((sec, i) => {
+    
+    const activeSecs = cur().sections;
+    const allSecs = [...activeSecs];
+    
+    // Append any known default sections that are NOT in activeSecs
+    knownDefaultSections.forEach(dInfo => {
+      if (!activeSecs.find(s => s.id === dInfo.id)) {
+        allSecs.push({ id: dInfo.id, type: 'default_section', key: dInfo.key, _hidden: true });
+      }
+    });
+
+    allSecs.forEach((sec, i) => {
       const group = document.createElement('div'); group.className = 'nav-tree-section';
+      if (sec._hidden) group.style.opacity = '0.5';
       const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-tree-item';
+      
+      const eyeBtn = document.createElement('button');
+      eyeBtn.type = 'button';
+      eyeBtn.innerHTML = sec._hidden ? '👁️‍🗨️' : '👁️';
+      eyeBtn.style.cssText = 'background:none;border:none;margin-right:8px;cursor:pointer;';
+      eyeBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (sec._hidden) {
+          // Re-add to active sections
+          cur().sections.push({ id: sec.id, type: 'default_section', key: sec.key });
+        } else {
+          // Remove from active sections
+          const idx = cur().sections.findIndex(s => s.id === sec.id);
+          if (idx !== -1) cur().sections.splice(idx, 1);
+        }
+        markBlocksDirty(); renderAll(); push();
+      };
+      
       if (sec.type === 'default_section') {
         const dInfo = knownDefaultSections.find(x => x.id === sec.id);
         b.innerHTML = '<span class="nav-tree-item__icon">📌</span><span class="nav-tree-item__label">' + (dInfo ? dInfo.label : sec.key || 'Default') + '</span><span class="nav-tree-item__badge">built-in</span>';
+        b.prepend(eyeBtn);
         b.classList.add('default');
+        if (!sec._hidden) {
+          if (selected.s === sec.id && !selected.b) b.classList.add('active');
+          b.addEventListener('click', () => {
+            selected = { s: sec.id, b: null }; renderAll(); push();
+            try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
+          });
+        }
       } else {
         const blkCount = (sec.blocks || []).length;
         b.innerHTML = '<span class="nav-tree-item__icon">▦</span><span class="nav-tree-item__label">Section ' + (i + 1) + '</span><span class="nav-tree-item__badge">' + blkCount + '</span>';
+        b.prepend(eyeBtn);
+        if (selected.s === sec.id && !selected.b) b.classList.add('active');
+        b.addEventListener('click', () => { selected = { s: sec.id, b: null }; renderAll(); push(); });
       }
-      if (selected.s === sec.id && !selected.b) b.classList.add('active');
-      b.addEventListener('click', () => {
-        selected = { s: sec.id, b: null }; renderAll(); push();
-        if (sec.type === 'default_section') {
-          try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
-        }
-      });
       group.append(b);
 
       // Block children
-      if (sec.blocks && sec.blocks.length && sec.type !== 'default_section') {
+      if (sec.blocks && sec.blocks.length && !sec._hidden) {
         const blocksDiv = document.createElement('div'); blocksDiv.className = 'nav-tree-blocks';
         sec.blocks.forEach(blk => {
           const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
@@ -1998,27 +2080,40 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   }
 
   // ---- SAVE ----
-  saveBtn.addEventListener('click', async () => {
-    if (!blocksDirty || !blocksData) return;
-    saveBtn.disabled = true; statusEl.textContent = 'Saving…';
+  saveBtn.onclick = async () => {
+    if (!blocksDirty && !contentDirty) return;
+    saveBtn.disabled = true;
     try {
-      const resp = await fetch('/api/blocks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blocksData) });
-      const out = await resp.json(); if (!resp.ok) throw new Error(out.error || 'Save failed');
-      blocksDirty = false; statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
-    } catch (e) { saveBtn.disabled = false; statusEl.textContent = 'Save failed'; statusEl.className = 'cms-bottom__status dirty'; }
-  });
-  window.addEventListener('beforeunload', (e) => { if (blocksDirty) e.preventDefault(); });
+      if (blocksDirty) {
+        await fetch('/api/blocks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blocksData) });
+        blocksDirty = false;
+      }
+      if (contentDirty) {
+        await fetch('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contentData) });
+        contentDirty = false;
+      }
+      statusEl.className = 'cms-bottom__status saved';
+      statusEl.textContent = 'Saved';
+    } catch(e) {
+      statusEl.className = 'cms-bottom__status dirty';
+      statusEl.textContent = 'Save failed';
+      saveBtn.disabled = false;
+    }
+  };
+  window.addEventListener('beforeunload', (e) => { if (blocksDirty || contentDirty) e.preventDefault(); });
 
   // ---- INIT ----
-  (async function initBlocks() {
+  (async function init() {
     try {
-      const [blocksResp, pagesResp] = await Promise.all([
+      const [blocksResp, pagesResp, contentResp] = await Promise.all([
         fetch('/api/blocks', { cache: 'no-store' }),
         fetch('/api/pages', { cache: 'no-store' }),
+        fetch('/api/content', { cache: 'no-store' }),
       ]);
       blocksData = blocksResp.ok ? await blocksResp.json() : { pages: {} };
       if (pagesResp.ok) pagesData = await pagesResp.json();
-    } catch (e) { blocksData = { pages: {} }; }
+      contentData = contentResp.ok ? await contentResp.json() : {};
+    } catch (e) { blocksData = { pages: {} }; contentData = {}; }
     if (!blocksData.pages) blocksData.pages = {};
     if (!pagesData.pages || !pagesData.pages.length) {
       pagesData = {
