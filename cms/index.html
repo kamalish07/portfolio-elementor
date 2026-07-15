@@ -553,10 +553,10 @@ function loadPage(pageId, path) {
   const bar = document.getElementById('pageBar');
   bar.innerHTML = '';
   (pagesData.pages || []).forEach(p => {
-    const btn = el('button', 'page-pill', p.title);
-    btn.dataset.id = p.id;
-    if (p.id === currentPage) btn.classList.add('active');
-    btn.onclick = () => loadPage(p.id, p.path);
+    const btn = el('button', 'page-pill', p.label);
+    btn.dataset.slug = p.slug;
+    if (p.slug === currentPage) btn.classList.add('active');
+    btn.onclick = () => loadPage(p.slug, p.path);
     bar.appendChild(btn);
   });
 

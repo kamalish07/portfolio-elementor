@@ -137,7 +137,7 @@
     return null;
   }
 
-  function applyBaseStyles(el, blk, parentLayoutMode) {
+  function applyBaseStyles(el, blk, parentLayoutMode, parentGap) {
     el.classList.add('ploy-blk');
     if (blk.id === state.selected.b) el.classList.add('ploy-sel');
     
@@ -167,7 +167,12 @@
     } else {
       // Auto layout sizing (flex child)
       var w = blk.width || 100;
-      el.style.flex = '0 1 ' + w + '%';
+      if (w < 100 && parentGap > 0) {
+        var reduce = (parentGap * (100 - w)) / 100;
+        el.style.flex = '0 1 calc(' + w + '% - ' + reduce.toFixed(2) + 'px)';
+      } else {
+        el.style.flex = '0 1 ' + w + '%';
+      }
     }
 
     applyAnimation(el, blk);
@@ -215,7 +220,7 @@
     }
   });
 
-  function buildBlock(blk, parentLayoutMode) {
+  function buildBlock(blk, parentLayoutMode, parentGap) {
     var el;
     
     if (blk.type === 'container') {
@@ -240,7 +245,7 @@
 
       if (blk.blocks) {
         blk.blocks.forEach(function(child) {
-          el.appendChild(buildBlock(child, blk.layoutMode || 'auto'));
+          el.appendChild(buildBlock(child, blk.layoutMode || 'auto', blk.gap || 0));
         });
       }
     } 
@@ -309,7 +314,7 @@
     }
 
     el.dataset.blockId = blk.id;
-    applyBaseStyles(el, blk, parentLayoutMode);
+    applyBaseStyles(el, blk, parentLayoutMode, parentGap);
     return el;
   }
 
@@ -352,7 +357,7 @@
 
       if (sec.blocks) {
         sec.blocks.forEach(function(blk) {
-          sEl.appendChild(buildBlock(blk, sec.layoutMode || 'auto'));
+          sEl.appendChild(buildBlock(blk, sec.layoutMode || 'auto', sec.gap || 0));
         });
       }
 
