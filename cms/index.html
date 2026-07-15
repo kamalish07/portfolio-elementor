@@ -1448,19 +1448,6 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
   function renderInspector() {
     inspector.innerHTML = '';
-    if (!blocksData) return;
-
-    const sec = findSec(selected.s);
-    if (!sec) {
-      const p = document.createElement('p');
-      p.className = 'hint';
-      p.textContent = cur().sections.length
-        ? 'Click a section or block in the preview (or a section above) to edit it.'
-        : 'This page has no sections yet.';
-      inspector.append(p);
-      return;
-  function renderInspector() {
-    inspector.innerHTML = '';
     const defaultWidgets = document.getElementById('defaultWidgets');
     if (!blocksData || !selected.s) {
       if (defaultWidgets) defaultWidgets.style.display = 'block';
