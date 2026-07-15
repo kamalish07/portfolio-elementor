@@ -1,0 +1,18 @@
+{
+  "colors": {
+    "background": "#ffffff",
+    "surface": "#ffffff",
+    "ink": "#000000",
+    "onDark": "#ffffff",
+    "accent": "#c68480",
+    "bg": "#ffffff",
+    "headerBg": "#ffffff",
+    "footerBg": "#000000"
+  },
+  "fonts": {
+    "headingPreset": "playfair",
+    "headingCustom": "",
+    "bodyPreset": "inter",
+    "bodyCustom": ""
+  }
+}
