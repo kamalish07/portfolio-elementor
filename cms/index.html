@@ -1513,6 +1513,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   let selected = { s: null, b: null };
   let editMode = false;
   let knownDefaultSections = [];
+  // When true, force the widget grid to stay visible even though a section
+  // is selected — set by the in-preview "+ Add Widget" button so users can
+  // actually pick a widget type to drop into that section.
+  let showWidgetGrid = false;
 
   const statusEl = document.getElementById('blocksStatus');
   const saveBtn = document.getElementById('blocksSaveBtn');
@@ -1521,14 +1525,68 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   const pageBar = document.getElementById('pageBar');
 
   const uid = (p) => p + '_' + Math.random().toString(36).slice(2, 9);
+
+  // Header and Footer are shared across every page: their widgets and
+  // background/padding overrides live once in blocksData.global and every
+  // page's default_section entry for them just points at that same object,
+  // so editing either from any page updates it everywhere.
+  const GLOBAL_KEYS = ['header', 'footer'];
+  function isGlobalKey(key) { return GLOBAL_KEYS.indexOf(key) !== -1; }
+  function globalEntry(key) {
+    if (!blocksData.global) blocksData.global = {};
+    if (!blocksData.global[key]) blocksData.global[key] = { blocks: [], override: {} };
+    if (!blocksData.global[key].blocks) blocksData.global[key].blocks = [];
+    if (!blocksData.global[key].override) blocksData.global[key].override = {};
+    return blocksData.global[key];
+  }
+
   function cur() {
     if (!blocksData.pages[currentPage]) blocksData.pages[currentPage] = { sections: [], defaultOverrides: {} };
     if (!blocksData.pages[currentPage].sections) blocksData.pages[currentPage].sections = [];
     if (!blocksData.pages[currentPage].defaultOverrides) blocksData.pages[currentPage].defaultOverrides = {};
-    return blocksData.pages[currentPage];
+    const page = blocksData.pages[currentPage];
+    // Re-point header/footer entries at the shared global blocks/override
+    // objects every time this page's data is accessed.
+    page.sections.forEach((s) => {
+      if (s.type === 'default_section' && isGlobalKey(s.key)) {
+        const g = globalEntry(s.key);
+        s.blocks = g.blocks;
+        page.defaultOverrides[s.key] = g.override;
+      }
+    });
+    return page;
   }
   const findSec = (id) => cur().sections.find((s) => s.id === id);
-  const findBlk = (sec, id) => (sec ? (sec.blocks || []).find((x) => x.id === id) : null);
+  // Recursive: finds a block by id anywhere in a section's tree (including
+  // inside nested containers), so nested widgets resolve in the inspector.
+  function findBlk(sec, id) {
+    if (!sec || !id) return null;
+    function walk(arr) {
+      for (const b of (arr || [])) {
+        if (b.id === id) return b;
+        if (b.type === 'container' && b.blocks) { const hit = walk(b.blocks); if (hit) return hit; }
+      }
+      return null;
+    }
+    return walk(sec.blocks);
+  }
+  // Finds the container block that directly holds a given block id (or null
+  // when the block sits at section top level).
+  function findParentContainer(sec, id) {
+    if (!sec) return null;
+    function walk(arr, parent) {
+      for (const b of (arr || [])) {
+        if (b.id === id) return { found: true, parent };
+        if (b.type === 'container' && b.blocks) {
+          const r = walk(b.blocks, b);
+          if (r.found) return r;
+        }
+      }
+      return { found: false, parent: null };
+    }
+    const r = walk(sec.blocks, null);
+    return r.found ? r.parent : null;
+  }
 
   function markBlocksDirty() {
     blocksDirty = true; saveBtn.disabled = false;
@@ -1575,9 +1633,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     paneSettings.style.display = tabName === 'settings' ? '' : 'none';
     push();
   }
-  tabElementsBtn.addEventListener('click', () => setTab('elements'));
-  tabSectionsBtn.addEventListener('click', () => setTab('sections'));
-  tabSettingsBtn.addEventListener('click', () => setTab('settings'));
+  tabElementsBtn.addEventListener('click', () => { showWidgetGrid = false; setTab('elements'); });
+  tabSectionsBtn.addEventListener('click', () => { showWidgetGrid = false; setTab('sections'); });
+  tabSettingsBtn.addEventListener('click', () => { showWidgetGrid = false; setTab('settings'); });
 
   // ---- PAGE BAR ----
   function buildPageBar() {
@@ -1647,6 +1705,15 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           const oldSecs = cur().sections.slice(); cur().sections = [];
           knownDefaultSections.forEach((ds) => { cur().sections.push({ id: ds.id, type: 'default_section', key: ds.key }); });
           cur().sections.push(...oldSecs); markBlocksDirty();
+        } else {
+          // Pick up default sections the page doesn't know about yet (e.g. Header,
+          // newly wrapped in data-default-section) so they don't vanish from
+          // already-migrated pages.
+          const missing = knownDefaultSections.filter((ds) => !cur().sections.find((s) => s.id === ds.id));
+          if (missing.length) {
+            cur().sections.splice(0, 0, ...missing.map((ds) => ({ id: ds.id, type: 'default_section', key: ds.key })));
+            markBlocksDirty();
+          }
         }
       }
       push(); if (window.pushStylesPreview) window.pushStylesPreview(); renderAll();
@@ -1692,7 +1759,12 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         // Send back an update to immediately refresh the image in the iframe
         try { frame.contentWindow.postMessage({ type: 'ploy-image-updated', path: d.path, value: tempVal }, ORIGIN); } catch (e) {}
       };
-    } else if (d.type === 'ploy-blocks-select') { selected = { s: d.sectionId, b: d.blockId }; renderAll(); }
+    } else if (d.type === 'ploy-blocks-select') {
+      selected = { s: d.sectionId, b: d.blockId };
+      if (d.openWidgets) { showWidgetGrid = true; setTab('elements'); }
+      else { showWidgetGrid = false; }
+      renderAll();
+    }
     else if (d.type === 'ploy-blocks-text') {
       const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
       blk.text = d.text; markBlocksDirty();
@@ -1723,11 +1795,28 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       sec.blocks = sec.blocks || []; sec.blocks.push(blk);
       selected = { s: sec.id, b: blk.id };
     } else if (d.op === 'moveBlock' || d.op === 'deleteBlock') {
-      const bi = sec.blocks.findIndex((x) => x.id === d.blockId); if (bi === -1) return;
-      if (d.op === 'moveBlock') { const nb = bi + d.dir; if (nb < 0 || nb >= sec.blocks.length) return; sec.blocks.splice(nb, 0, sec.blocks.splice(bi, 1)[0]); }
-      else { sec.blocks.splice(bi, 1); if (selected.b === d.blockId) selected = { s: sec.id, b: null }; }
+      // Locate the array that directly holds the block (top-level or nested
+      // inside a container), so move/delete works at any depth.
+      const loc = locateBlock(sec, d.blockId);
+      if (!loc) return;
+      const { arr, idx } = loc;
+      if (d.op === 'moveBlock') { const nb = idx + d.dir; if (nb < 0 || nb >= arr.length) return; arr.splice(nb, 0, arr.splice(idx, 1)[0]); }
+      else { arr.splice(idx, 1); if (selected.b === d.blockId) selected = { s: sec.id, b: null }; }
     }
     markBlocksDirty(); renderAll(); push();
+  }
+
+  // Returns { arr, idx } for the array (and index within it) that directly
+  // contains blockId anywhere in the section tree, or null if not found.
+  function locateBlock(sec, blockId) {
+    function walk(arr) {
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].id === blockId) return { arr, idx: i };
+        if (arr[i].type === 'container' && arr[i].blocks) { const hit = walk(arr[i].blocks); if (hit) return hit; }
+      }
+      return null;
+    }
+    return walk(sec.blocks || []);
   }
 
   // ---- WIDGET ADD HANDLERS ----
@@ -1746,12 +1835,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         setTimeout(() => btn.classList.remove('pulse'), 600);
         return;
       }
-      if (!selected.s) { toast('Select a custom section first to add widgets.', true); return; }
+      if (!selected.s) { toast('Select a section first to add widgets.', true); return; }
       const sec = findSec(selected.s);
-      if (!sec || sec.type === 'default_section') { 
-        toast('Theme sections have fixed layouts. Select a Custom Section to drop widgets into.', true); 
-        return; 
-      }
+      if (!sec) { toast('Select a section first to add widgets.', true); return; }
       let blk;
       if (type === 'heading') blk = newTextBlock('h2');
       else if (type === 'text') blk = newTextBlock('p');
@@ -1794,6 +1880,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       }
       
       selected = { s: sec.id, b: blk.id };
+      showWidgetGrid = false;
       markBlocksDirty(); renderAll(); push();
       btn.classList.add('pulse');
       setTimeout(() => btn.classList.remove('pulse'), 600);
@@ -1873,6 +1960,62 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     if (isDanger) b.className = 'danger';
     b.addEventListener('click', fn);
     return b;
+  }
+  // Internal-link picker: a dropdown of the site's pages (from pages.json)
+  // plus a free-text field for custom URLs and in-page anchors. Lets users
+  // interlink pages without typing paths.
+  function linkInput(value, onCh) {
+    const wrap = document.createElement('div');
+    const sel = document.createElement('select'); sel.className = 'ctl-select';
+    const pages = (pagesData && pagesData.pages) ? pagesData.pages : [];
+    const matched = pages.find((p) => p.path === value);
+    const opts = [{ v: '__custom__', l: 'Custom URL / anchor…' }]
+      .concat(pages.map((p) => ({ v: p.path, l: '📄 ' + p.label + '  (' + p.path + ')' })));
+    opts.forEach((o) => {
+      const op = document.createElement('option'); op.value = o.v; op.textContent = o.l;
+      if ((matched && o.v === value) || (!matched && o.v === '__custom__')) op.selected = true;
+      sel.append(op);
+    });
+    const txt = document.createElement('input'); txt.type = 'text'; txt.className = 'ctl-input';
+    txt.placeholder = 'https://… , /work/page/ , or #section';
+    txt.style.marginTop = '6px'; txt.value = value || '';
+    txt.style.display = matched ? 'none' : '';
+    sel.addEventListener('change', () => {
+      if (sel.value === '__custom__') { txt.style.display = ''; txt.focus(); }
+      else { txt.style.display = 'none'; txt.value = sel.value; onCh(sel.value); }
+    });
+    txt.addEventListener('input', () => onCh(txt.value));
+    wrap.append(sel, txt);
+    return wrap;
+  }
+  // Four-up per-side padding editor (Top / Right / Bottom / Left), Figma-style.
+  function sidePadding(obj, onCh) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px';
+    const sides = [['padTop', 'T'], ['padRight', 'R'], ['padBottom', 'B'], ['padLeft', 'L']];
+    sides.forEach(([key, lbl]) => {
+      const cell = document.createElement('div');
+      const cap = document.createElement('div'); cap.textContent = lbl;
+      cap.style.cssText = 'font-size:10px;color:var(--sb-text-muted);text-align:center;margin-bottom:2px';
+      const i = document.createElement('input'); i.type = 'number'; i.className = 'ctl-input ctl-number';
+      i.min = 0; i.max = 400; i.placeholder = '0';
+      i.value = obj[key] != null ? obj[key] : '';
+      i.addEventListener('input', () => {
+        const v = i.value === '' ? null : (parseFloat(i.value) || 0);
+        if (v == null) delete obj[key]; else obj[key] = v;
+        onCh();
+      });
+      cell.append(cap, i); wrap.append(cell);
+    });
+    return wrap;
+  }
+  function checkboxRow(labelText, checked, onCh) {
+    const wrap = document.createElement('div'); wrap.className = 'ctl-checkbox-row';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!checked;
+    const lb = document.createElement('span'); lb.textContent = labelText; lb.style.cssText = 'font-size:12px;color:var(--sb-text)';
+    cb.addEventListener('change', () => onCh(cb.checked));
+    wrap.append(cb, lb);
+    return wrap;
   }
 
   // ---- RENDER ----
@@ -1973,7 +2116,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         if (!sec._hidden) {
           if (selected.s === sec.id && !selected.b) b.classList.add('active');
           b.addEventListener('click', () => {
-            selected = { s: sec.id, b: null }; renderAll(); push();
+            selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push();
             try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
           });
         }
@@ -1982,7 +2125,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         b.innerHTML = '<span class="nav-tree-item__icon">▦</span><span class="nav-tree-item__label">Section ' + (i + 1) + '</span><span class="nav-tree-item__badge">' + blkCount + '</span>';
         b.prepend(eyeBtn);
         if (selected.s === sec.id && !selected.b) b.classList.add('active');
-        b.addEventListener('click', () => { selected = { s: sec.id, b: null }; renderAll(); push(); });
+        b.addEventListener('click', () => { selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); });
       }
       group.append(b);
 
@@ -1994,7 +2137,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           const label = blk.type === 'text' ? (blk.text || '').substring(0, 25).replace(/<[^>]+>/g, '') : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
           bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + (label || blk.type) + '</span>';
           if (selected.s === secId && selected.b === blk.id) bb.classList.add('active');
-          bb.addEventListener('click', (e) => { e.stopPropagation(); selected = { s: secId, b: blk.id }; renderAll(); push(); });
+          bb.addEventListener('click', (e) => { e.stopPropagation(); selected = { s: secId, b: blk.id }; showWidgetGrid = false; renderAll(); push(); });
           
           bb.draggable = true;
           bb.addEventListener('dragstart', (e) => {
@@ -2070,10 +2213,36 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     });
   }
 
+  function buildBreadcrumb(sec, blk) {
+    const bc = document.createElement('div'); bc.className = 'inspector-breadcrumb';
+    bc.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 12px;font-size:11px;border-bottom:1px solid var(--sb-border)';
+    const crumb = (label, onClick, active) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      b.style.cssText = 'background:none;border:none;padding:0;font-size:11px;color:' + (active ? 'var(--sb-text)' : 'var(--sb-accent)') + ';font-weight:' + (active ? '600' : '400') + ';cursor:' + (onClick ? 'pointer' : 'default');
+      if (onClick) b.addEventListener('click', onClick);
+      return b;
+    };
+    const sep = () => { const s = document.createElement('span'); s.textContent = '›'; s.style.opacity = '.45'; return s; };
+    const secLabel = sec.type === 'default_section'
+      ? '📌 ' + ((knownDefaultSections.find((d) => d.id === sec.id) || {}).label || sec.key || 'Section')
+      : '▦ Section';
+    bc.append(crumb(secLabel, () => { selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); }, !blk));
+    if (blk) {
+      const chain = [];
+      let p = findParentContainer(sec, blk.id);
+      while (p) { chain.unshift(p); p = findParentContainer(sec, p.id); }
+      chain.forEach((c) => {
+        bc.append(sep(), crumb('📦 Container', () => { selected = { s: sec.id, b: c.id }; showWidgetGrid = false; renderAll(); push(); }, false));
+      });
+      bc.append(sep(), crumb((blk.type.charAt(0).toUpperCase() + blk.type.slice(1)), null, true));
+    }
+    return bc;
+  }
+
   function renderInspector() {
     inspector.innerHTML = '';
     const defaultWidgets = document.getElementById('defaultWidgets');
-    if (!blocksData || !selected.s) {
+    if (!blocksData || !selected.s || showWidgetGrid) {
       if (defaultWidgets) defaultWidgets.style.display = 'block';
       inspector.style.display = 'none'; return;
     }
@@ -2100,8 +2269,12 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     hdr.append(backBtn, title);
     inspector.append(hdr);
 
-    // Default Section
-    if (sec.type === 'default_section') {
+    // Breadcrumb (Webflow-style): Section › Container › Widget, each clickable
+    // to jump up the hierarchy. Shown whenever a widget is selected.
+    if (blk) inspector.append(buildBreadcrumb(sec, blk));
+
+    // Default Section (only when the section itself, not a widget inside it, is selected)
+    if (sec.type === 'default_section' && !blk) {
       const sKey = selected.s.replace('default:', '');
       const ds = knownDefaultSections.find((d) => d.key === sKey);
       const ov = cur().defaultOverrides[sKey] || {};
@@ -2156,10 +2329,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       if (blk.type === 'image') {
         panelC.append(field('Image URL', imageControl(blk.src, (v) => { blk.src = v; upd(); })));
         panelC.append(field('Alt text', textInput(blk.alt, (v) => { blk.alt = v; upd(); })));
-        panelC.append(field('Link URL', textInput(blk.url || '', (v) => { blk.url = v; upd(); })));
+        panelC.append(field('Link to (page or URL)', linkInput(blk.url || '', (v) => { blk.url = v; upd(); })));
       } else if (blk.type === 'button') {
         panelC.append(field('Button text', textInput(blk.text, (v) => { blk.text = v; upd(); })));
-        panelC.append(field('Link URL', textInput(blk.url, (v) => { blk.url = v; upd(); })));
+        panelC.append(field('Link to (page or URL)', linkInput(blk.url || '', (v) => { blk.url = v; upd(); })));
       } else {
         const ta = textInput(blk.text, (v) => { blk.text = v; upd(); }, true);
         panelC.append(field('Text (use [Text](/url) for links)', ta, 'blocktext'));
@@ -2170,6 +2343,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     if (!blk) {
       panelS.append(field('Background color', colorInput(sec.bg, (v) => { sec.bg = v; upd(); })));
       panelS.append(field('Vertical padding (px)', numInput(sec.paddingY, (v) => { sec.paddingY = v; upd(); }, 0, 400)));
+      panelS.append(field('Padding — per side (px, overrides above)', sidePadding(sec, upd)));
       panelS.append(field('Gap between blocks (px)', numInput(sec.gap, (v) => { sec.gap = v; upd(); }, 0, 120)));
       panelS.append(field('Content max width (px)', numInput(sec.maxWidth, (v) => { sec.maxWidth = v || 1152; upd(); }, 320, 2400)));
       panelS.append(field('Min height (px)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000), 'secminh'));
@@ -2200,13 +2374,31 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelS.append(field('Thickness (px)', numInput(blk.height, (v) => { blk.height = v; upd(); }, 1, 20)));
         panelS.append(field('Line style', selInput([{v:'solid',l:'Solid'},{v:'dashed',l:'Dashed'},{v:'dotted',l:'Dotted'}], blk.lineStyle || 'solid', (v) => { blk.lineStyle = v; upd(); })));
       } else if (blk.type === 'container') {
-        panelS.append(field('Layout Direction', selInput([{v:'column',l:'Column (Vertical)'},{v:'row',l:'Row (Horizontal)'}], blk.flexDirection || 'column', (v) => { blk.flexDirection = v; upd(); })));
-        panelS.append(field('Gap (px)', numInput(blk.gap, (v) => { blk.gap = v; upd(); }, 0, 100)));
-        panelS.append(field('Padding (px)', numInput(blk.padding, (v) => { blk.padding = v; upd(); }, 0, 100)));
-        panelS.append(field('Align Items', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'stretch',l:'Stretch'}], blk.alignItems || 'stretch', (v) => { blk.alignItems = v; upd(); })));
-        panelS.append(field('Justify Content', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'space-between',l:'Space Between'}], blk.justifyContent || 'flex-start', (v) => { blk.justifyContent = v; upd(); })));
+        panelS.append(field('Layout mode', selInput([{v:'auto',l:'Auto-layout (stack)'},{v:'free',l:'Free-form (absolute)'}], blk.layout === 'free' ? 'free' : 'auto', (v) => { blk.layout = v === 'free' ? 'free' : 'auto'; upd(); renderInspector(); })));
+        if (blk.layout !== 'free') {
+          panelS.append(field('Direction', selInput([{v:'column',l:'Column (Vertical)'},{v:'row',l:'Row (Horizontal)'}], blk.flexDirection || 'column', (v) => { blk.flexDirection = v; upd(); })));
+          panelS.append(field('Gap (px)', numInput(blk.gap, (v) => { blk.gap = v; upd(); }, 0, 100)));
+          panelS.append(field('Align Items', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'stretch',l:'Stretch'}], blk.alignItems || 'stretch', (v) => { blk.alignItems = v; upd(); })));
+          panelS.append(field('Justify Content', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'space-between',l:'Space Between'}], blk.justifyContent || 'flex-start', (v) => { blk.justifyContent = v; upd(); })));
+          panelS.append(field('Wrap children', checkboxRow('Wrap onto multiple lines', blk.wrap, (v) => { blk.wrap = v; upd(); })));
+        } else {
+          panelS.append(field('Frame min height (px)', numInput(blk.minHeight, (v) => { blk.minHeight = v; upd(); }, 0, 2000)));
+          const hint = document.createElement('p'); hint.className = 'hint';
+          hint.textContent = 'Free-form: select a child widget to set its X / Y position.';
+          panelS.append(hint);
+        }
+        panelS.append(field('Padding — per side (px)', sidePadding(blk, upd)));
         panelS.append(field('Background', colorInput(blk.bg, (v) => { blk.bg = v; upd(); })));
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
+      }
+      // Free-form child position controls
+      if (blk.type !== 'container') {
+        const parent = findParentContainer(sec, blk.id);
+        if (parent && parent.layout === 'free') {
+          panelS.append(field('X position (px)', numInput(blk.x || 0, (v) => { blk.x = v; upd(); }, 0, 4000)));
+          panelS.append(field('Y position (px)', numInput(blk.y || 0, (v) => { blk.y = v; upd(); }, 0, 4000)));
+          panelS.append(field('Fixed width (px, 0 = auto)', numInput(blk.freeW || 0, (v) => { blk.freeW = v || 0; upd(); }, 0, 2000)));
+        }
       }
       panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
     }

@@ -27,7 +27,6 @@
   var focusBlockId = null;
   var styledEls = [];
   var pendingOverrides = null;
-  var defaultSectionEls = []; // track annotated default section elements
   var extractedDefaultNodes = {};
 
   var animObserver = null;
@@ -52,6 +51,11 @@
     else el.classList.add('is-visible'); // fallback
   }
 
+  function applyHoverEffect(el, data) {
+    if (!data.hoverEffect) return;
+    el.classList.add('ploy-hover-' + data.hoverEffect);
+  }
+
   var TAGS = {
     h1: { size: 48, weight: 600, heading: true },
     h2: { size: 36, weight: 600, heading: true },
@@ -63,10 +67,18 @@
   var styleEl = document.createElement('style');
   styleEl.textContent = [
     '.ploy-sec{position:relative}',
+    /* Widget (block) hover + selection */
     '.custom-sections--edit .ploy-blk{cursor:pointer}',
     '.custom-sections--edit .ploy-blk:hover{outline:1px dashed rgba(37,99,235,.55);outline-offset:2px}',
     '.ploy-blk.ploy-sel{outline:2px solid #2563eb!important;outline-offset:2px}',
     '.ploy-sec.ploy-sel-sec{outline:2px solid #7c3aed;outline-offset:-2px}',
+    /* Floating element-name label (Webflow-style), shown on hover/selection */
+    '.ploy-name-label{position:absolute;top:0;left:0;transform:translateY(-100%);z-index:71;background:#2563eb;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:2px 8px;border-radius:3px 3px 0 0;pointer-events:none;letter-spacing:.2px;white-space:nowrap}',
+    '.ploy-name-label--sec{background:#7c3aed}',
+    '.ploy-blk{position:relative}',
+    '.ploy-blk > .ploy-name-label{opacity:0;transition:opacity .12s}',
+    '.custom-sections--edit .ploy-blk:hover > .ploy-name-label{opacity:1}',
+    '.ploy-blk.ploy-sel > .ploy-name-label{opacity:1}',
     '.ploy-handle{position:absolute;width:14px;height:14px;border-radius:3px;z-index:60;box-shadow:0 0 0 2px #fff;touch-action:none}',
     '.ploy-handle--right{background:#2563eb;right:-8px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
     '.ploy-handle--bottom{background:#7c3aed;left:50%;bottom:-8px;transform:translateX(-50%);cursor:ns-resize}',
@@ -78,11 +90,19 @@
     '.ploy-empty{border:2px dashed #b9b2a6;border-radius:8px;margin:28px auto;max-width:900px;padding:44px 20px;text-align:center;color:#8a8375;font:14px/1.5 system-ui,sans-serif}',
     '.ploy-imgph{border:2px dashed #999;border-radius:6px;min-height:140px;display:flex;align-items:center;justify-content:center;color:#777;font:13px system-ui,sans-serif;background:rgba(0,0,0,.04);padding:12px;text-align:center}',
     '.ploy-blk__text:focus{outline:none}',
-    /* Default section edit-mode styles */
-    '.ploy-defsec--edit{position:relative;cursor:pointer;transition:outline .15s}',
-    '.ploy-defsec--edit:hover{outline:2px dashed rgba(124,58,237,.4);outline-offset:-2px}',
+    /* Default section edit-mode styles. The section is selectable via its
+       chrome (empty areas), but inner text/image fields stay directly
+       clickable for inline editing — so no blocking overlay. */
+    '.ploy-defsec--edit{position:relative;transition:outline .15s}',
+    '.ploy-defsec--edit:hover{outline:2px dashed rgba(124,58,237,.45);outline-offset:-2px}',
+    '.ploy-defsec--edit:hover > .ploy-defsec-label{opacity:1}',
     '.ploy-defsec--selected{outline:2px solid #7c3aed!important;outline-offset:-2px}',
-    '.ploy-defsec-label{position:absolute;top:6px;left:6px;z-index:70;background:rgba(124,58,237,.88);color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:3px 10px;border-radius:3px;pointer-events:none;letter-spacing:.3px}',
+    '.ploy-defsec--selected > .ploy-defsec-label{opacity:1}',
+    '.ploy-defsec-label{position:absolute;top:0;left:0;z-index:72;background:#7c3aed;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:3px 10px;border-radius:0 0 4px 0;pointer-events:none;letter-spacing:.3px;opacity:.55;transition:opacity .12s}',
+    /* Extra-widgets zone dropped into a default section */
+    '.ploy-defsec-extra{position:relative;z-index:2}',
+    /* Inline-editable fields get a subtle affordance on hover in edit mode */
+    '.ploy-defsec--edit [data-cms]:hover,.ploy-defsec--edit [data-f]:hover{outline:1px dashed rgba(37,99,235,.5);outline-offset:2px;cursor:text}',
     /* Link styling */
     '.ploy-blk__text a{color:var(--ploy-accent-primary, #2563eb);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}',
     '.ploy-blk__text a:hover{border-color:currentColor}',
@@ -102,24 +122,37 @@
     return '0 1 calc(' + w + '% - ' + reduce.toFixed(2) + 'px)';
   }
 
+  // Build a CSS padding string from per-side values (padTop/Right/Bottom/Left),
+  // falling back to a single value or a default when sides aren't set.
+  function paddingCss(obj, fallback) {
+    var hasSides = obj.padTop != null || obj.padRight != null || obj.padBottom != null || obj.padLeft != null;
+    if (hasSides) {
+      var t = obj.padTop != null ? obj.padTop : 0;
+      var r = obj.padRight != null ? obj.padRight : 0;
+      var bt = obj.padBottom != null ? obj.padBottom : 0;
+      var l = obj.padLeft != null ? obj.padLeft : 0;
+      return t + 'px ' + r + 'px ' + bt + 'px ' + l + 'px';
+    }
+    return fallback;
+  }
+
   // ---------------- default section detection & editing ----------------
   function getDefaultSections() {
-    return Array.prototype.slice.call(document.querySelectorAll('[data-default-section]')).map(function (el) {
-      return {
-        id: 'default:' + el.dataset.defaultSection,
-        key: el.dataset.defaultSection,
-        label: el.dataset.defaultLabel || el.dataset.defaultSection,
-        el: el
-      };
-    }).concat(Object.keys(extractedDefaultNodes).map(function(k) {
-      var el = extractedDefaultNodes[k];
-      return {
-        id: 'default:' + k,
-        key: k,
-        label: el.dataset.defaultLabel || k,
-        el: el
-      };
-    }));
+    // A default section's element may match both the live DOM query (once
+    // it's been re-inserted after extraction) and the extractedDefaultNodes
+    // cache — de-duplicate by key so each section is only listed once.
+    var byKey = {};
+    var order = [];
+    function add(key, el) {
+      if (byKey[key]) return;
+      byKey[key] = { id: 'default:' + key, key: key, label: el.dataset.defaultLabel || key, el: el };
+      order.push(key);
+    }
+    Array.prototype.slice.call(document.querySelectorAll('[data-default-section]')).forEach(function (el) {
+      add(el.dataset.defaultSection, el);
+    });
+    Object.keys(extractedDefaultNodes).forEach(function (k) { add(k, extractedDefaultNodes[k]); });
+    return order.map(function (k) { return byKey[k]; });
   }
 
   function applyDefaultOverrides(overrides) {
@@ -135,62 +168,20 @@
     });
   }
 
-  function annotateDefaultSections() {
-    // Clear previous annotations
-    cleanupDefaultAnnotations();
-
-    var secs = getDefaultSections();
-    defaultSectionEls = [];
-
-    secs.forEach(function (sec) {
-      if (state.editMode) {
-        sec.el.classList.add('ploy-defsec--edit');
-        defaultSectionEls.push(sec.el);
-
-        // Label overlay
-        var label = document.createElement('div');
-        label.className = 'ploy-defsec-label';
-        label.textContent = '📌 ' + sec.label;
-        label.dataset.ployAnnotation = 'true';
-        sec.el.appendChild(label);
-
-        // Selection state
-        if (state.selected.s === sec.id) {
-          sec.el.classList.add('ploy-defsec--selected');
-        }
-
-        // Click handler
-        sec.el._ployClickHandler = function (ev) {
-          // Don't intercept if clicking a link or inside custom-sections
-          if (ev.target.closest && (ev.target.closest('a') || ev.target.closest('.custom-sections'))) return;
-          ev.stopPropagation();
-          if (state.selected.s === sec.id && !state.selected.b) return;
-          state.selected = { s: sec.id, b: null };
-          annotateDefaultSections();
-          post({ type: 'ploy-blocks-select', sectionId: sec.id, blockId: null });
-        };
-        sec.el.addEventListener('click', sec.el._ployClickHandler);
-      }
-    });
-
-    // Apply visual overrides
-    applyDefaultOverrides(state.defaultOverrides);
-  }
-
-  function cleanupDefaultAnnotations() {
-    // Remove all annotation labels
-    var labels = document.querySelectorAll('[data-ploy-annotation]');
-    for (var i = 0; i < labels.length; i++) labels[i].remove();
-
-    // Remove edit classes and click handlers
-    defaultSectionEls.forEach(function (el) {
-      el.classList.remove('ploy-defsec--edit', 'ploy-defsec--selected');
-      if (el._ployClickHandler) {
-        el.removeEventListener('click', el._ployClickHandler);
-        delete el._ployClickHandler;
-      }
-    });
-    defaultSectionEls = [];
+  // Default-section DOM nodes are persistent (extracted once, re-appended
+  // every render), so any editing chrome we add to them accumulates unless
+  // cleared first. This strips all editor-only additions and inline-edit
+  // artifacts so each render starts from a clean section element.
+  function cleanDefaultChrome(el) {
+    var junk = el.querySelectorAll('.ploy-defsec-label, .ploy-toolbar, .ploy-handle, .ploy-sec-overlay, .ploy-defsec-extra, .ploy-name-label');
+    for (var i = 0; i < junk.length; i++) junk[i].remove();
+    el.classList.remove('ploy-defsec--edit', 'ploy-defsec--selected', 'ploy-sel-sec');
+    if (el._ployClickHandler) {
+      el.removeEventListener('click', el._ployClickHandler);
+      delete el._ployClickHandler;
+    }
+    el.style.outline = '';
+    el.style.outlineColor = '';
   }
 
   // ---------------- rendering ----------------
@@ -207,7 +198,21 @@
 
     container.innerHTML = '';
     container.classList.toggle('custom-sections--edit', state.editMode);
-    
+
+    // Safety net: if a default section exists in the DOM (e.g. Header, once
+    // wrapped in data-default-section) but isn't in this page's saved
+    // sections list yet (stale/pre-existing blocks.json data), still render
+    // it rather than letting it silently disappear.
+    if (state.migrated) {
+      var knownKeys = {};
+      state.sections.forEach(function (sec) { if (sec.type === 'default_section') knownKeys[sec.key] = true; });
+      Object.keys(extractedDefaultNodes).forEach(function (key) {
+        if (knownKeys[key]) return;
+        var orphan = extractedDefaultNodes[key];
+        if (orphan && !orphan.parentNode) container.appendChild(orphan);
+      });
+    }
+
     if (!state.sections.length && state.migrated) {
       if (state.editMode) {
         var ph = document.createElement('div');
@@ -224,14 +229,31 @@
       if (sec.type === 'default_section') {
         var el = extractedDefaultNodes[sec.key];
         if (el) {
+          // Always start from a clean element — default section nodes persist
+          // across renders, so stale chrome/extra-widgets must be stripped.
+          cleanDefaultChrome(el);
+
           if (sec.bg) {
              el.style.setProperty('background-color', sec.bg, 'important');
              el.classList.remove('bg-ploy-background-primary', 'bg-ploy-background-inverse', 'bg-ploy-background-secondary');
           }
           if (sec.paddingY != null) el.style.padding = sec.paddingY + 'px 0';
-          
+
+          // Render any extra widgets the user has added into this default section
+          // (e.g. new text/image/button blocks inserted via "+ Add Widget"),
+          // without touching the section's own hand-built markup/layout.
+          if (sec.blocks && sec.blocks.length) {
+            var extraZone = document.createElement('div');
+            extraZone.className = 'ploy-defsec-extra';
+            var extraGap = sec.gap != null ? sec.gap : 24;
+            extraZone.style.cssText = 'display:flex;flex-wrap:wrap;gap:' + extraGap + 'px;padding:20px;';
+            sec.blocks.forEach(function (b) { extraZone.appendChild(renderBlock(sec, b)); });
+            el.appendChild(extraZone);
+          }
+
           if (state.editMode) attachSectionEditing(el, sec);
           applyAnimation(el, sec);
+          applyHoverEffect(el, sec);
           container.appendChild(el);
         }
         return;
@@ -241,7 +263,7 @@
       secEl.className = 'ploy-sec';
       secEl.dataset.sid = sec.id;
       if (sec.bg) secEl.style.background = sec.bg;
-      secEl.style.padding = (sec.paddingY != null ? sec.paddingY : 64) + 'px 20px';
+      secEl.style.padding = paddingCss(sec, (sec.paddingY != null ? sec.paddingY : 64) + 'px 20px');
       if (sec.minHeight) secEl.style.minHeight = sec.minHeight + 'px';
       var row = document.createElement('div');
       row.className = 'ploy-sec__row';
@@ -255,6 +277,7 @@
       secEl.appendChild(row);
       if (state.editMode) attachSectionEditing(secEl, sec);
       applyAnimation(secEl, sec);
+      applyHoverEffect(secEl, sec);
       container.appendChild(secEl);
     });
     if (focusBlockId) {
@@ -273,8 +296,9 @@
       focusBlockId = null;
     }
 
-    // Re-annotate default sections after rendering
-    annotateDefaultSections();
+    // Apply any saved visual overrides to default sections (bg/padding set
+    // through the inspector's Background/Padding fields).
+    applyDefaultOverrides(state.defaultOverrides);
   }
 
   function renderBlock(sec, b) {
@@ -286,19 +310,40 @@
     wrap.style.minWidth = '60px';
     wrap.style.position = 'relative';
     if (b.type === 'container') {
-      wrap.style.display = 'flex';
-      wrap.style.flexDirection = b.flexDirection || 'column';
-      wrap.style.gap = (b.gap != null ? b.gap : 16) + 'px';
-      wrap.style.alignItems = b.alignItems || 'stretch';
-      wrap.style.justifyContent = b.justifyContent || 'flex-start';
-      if (b.padding) wrap.style.padding = b.padding + 'px';
+      var freeForm = b.layout === 'free';
+      if (freeForm) {
+        // Free-form (absolute) layout: children are positioned by x/y/w.
+        wrap.style.display = 'block';
+        wrap.style.position = 'relative';
+        wrap.style.minHeight = (b.minHeight || 240) + 'px';
+      } else {
+        // Auto-layout (flex stack), Framer/Figma-style.
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = b.flexDirection || 'column';
+        wrap.style.flexWrap = b.wrap ? 'wrap' : 'nowrap';
+        wrap.style.gap = (b.gap != null ? b.gap : 16) + 'px';
+        wrap.style.alignItems = b.alignItems || 'stretch';
+        wrap.style.justifyContent = b.justifyContent || 'flex-start';
+      }
+      var cpad = paddingCss(b, b.padding ? b.padding + 'px' : '');
+      if (cpad) wrap.style.padding = cpad;
       if (b.bg) wrap.style.backgroundColor = b.bg;
       if (b.radius) wrap.style.borderRadius = b.radius + 'px';
-      (b.blocks || []).forEach(function (child) { wrap.appendChild(renderBlock(sec, child)); });
+      (b.blocks || []).forEach(function (child) {
+        var childEl = renderBlock(sec, child);
+        if (freeForm) {
+          childEl.style.position = 'absolute';
+          childEl.style.left = (child.x || 0) + 'px';
+          childEl.style.top = (child.y || 0) + 'px';
+          if (child.freeW) childEl.style.width = child.freeW + 'px';
+          childEl.style.flex = '';
+        }
+        wrap.appendChild(childEl);
+      });
       if (state.editMode && !(b.blocks && b.blocks.length)) {
          var ph = document.createElement('div');
          ph.className = 'ploy-empty';
-         ph.textContent = 'Empty container';
+         ph.textContent = freeForm ? 'Empty free-form frame' : 'Empty container';
          ph.style.padding = '20px';
          ph.style.border = '1px dashed #ccc';
          wrap.appendChild(ph);
@@ -307,7 +352,7 @@
       var btn = document.createElement('a');
       btn.className = 'button-link typography-button inline-flex items-center justify-center rounded-button border px-5 py-3 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 button-link--primary border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:opacity-80';
       btn.textContent = b.text || 'Button';
-      btn.href = b.url || '#';
+      btn.href = b.url ? (window.PloyTheme ? window.PloyTheme.url(b.url) : b.url) : '#';
       if (state.editMode) btn.addEventListener('click', function(e) { e.preventDefault(); });
       wrap.appendChild(btn);
     } else if (b.type === 'image') {
@@ -318,7 +363,18 @@
         img.style.width = '100%';
         img.style.display = 'block';
         if (b.radius) img.style.borderRadius = b.radius + 'px';
-        wrap.appendChild(img);
+        if (b.url) {
+          // Wrap in a link so images can point to another page/URL. In edit
+          // mode the click is suppressed so it doesn't navigate while editing.
+          var alink = document.createElement('a');
+          alink.href = window.PloyTheme ? window.PloyTheme.url(b.url) : b.url;
+          alink.style.display = 'block';
+          if (state.editMode) alink.addEventListener('click', function (e) { e.preventDefault(); });
+          alink.appendChild(img);
+          wrap.appendChild(alink);
+        } else {
+          wrap.appendChild(img);
+        }
       } else if (state.editMode) {
         var ph = document.createElement('div');
         ph.className = 'ploy-imgph';
@@ -360,8 +416,14 @@
       if (b.color) el.style.color = b.color;
       wrap.appendChild(el);
     }
-    if (state.editMode) attachBlockEditing(wrap, sec, b);
+    if (state.editMode) {
+      var typeName = { text: 'Text', image: 'Image', button: 'Button', divider: 'Divider', container: 'Container' }[b.type] || 'Widget';
+      var icon = { text: 'T', image: '🖼', button: '🔘', divider: '➖', container: '📦' }[b.type] || '▪';
+      wrap.appendChild(makeNameLabel(icon + ' ' + typeName, false));
+      attachBlockEditing(wrap, sec, b);
+    }
     applyAnimation(wrap, b);
+    applyHoverEffect(wrap, b);
     return wrap;
   }
 
@@ -399,81 +461,94 @@
     return btn;
   }
 
-  function attachSectionEditing(secEl, sec) {
-    if (sec.type === 'default_section') {
-      // Add overlay to block interactions with links/buttons
-      var existing = secEl.querySelector('.ploy-sec-overlay');
-      if (!existing) {
-        var over = document.createElement('div');
-        over.className = 'ploy-sec-overlay';
-        over.style.position = 'absolute';
-        over.style.inset = '0';
-        over.style.zIndex = '50';
-        over.style.cursor = 'pointer';
-        over.style.display = 'flex';
-        over.style.alignItems = 'flex-start';
-        over.style.justifyContent = 'flex-end';
-        over.style.padding = '8px';
-        
-        var badge = document.createElement('span');
-        badge.textContent = '🔒 Theme Section (Content Editable)';
-        badge.style.cssText = 'background: rgba(147, 51, 234, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-family: system-ui; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.2s;';
-        over.appendChild(badge);
-        
-        over.addEventListener('mouseenter', function() { badge.style.opacity = '1'; });
-        over.addEventListener('mouseleave', function() { badge.style.opacity = '0'; });
-        
-        secEl.style.position = 'relative'; // Ensure overlay is contained
-        secEl.appendChild(over);
-      }
-    }
+  // True when a click landed on something inside a section that should be
+  // handled directly (inline text editing, image swap, an added widget) rather
+  // than selecting the whole section.
+  function isInnerEditTarget(t) {
+    if (!t || !t.closest) return false;
+    return !!t.closest('[data-cms], [data-cms-src], [data-f], [data-f-src], [contenteditable="true"], .ploy-defsec-extra, .ploy-blk, .ploy-toolbar, .ploy-handle, .ploy-defsec-label');
+  }
 
-    secEl.addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      if (state.selected.s === sec.id && !state.selected.b) return;
-      select(sec.id, null);
-    });
-    if (state.selected.s !== sec.id || state.selected.b) return;
-    
-    secEl.classList.add('ploy-sel-sec');
-    if (sec.type === 'default_section') {
-      secEl.style.outlineColor = 'rgba(147, 51, 234, 0.8)';
-    } else {
-      secEl.style.outlineColor = 'var(--ploy-sel, #3b82f6)';
-    }
+  function makeNameLabel(text, isSection) {
+    var label = document.createElement('div');
+    label.className = 'ploy-name-label' + (isSection ? ' ploy-name-label--sec' : '');
+    label.textContent = text;
+    return label;
+  }
 
+  function sectionToolbar(sec, isDefault) {
     var bar = document.createElement('div');
     bar.className = 'ploy-toolbar ploy-toolbar--sec';
-    
-    if (sec.type === 'default_section') {
-      bar.append(
-        toolbarButton('✕', 'Hide section', function () { post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id }); })
-      );
-    } else {
-      bar.append(
-        toolbarButton('+ Add Widget', 'Open Elements Panel', function () { 
-          // Post message to open elements tab
-          post({ type: 'ploy-blocks-select', sectionId: sec.id, blockId: null });
-        }),
-        toolbarButton('✕', 'Delete section', function () { post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id }); })
-      );
-    }
-    secEl.appendChild(bar);
+    bar.append(
+      toolbarButton('+ Add Widget', 'Add a widget into this section', function () {
+        post({ type: 'ploy-blocks-select', sectionId: sec.id, blockId: null, openWidgets: true });
+      }),
+      toolbarButton('✕', isDefault ? 'Hide section' : 'Delete section', function () {
+        post({ type: 'ploy-blocks-op', op: 'deleteSection', sectionId: sec.id });
+      })
+    );
+    return bar;
+  }
 
-    if (sec.type !== 'default_section') {
-      var handle = document.createElement('div');
-      handle.className = 'ploy-handle ploy-handle--bottom';
-      handle.title = 'Drag to set section height';
-      var startH = 0;
-      handle.addEventListener('pointerdown', function () { startH = secEl.getBoundingClientRect().height; });
-      dragHandle(handle, function (dx, dy) {
-        sec.minHeight = Math.max(0, Math.round(startH + dy));
-        secEl.style.minHeight = sec.minHeight + 'px';
-      }, function () {
-        post({ type: 'ploy-blocks-section-resize', sectionId: sec.id, minHeight: sec.minHeight });
-      });
-      secEl.appendChild(handle);
+  function attachSectionEditing(secEl, sec) {
+    var isDefault = sec.type === 'default_section';
+    var selectedHere = state.selected.s === sec.id && !state.selected.b;
+
+    if (isDefault) {
+      secEl.classList.add('ploy-defsec--edit');
+      // Name label (Webflow-style) shown on hover / when selected.
+      var dlabel = document.createElement('div');
+      dlabel.className = 'ploy-defsec-label';
+      dlabel.textContent = '📌 ' + (secEl.dataset.defaultLabel || sec.key || 'Section');
+      secEl.appendChild(dlabel);
+
+      // Click selects the section, but only when the click is on section
+      // "chrome" (empty areas) — inner text/images/widgets/links keep their
+      // own behavior so inline editing keeps working.
+      secEl._ployClickHandler = function (ev) {
+        // Stop links from navigating away while editing.
+        var a = ev.target.closest && ev.target.closest('a');
+        if (a) ev.preventDefault();
+        if (isInnerEditTarget(ev.target)) return; // let inline editing handle it
+        ev.stopPropagation();
+        if (selectedHere) return;
+        select(sec.id, null);
+      };
+      secEl.addEventListener('click', secEl._ployClickHandler);
+
+      if (selectedHere) {
+        secEl.classList.add('ploy-defsec--selected');
+        secEl.appendChild(sectionToolbar(sec, true));
+      }
+      return;
     }
+
+    // Custom section — element is freshly created each render.
+    secEl.appendChild(makeNameLabel('▦ Section', true));
+    secEl.addEventListener('click', function (ev) {
+      if (isInnerEditTarget(ev.target)) return;
+      ev.stopPropagation();
+      if (selectedHere) return;
+      select(sec.id, null);
+    });
+    if (!selectedHere) return;
+
+    secEl.classList.add('ploy-sel-sec');
+    secEl.style.outlineColor = 'var(--ploy-sel, #3b82f6)';
+    secEl.appendChild(sectionToolbar(sec, false));
+
+    var handle = document.createElement('div');
+    handle.className = 'ploy-handle ploy-handle--bottom';
+    handle.title = 'Drag to set section height';
+    var startH = 0;
+    handle.addEventListener('pointerdown', function () { startH = secEl.getBoundingClientRect().height; });
+    dragHandle(handle, function (dx, dy) {
+      sec.minHeight = Math.max(0, Math.round(startH + dy));
+      secEl.style.minHeight = sec.minHeight + 'px';
+    }, function () {
+      post({ type: 'ploy-blocks-section-resize', sectionId: sec.id, minHeight: sec.minHeight });
+    });
+    secEl.appendChild(handle);
   }
 
   function attachBlockEditing(wrap, sec, b) {
@@ -643,6 +718,17 @@
       // Also load default overrides for this page
       if (blocks.pages[PAGE].defaultOverrides) {
         state.defaultOverrides = blocks.pages[PAGE].defaultOverrides;
+      }
+      // Header/Footer are shared site-wide: always resolve their widgets and
+      // overrides from blocks.global so every page reflects the same edits,
+      // regardless of when this particular page was last saved from the CMS.
+      if (blocks.global) {
+        state.sections.forEach(function (s) {
+          if (s.type === 'default_section' && blocks.global[s.key]) {
+            s.blocks = blocks.global[s.key].blocks || [];
+            state.defaultOverrides[s.key] = blocks.global[s.key].override || {};
+          }
+        });
       }
       renderSections();
     }
