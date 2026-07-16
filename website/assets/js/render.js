@@ -87,6 +87,9 @@
     if (get(el.dataset.cmsHide)) el.remove();
   });
 
+  // List rendering is factored out so it can re-run when the CMS previews an
+  // added/removed list item (e.g. a new Experience) without a full reload.
+  function renderLists() {
   document.querySelectorAll('[data-cms-list]').forEach((container) => {
     const items = get(container.dataset.cmsList);
     const tpl = container.querySelector('template');
@@ -162,6 +165,8 @@
       container.appendChild(node);
     });
   });
+  }
+  renderLists();
 
   document.querySelectorAll('[data-cms-linkedin]').forEach((el) => {
     const url = get(el.dataset.cmsLinkedin);
@@ -186,9 +191,19 @@
   // list re-renders above have produced their final elements.
   window.__ployRendered = true;
   document.dispatchEvent(new CustomEvent('ploy:rendered'));
-  if (inCMS) {
+  {
     window.addEventListener('message', (ev) => {
       const d = ev.data || {};
+      if (d.type === 'ploy-content-preview' && d.content) {
+        // The CMS added/removed a list item (or edited content); re-render the
+        // lists so the change shows immediately, then let sections.js re-apply
+        // its style overrides.
+        data = d.content;
+        renderLists();
+        window.__ployRendered = true;
+        document.dispatchEvent(new CustomEvent('ploy:rendered'));
+        return;
+      }
       if (d.type === 'ploy-image-updated') {
         const rurl = (p) => (window.PloyTheme ? window.PloyTheme.url(p) : p);
         

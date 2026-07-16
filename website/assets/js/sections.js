@@ -23,7 +23,7 @@
   var framed = window.parent && window.parent !== window;
   var ORIGINS = window.PLOY_CMS_ORIGINS || [];
 
-  var state = { sections: [], editMode: false, selected: { s: null, b: null }, defaultOverrides: {}, migrated: false };
+  var state = { sections: [], editMode: false, selected: { s: null, b: null }, defaultOverrides: {}, migrated: false, multi: [] };
   var focusBlockId = null;
   var styledEls = [];
   var pendingOverrides = null;
@@ -56,6 +56,17 @@
     el.classList.add('ploy-hover-' + data.hoverEffect);
   }
 
+  // Apply border + corner-radius settings shared by sections and widgets.
+  function applyBorder(el, o) {
+    if (!o) return;
+    if (o.borderWidth) {
+      el.style.border = o.borderWidth + 'px ' + (o.borderStyle || 'solid') + ' ' + (o.borderColor || '#000000');
+    }
+    if (o.borderRadius != null && o.borderRadius !== '' && o.borderRadius !== 0) {
+      el.style.borderRadius = o.borderRadius + 'px';
+    }
+  }
+
   var TAGS = {
     h1: { size: 48, weight: 600, heading: true },
     h2: { size: 36, weight: 600, heading: true },
@@ -71,6 +82,7 @@
     '.custom-sections--edit .ploy-blk{cursor:pointer}',
     '.custom-sections--edit .ploy-blk:hover{outline:1px dashed rgba(37,99,235,.55);outline-offset:2px}',
     '.ploy-blk.ploy-sel{outline:2px solid #2563eb!important;outline-offset:2px}',
+    '.ploy-blk.ploy-multisel{outline:2px solid #f59e0b!important;outline-offset:2px}',
     '.ploy-sec.ploy-sel-sec{outline:2px solid #7c3aed;outline-offset:-2px}',
     /* Floating element-name label (Webflow-style), shown on hover/selection */
     '.ploy-name-label{position:absolute;top:0;left:0;transform:translateY(-100%);z-index:71;background:#2563eb;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:2px 8px;border-radius:3px 3px 0 0;pointer-events:none;letter-spacing:.2px;white-space:nowrap}',
@@ -167,6 +179,7 @@
         sec.el.style.paddingTop = ov.paddingY + 'px';
         sec.el.style.paddingBottom = ov.paddingY + 'px';
       }
+      applyBorder(sec.el, ov);
     });
   }
 
@@ -241,15 +254,29 @@
           }
           if (sec.paddingY != null) el.style.padding = sec.paddingY + 'px 0';
 
-          // Render any extra widgets the user has added into this default section
-          // (e.g. new text/image/button blocks inserted via "+ Add Widget"),
-          // without touching the section's own hand-built markup/layout.
+          // Extra widgets the user added into this default section. They sit on
+          // a free-form overlay so they can be dragged anywhere over the
+          // section's hand-built content (which stays inline-editable
+          // underneath — the overlay itself ignores pointer events).
           if (sec.blocks && sec.blocks.length) {
+            el.style.position = el.style.position || 'relative';
             var extraZone = document.createElement('div');
             extraZone.className = 'ploy-defsec-extra';
-            var extraGap = sec.gap != null ? sec.gap : 24;
-            extraZone.style.cssText = 'display:flex;flex-wrap:wrap;gap:' + extraGap + 'px;padding:20px;';
-            sec.blocks.forEach(function (b) { extraZone.appendChild(renderBlock(sec, b)); });
+            extraZone.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;';
+            sec.blocks.forEach(function (b) {
+              var childEl = renderBlock(sec, b, true);
+              childEl.style.position = 'absolute';
+              childEl.style.left = (b.x || 20) + 'px';
+              childEl.style.top = (b.y || 20) + 'px';
+              childEl.style.width = b.freeW ? b.freeW + 'px' : 'auto';
+              childEl.style.flex = '';
+              childEl.style.pointerEvents = 'auto';
+              if (state.editMode && state.selected.b === b.id) {
+                addFreeMoveHandle(childEl, sec, b, el);
+                addFreeResizeHandle(childEl, sec, b);
+              }
+              extraZone.appendChild(childEl);
+            });
             el.appendChild(extraZone);
           }
 
@@ -313,6 +340,7 @@
       if (state.editMode) attachSectionEditing(secEl, sec);
       applyAnimation(secEl, sec);
       applyHoverEffect(secEl, sec);
+      applyBorder(secEl, sec);
       container.appendChild(secEl);
     });
     if (focusBlockId) {
@@ -433,17 +461,21 @@
       var d = TAGS[b.tag] || TAGS.p;
       var el = document.createElement(TAGS[b.tag] ? b.tag : 'p');
       el.className = 'ploy-blk__text';
-      if (!state.editMode && b.text) {
-        // Parse simple markdown links: [text](url) and **bold** / *italic*
-        var html = b.text
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape
+      // Text widgets store rich HTML from inline editing (bold/links/line
+      // breaks). Render that HTML identically in edit AND live mode so the
+      // two never diverge. Only apply the markdown shortcuts to plain text
+      // that contains no HTML tags yet.
+      var raw = b.text || '';
+      var looksHtml = /<[a-z!/][\s\S]*>/i.test(raw);
+      if (!looksHtml && raw) {
+        el.innerHTML = raw
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
           .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
           .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
           .replace(/\*([^*]+)\*/g, '<i>$1</i>')
           .replace(/__([^_]+)__/g, '<u>$1</u>');
-        el.innerHTML = html;
       } else {
-        el.innerHTML = b.text || ''; // Let them see raw HTML when editing
+        el.innerHTML = raw;
       }
       el.style.margin = '0';
       el.style.whiteSpace = 'pre-wrap';
@@ -461,10 +493,12 @@
       var typeName = { text: 'Text', image: 'Image', button: 'Button', divider: 'Divider', container: 'Container' }[b.type] || 'Widget';
       var icon = { text: 'T', image: '🖼', button: '🔘', divider: '➖', container: '📦' }[b.type] || '▪';
       wrap.appendChild(makeNameLabel(icon + ' ' + typeName, false));
+      if (state.multi && state.multi.indexOf(b.id) !== -1) wrap.classList.add('ploy-multisel');
       attachBlockEditing(wrap, sec, b, freeCtx);
     }
     applyAnimation(wrap, b);
     applyHoverEffect(wrap, b);
+    applyBorder(wrap, b);
     return wrap;
   }
 
@@ -668,9 +702,14 @@
 
     // Single click SELECTS the widget (shows its properties). Clicking an
     // already-selected text widget again enters edit mode — like Figma:
-    // click to select the box, click again to type.
+    // click to select the box, click again to type. Shift/Ctrl/Cmd-click
+    // adds the widget to a multi-selection for grouping/alignment.
     wrap.addEventListener('click', function (ev) {
       ev.stopPropagation();
+      if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
+        post({ type: 'ploy-blocks-multiselect', sectionId: sec.id, blockId: b.id });
+        return;
+      }
       if (state.selected.b === b.id) {
         if (textEl && textEl.contentEditable !== 'true') enterTextEdit(wrap, textEl);
         return;
@@ -681,7 +720,13 @@
     if (textEl) {
       textEl.contentEditable = 'false';
       textEl.addEventListener('input', function () {
-        b.text = textEl.innerHTML;
+        // Normalize contentEditable's block wrappers into clean <br> line
+        // breaks so the stored HTML renders the same on the live site.
+        b.text = textEl.innerHTML
+          .replace(/<div><br\s*\/?><\/div>/gi, '<br>')
+          .replace(/<div>/gi, '<br>')
+          .replace(/<\/div>/gi, '')
+          .replace(/&nbsp;/gi, ' ');
         post({ type: 'ploy-blocks-text', sectionId: sec.id, blockId: b.id, text: b.text });
       });
       textEl.addEventListener('blur', function () {
@@ -821,6 +866,7 @@
       state.editMode = !!d.editMode;
       state.selected = d.selected || { s: null, b: null };
       state.defaultOverrides = d.defaultOverrides || {};
+      state.multi = d.multi || [];
       renderSections();
     } else if (d.type === 'ploy-styles-preview') {
       applyOverrides(d.overrides || {});
@@ -844,6 +890,50 @@
       childEl.style.left = nx + 'px';
       childEl.style.top = ny + 'px';
       post({ type: 'ploy-blocks-free-move', sectionId: d.sectionId, blockId: d.blockId, x: nx, y: ny });
+    } else if (d.type === 'ploy-multi-align') {
+      // Align/distribute several free-form widgets. Measured here where real
+      // sizes are known; new x/y are posted back as a batch to persist.
+      var ids = d.ids || [];
+      var items = [];
+      ids.forEach(function (id) {
+        var el = document.querySelector('[data-bid="' + id + '"]');
+        if (el) items.push({ id: id, el: el, l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+      });
+      if (items.length < 2) return;
+      var minL = Math.min.apply(null, items.map(function (i) { return i.l; }));
+      var maxR = Math.max.apply(null, items.map(function (i) { return i.l + i.w; }));
+      var minT = Math.min.apply(null, items.map(function (i) { return i.t; }));
+      var maxB = Math.max.apply(null, items.map(function (i) { return i.t + i.h; }));
+      var cx = (minL + maxR) / 2, cy = (minT + maxB) / 2;
+      items.forEach(function (i) {
+        if (d.mode === 'left') i.nx = minL;
+        else if (d.mode === 'right') i.nx = maxR - i.w;
+        else if (d.mode === 'hcenter') i.nx = Math.round(cx - i.w / 2);
+        if (d.mode === 'top') i.ny = minT;
+        else if (d.mode === 'bottom') i.ny = maxB - i.h;
+        else if (d.mode === 'vcenter') i.ny = Math.round(cy - i.h / 2);
+      });
+      if (d.mode === 'hdist' || d.mode === 'vdist') {
+        var horiz = d.mode === 'hdist';
+        var sorted = items.slice().sort(function (a, b2) { return horiz ? a.l - b2.l : a.t - b2.t; });
+        var total = horiz ? (maxR - minL) : (maxB - minT);
+        var sizes = sorted.reduce(function (s, i) { return s + (horiz ? i.w : i.h); }, 0);
+        var gap = (total - sizes) / (sorted.length - 1);
+        var cursor = horiz ? minL : minT;
+        sorted.forEach(function (i) {
+          if (horiz) { i.nx = Math.round(cursor); cursor += i.w + gap; }
+          else { i.ny = Math.round(cursor); cursor += i.h + gap; }
+        });
+      }
+      var moves = [];
+      items.forEach(function (i) {
+        var nx = i.nx != null ? Math.max(0, i.nx) : i.l;
+        var ny = i.ny != null ? Math.max(0, i.ny) : i.t;
+        i.el.style.left = nx + 'px';
+        i.el.style.top = ny + 'px';
+        moves.push({ id: i.id, x: nx, y: ny });
+      });
+      post({ type: 'ploy-blocks-free-move-batch', sectionId: d.sectionId, moves: moves });
     }
   });
 
@@ -877,8 +967,15 @@
     }
     if (styles && styles.overrides && Object.keys(styles.overrides).length) applyOverrides(styles.overrides);
 
-    // Collect default section info to send to CMS
-    var defSecs = getDefaultSections().map(function (s) { return { id: s.id, key: s.key, label: s.label }; });
+    // Collect default section info to send to CMS, including any repeatable
+    // list bindings inside each section (e.g. Experience) so the CMS can offer
+    // add/remove-item controls.
+    var defSecs = getDefaultSections().map(function (s) {
+      var lists = Array.prototype.slice.call(s.el.querySelectorAll('[data-cms-list],[data-cms-textlist]')).map(function (c) {
+        return { path: c.dataset.cmsList || c.dataset.cmsTextlist, kind: c.dataset.cmsList ? 'list' : 'textlist' };
+      });
+      return { id: s.id, key: s.key, label: s.label, lists: lists };
+    });
     post({ type: 'ploy-blocks-ready', page: PAGE, defaultSections: defSecs });
   });
 })();
