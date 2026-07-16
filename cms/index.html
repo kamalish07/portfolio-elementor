@@ -993,6 +993,27 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .sidebar-panel, #blocksInspector, #secList, .page-data-panel, .rpane { scrollbar-color: #c9cdd8 transparent; }
 .sidebar-panel::-webkit-scrollbar-thumb, #blocksInspector::-webkit-scrollbar-thumb, #secList::-webkit-scrollbar-thumb, .rpane::-webkit-scrollbar-thumb { background: #c9cdd8; border: 2px solid #fff; }
 .rpane::-webkit-scrollbar { width: 9px; }
+
+/* ---- Layout fixes: tabs were clipped by stale -16px margins ---- */
+#blocksInspector { overflow-x: hidden; }
+.props-tabs { margin: 0 -14px 14px; }
+.props-tabs button { font-size: 12px; letter-spacing: .3px; padding: 10px 4px; white-space: nowrap; }
+
+/* ---- Readability: bump the small text sizes across the editor ---- */
+body { font-size: 13.5px; }
+.ctl-field > label { font-size: 12px; letter-spacing: .3px; }
+.ctl-input, .ctl-textarea, .ctl-select { font-size: 13px; padding: 9px 11px; }
+.hint, .rpane-empty { font-size: 12px; }
+.nav-tree-item, .nav-tree-item__label { font-size: 13px; }
+.nav-tree-item__badge { font-size: 10.5px; }
+.widget-card { font-size: 12.5px; }
+.inspector-header h3 { font-size: 14px; }
+.settings-group h4 { font-size: 13.5px; }
+.page-data-panel h4 { font-size: 13px; }
+.colorfield label { font-size: 12px; }
+.cms-bottom { font-size: 12.5px; }
+.panel-left__editing { font-size: 12.5px; }
+.panel-left__content-hd { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -1086,8 +1107,13 @@ body { background: var(--preview-bg); color: var(--sb-text); }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="4 4"/></svg>
               Container
             </button>
+            <button class="widget-card" data-widget="shape" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 7-3.5 11h-11L3 9z"/></svg>
+              Shape
+            </button>
           </div>
           <p class="hint">Adds into the selected section — select one in the layers or canvas first.</p>
+          <div id="presetList"></div>
         </div>
       </div>
 
@@ -1537,7 +1563,27 @@ function buildEditor() {
     editor.append(panel);
     const link = document.createElement('a'); link.href = '#sec-' + section.id; link.textContent = section.title; toc.append(link);
   });
+  if (window.__pageDataSlug) window.filterPageData(window.__pageDataSlug);
 }
+
+// Show only the data sections relevant to the page being edited ("Page" tab
+// shows just the current page). site/footer are global so always shown.
+const PAGE_DATA_SCOPE = {
+  site: '*', footer: '*',
+  hero: 'home', practice: 'home', projects: 'home', experience: 'home',
+  'cs-wireframes': 'product-wireframes', 'cs-visual': 'visual-systems', decks: 'product-decks',
+};
+window.filterPageData = function (slug) {
+  window.__pageDataSlug = slug;
+  SCHEMA.forEach((section) => {
+    const scope = PAGE_DATA_SCOPE[section.id] || '*';
+    const show = scope === '*' || scope === slug;
+    const panel = document.getElementById('sec-' + section.id);
+    const link = document.querySelector('#toc a[href="#sec-' + section.id + '"]');
+    if (panel) panel.style.display = show ? '' : 'none';
+    if (link) link.style.display = show ? '' : 'none';
+  });
+};
 
 async function save() {
   if (!dirty) return;
@@ -1901,6 +1947,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   function newImageBlock() { return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 }; }
   function newContainerBlock() { return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] }; }
   function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 }; }
+  function newShapeBlock() { return { id: uid('b'), type: 'shape', shape: 'rectangle', fill: '#6366f1', height: 120, thickness: 3, width: 30, freeW: 200 }; }
   function newSection() {
     // New sections are free-form canvases by default: drop widgets in and
     // drag them anywhere, then select + group to apply auto-layout.
@@ -1913,6 +1960,63 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const n = targetBlocks ? targetBlocks.length : 0;
     blk.x = 40 + (n % 6) * 28;
     blk.y = 40 + (n % 8) * 44;
+  }
+
+  // ---- SECTION PRESETS (save a section, reuse it on any page) ----
+  let presetsData = { presets: [] };
+  function regenIds(node) {
+    const copy = JSON.parse(JSON.stringify(node));
+    (function walk(n) {
+      if (n.id) n.id = uid(String(n.id).split('_')[0] || 'b');
+      (n.blocks || []).forEach(walk);
+    })(copy);
+    return copy;
+  }
+  async function savePresetsToServer() {
+    try {
+      await fetch('/api/presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(presetsData) });
+    } catch (e) { toast('Saving presets failed', true); }
+  }
+  function saveSectionAsPreset(sec) {
+    const name = prompt('Preset name:', 'My section');
+    if (!name || !name.trim()) return;
+    presetsData.presets.push({ name: name.trim(), section: JSON.parse(JSON.stringify(sec)) });
+    savePresetsToServer();
+    renderPresetList();
+    toast('Preset "' + name.trim() + '" saved — reuse it from the ＋ panel.');
+  }
+  function insertPreset(p) {
+    const s = regenIds(p.section);
+    s.id = uid('s');
+    cur().sections.push(s);
+    selected = { s: s.id, b: null };
+    showWidgetGrid = false;
+    markBlocksDirty(); renderAll(); push();
+    toast('Preset "' + p.name + '" added to this page.');
+  }
+  function renderPresetList() {
+    const box = document.getElementById('presetList');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!presetsData.presets.length) return;
+    const h = document.createElement('div');
+    h.textContent = 'Saved presets';
+    h.style.cssText = 'font-size:12.5px;font-weight:600;color:var(--sb-text-bright);margin:12px 0 6px';
+    box.append(h);
+    presetsData.presets.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = '▦ ' + p.name;
+      b.style.cssText = 'flex:1;text-align:left;background:var(--sb-bg-light);border:1px solid var(--sb-border);border-radius:6px;padding:7px 9px;font-size:12.5px;color:var(--sb-text);cursor:pointer';
+      b.addEventListener('click', () => insertPreset(p));
+      const del = document.createElement('button'); del.type = 'button'; del.textContent = '✕'; del.title = 'Delete preset';
+      del.style.cssText = 'background:none;border:none;color:var(--sb-text-muted);cursor:pointer;font-size:12px';
+      del.addEventListener('click', () => {
+        if (!confirm('Delete preset "' + p.name + '"?')) return;
+        presetsData.presets.splice(i, 1); savePresetsToServer(); renderPresetList();
+      });
+      row.append(b, del); box.append(row);
+    });
   }
 
   // ---- EDIT MODE / PREVIEW TOGGLE ----
@@ -1948,6 +2052,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const e2 = document.getElementById('pagesCrumbBtn');
     if (e1) e1.textContent = label;
     if (e2) e2.textContent = label + ' ▾';
+    if (window.filterPageData) window.filterPageData(currentPage);
   }
   function buildPageBar() {
     pageBar.innerHTML = '';
@@ -2111,6 +2216,25 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       const sec = findSec(d.sectionId); if (!sec) return;
       (d.moves || []).forEach((m) => { const blk = findBlk(sec, m.id); if (blk) { blk.x = m.x; blk.y = m.y; } });
       markBlocksDirty();
+    } else if (d.type === 'ploy-default-converted') {
+      // Replace the default section with a free-form section whose widgets
+      // mirror the measured elements. The original stays recoverable via the
+      // 👁 toggle in the layers panel.
+      const secs = cur().sections;
+      const idx = secs.findIndex((s) => s.id === d.sectionId);
+      if (idx === -1) return;
+      const old = secs[idx];
+      const blocks = (d.blocks || []).map((b) => { b.id = uid('b'); return b; });
+      if (old.blocks && old.blocks.length) blocks.push(...old.blocks); // keep widgets already added
+      const nsec = {
+        id: uid('s'), layout: 'free', bg: '', paddingY: 0, gap: 24, align: 'start',
+        maxWidth: d.secWidth || 1152, minHeight: d.minHeight || 400, blocks,
+      };
+      if (d.bg && d.bg !== 'rgba(0, 0, 0, 0)' && d.bg !== 'transparent') nsec.bg = d.bg;
+      secs.splice(idx, 1, nsec);
+      selected = { s: nsec.id, b: null };
+      markBlocksDirty(); renderAll(); push();
+      toast('Converted! Every element is now an editable, movable widget. Restore the original anytime with its 👁 toggle.');
     } else if (d.type === 'ploy-blocks-op') { handleOp(d); }
   });
 
@@ -2125,6 +2249,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       if (d.blockType === 'image') blk = newImageBlock();
       else if (d.blockType === 'button') blk = newButtonBlock();
       else if (d.blockType === 'container') blk = newContainerBlock();
+      else if (d.blockType === 'shape') blk = newShapeBlock();
       else blk = newTextBlock();
       sec.blocks = sec.blocks || [];
       if (sec.layout === 'free') placeFree(blk, sec.blocks);
@@ -2226,6 +2351,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       else if (type === 'button') blk = newButtonBlock();
       else if (type === 'divider') blk = { id: uid('b'), type: 'divider', color: '#e5e7eb', height: 1, width: 100, lineStyle: 'solid' };
       else if (type === 'container') blk = newContainerBlock();
+      else if (type === 'shape') blk = newShapeBlock();
       else blk = newTextBlock();
       
       sec.blocks = sec.blocks || [];
@@ -2498,22 +2624,25 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       xBtn.style.cssText = 'background:transparent;color:#fff;border:none;cursor:pointer;font-size:12px';
       xBtn.addEventListener('click', () => { multiSel.clear(); renderAll(); push(); });
       topRow.append(lbl, gBtn, xBtn);
-      // Alignment row (posts to the preview which measures + repositions).
+      // Alignment grid — 2 columns with named actions so every option is
+      // readable (posts to the preview, which measures + repositions).
       const alignRow = document.createElement('div');
-      alignRow.style.cssText = 'display:flex;gap:3px;flex-wrap:wrap';
+      alignRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:5px';
       const secId = selected.s;
-      const aBtn = (label, mode, title) => {
-        const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = title;
-        b.style.cssText = 'background:rgba(255,255,255,.9);color:#111;border:none;border-radius:4px;padding:3px 7px;font-size:12px;cursor:pointer;line-height:1';
+      const aBtn = (icon, label, mode) => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.innerHTML = '<span style="font-size:14px;line-height:1">' + icon + '</span><span>' + label + '</span>';
+        b.style.cssText = 'display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.94);color:#1f2430;border:none;border-radius:6px;padding:7px 9px;font-size:12px;font-weight:500;cursor:pointer;text-align:left';
         b.addEventListener('click', () => {
           try { frame.contentWindow.postMessage({ type: 'ploy-multi-align', sectionId: secId, ids: Array.from(multiSel), mode }, ORIGIN); } catch (e) {}
         });
         return b;
       };
       alignRow.append(
-        aBtn('⇤', 'left', 'Align left'), aBtn('⇔', 'hcenter', 'Align horizontal centers'), aBtn('⇥', 'right', 'Align right'),
-        aBtn('⤒', 'top', 'Align top'), aBtn('↕', 'vcenter', 'Align vertical centers'), aBtn('⤓', 'bottom', 'Align bottom'),
-        aBtn('↔', 'hdist', 'Distribute horizontally'), aBtn('↨', 'vdist', 'Distribute vertically')
+        aBtn('⇤', 'Align left', 'left'),      aBtn('⤒', 'Align top', 'top'),
+        aBtn('⇔', 'Center H', 'hcenter'),     aBtn('↕', 'Center V', 'vcenter'),
+        aBtn('⇥', 'Align right', 'right'),    aBtn('⤓', 'Align bottom', 'bottom'),
+        aBtn('↔', 'Distribute H', 'hdist'),   aBtn('↨', 'Distribute V', 'vdist')
       );
       box.append(topRow, alignRow);
       listEl.append(box);
@@ -2627,7 +2756,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       const renderTreeBlocks = (blocksArr, parentDiv, secId) => {
         blocksArr.forEach(blk => {
           const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'nav-tree-item';
-          const icon = blk.type === 'image' ? '🖼' : (blk.type === 'button' ? '🔘' : (blk.type === 'container' ? '📦' : (blk.type === 'divider' ? '➖' : 'T')));
+          const icon = { image: '🖼', button: '🔘', container: '📦', divider: '➖', shape: '⬠' }[blk.type] || 'T';
           const label = blk.type === 'text' ? (blk.text || '').substring(0, 25).replace(/<[^>]+>/g, '') : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
           bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + (label || blk.type) + '</span>';
           if (selected.s === secId && selected.b === blk.id) bb.classList.add('active');
@@ -2723,10 +2852,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
   function buildBreadcrumb(sec, blk) {
     const bc = document.createElement('div'); bc.className = 'inspector-breadcrumb';
-    bc.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 12px;font-size:11px;border-bottom:1px solid var(--sb-border)';
+    bc.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 -14px 12px;padding:7px 14px;font-size:12px;border-bottom:1px solid var(--sb-border);background:var(--sb-bg-light)';
     const crumb = (label, onClick, active) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      b.style.cssText = 'background:none;border:none;padding:0;font-size:11px;color:' + (active ? 'var(--sb-text)' : 'var(--sb-accent)') + ';font-weight:' + (active ? '600' : '400') + ';cursor:' + (onClick ? 'pointer' : 'default');
+      b.style.cssText = 'background:none;border:none;padding:0;font-size:12px;color:' + (active ? 'var(--sb-text-bright)' : 'var(--sb-accent)') + ';font-weight:' + (active ? '600' : '400') + ';cursor:' + (onClick ? 'pointer' : 'default');
       if (onClick) b.addEventListener('click', onClick);
       return b;
     };
@@ -2830,6 +2959,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
       const acts = document.createElement('div'); acts.className = 'inspector-actions';
       acts.append(
+        actionBtn('🔓 Convert to free-form', () => {
+          if (!confirm('Convert this section into a free-form section?\n\nEvery text, image and button becomes an individually editable, movable widget. The original stays available via its 👁 toggle in the layers panel.')) return;
+          try { frame.contentWindow.postMessage({ type: 'ploy-convert-default', sectionId: sec.id, key: sKey }, ORIGIN); } catch (e) {}
+        }),
         actionBtn('👁️ Hide Section', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
       inspector.append(acts);
@@ -2924,6 +3057,17 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelS.append(field('Line color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
         panelS.append(field('Thickness (px)', numInput(blk.height, (v) => { blk.height = v; upd(); }, 1, 20)));
         panelS.append(field('Line style', selInput([{v:'solid',l:'Solid'},{v:'dashed',l:'Dashed'},{v:'dotted',l:'Dotted'}], blk.lineStyle || 'solid', (v) => { blk.lineStyle = v; upd(); })));
+      } else if (blk.type === 'shape') {
+        panelS.append(field('Shape', selInput([
+          { v: 'rectangle', l: 'Rectangle' }, { v: 'circle', l: 'Circle' }, { v: 'line', l: 'Line' },
+          { v: 'triangle', l: 'Triangle' }, { v: 'diamond', l: 'Diamond' }, { v: 'hexagon', l: 'Hexagon' },
+        ], blk.shape || 'rectangle', (v) => { blk.shape = v; upd(); renderInspector(); })));
+        panelS.append(field('Fill color', colorInput(blk.fill, (v) => { blk.fill = v; upd(); })));
+        if ((blk.shape || 'rectangle') === 'line') {
+          panelS.append(field('Thickness (px)', numInput(blk.thickness, (v) => { blk.thickness = v; upd(); }, 1, 40)));
+        } else {
+          panelS.append(field('Height (px)', numInput(blk.height, (v) => { blk.height = v; upd(); }, 10, 1200)));
+        }
       } else if (blk.type === 'container') {
         panelS.append(field('Layout mode', selInput([{v:'auto',l:'Auto-layout (stack)'},{v:'free',l:'Free-form (absolute)'}], blk.layout === 'free' ? 'free' : 'auto', (v) => { blk.layout = v === 'free' ? 'free' : 'auto'; upd(); renderInspector(); })));
         if (blk.layout !== 'free') {
@@ -2988,6 +3132,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const acts = document.createElement('div'); acts.className = 'inspector-actions';
     if (!blk) {
       acts.append(
+        actionBtn('💾 Save preset', () => saveSectionAsPreset(sec)),
         actionBtn('✕ Delete', () => handleOp({ op: 'deleteSection', sectionId: sec.id }), true),
       );
     } else {
@@ -3052,6 +3197,12 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       };
     }
     statusEl.textContent = 'All changes saved'; statusEl.className = 'cms-bottom__status saved';
+    try {
+      const pr = await fetch('/api/presets', { cache: 'no-store' });
+      if (pr.ok) presetsData = await pr.json();
+      if (!presetsData || !Array.isArray(presetsData.presets)) presetsData = { presets: [] };
+    } catch (e) { presetsData = { presets: [] }; }
+    renderPresetList();
     seedHistory();
     buildPageBar(); loadInitialFrame(); renderAll();
   })();

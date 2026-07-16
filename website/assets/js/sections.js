@@ -457,6 +457,19 @@
       div.style.margin = '0';
       div.style.width = '100%';
       wrap.appendChild(div);
+    } else if (b.type === 'shape') {
+      // Vector-ish shapes: rectangle, circle, line, and polygons via clip-path.
+      var sh = document.createElement('div');
+      var kind = b.shape || 'rectangle';
+      sh.style.width = '100%';
+      sh.style.height = (kind === 'line' ? (b.thickness || 3) : (b.height || 120)) + 'px';
+      sh.style.background = b.fill || '#6366f1';
+      if (kind === 'circle') sh.style.borderRadius = '50%';
+      else if (kind === 'line') sh.style.borderRadius = '2px';
+      else if (kind === 'triangle') sh.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+      else if (kind === 'diamond') sh.style.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
+      else if (kind === 'hexagon') sh.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+      wrap.appendChild(sh);
     } else {
       var d = TAGS[b.tag] || TAGS.p;
       var el = document.createElement(TAGS[b.tag] ? b.tag : 'p');
@@ -490,8 +503,8 @@
       wrap.appendChild(el);
     }
     if (state.editMode) {
-      var typeName = { text: 'Text', image: 'Image', button: 'Button', divider: 'Divider', container: 'Container' }[b.type] || 'Widget';
-      var icon = { text: 'T', image: '🖼', button: '🔘', divider: '➖', container: '📦' }[b.type] || '▪';
+      var typeName = { text: 'Text', image: 'Image', button: 'Button', divider: 'Divider', container: 'Container', shape: 'Shape' }[b.type] || 'Widget';
+      var icon = { text: 'T', image: '🖼', button: '🔘', divider: '➖', container: '📦', shape: '⬠' }[b.type] || '▪';
       wrap.appendChild(makeNameLabel(icon + ' ' + typeName, false));
       if (state.multi && state.multi.indexOf(b.id) !== -1) wrap.classList.add('ploy-multisel');
       attachBlockEditing(wrap, sec, b, freeCtx);
@@ -538,37 +551,66 @@
 
   // Adds a drag handle to a free-form child so it can be dragged around its
   // frame on the canvas. Updates x/y live and posts the final position so the
-  // CMS persists it. Snaps to a 16px grid unless Alt is held.
+  // CMS persists it. Snaps to a 16px grid unless Alt is held. When the block
+  // belongs to a multi-selection, every selected sibling moves together.
   function addFreeMoveHandle(childEl, sec, blk, frame) {
     var handle = document.createElement('div');
     handle.className = 'ploy-handle ploy-handle--move';
     handle.title = 'Drag to move';
     handle.textContent = '✥';
-    var startX = 0, startY = 0, origX = 0, origY = 0, snap = true;
+    var startX = 0, startY = 0, snap = true, group = [];
     handle.addEventListener('pointerdown', function (ev) {
       ev.preventDefault();
       ev.stopPropagation();
       startX = ev.clientX; startY = ev.clientY;
-      origX = blk.x || 0; origY = blk.y || 0;
       snap = !ev.altKey;
+      // Build the drag group: the block itself plus any multi-selected
+      // siblings that are also visible on this canvas.
+      var ids = (state.multi && state.multi.indexOf(blk.id) !== -1) ? state.multi : [blk.id];
+      group = [];
+      ids.forEach(function (id) {
+        var b2 = id === blk.id ? blk : findBlockInSection(sec, id);
+        var el2 = id === blk.id ? childEl : document.querySelector('[data-bid="' + id + '"]');
+        if (b2 && el2) group.push({ b: b2, el: el2, ox: b2.x || 0, oy: b2.y || 0 });
+      });
       try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
       function move(e) {
-        var nx = Math.max(0, origX + (e.clientX - startX));
-        var ny = Math.max(0, origY + (e.clientY - startY));
-        if (snap) { nx = Math.round(nx / 16) * 16; ny = Math.round(ny / 16) * 16; }
-        blk.x = Math.round(nx); blk.y = Math.round(ny);
-        childEl.style.left = blk.x + 'px';
-        childEl.style.top = blk.y + 'px';
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        group.forEach(function (g) {
+          var nx = Math.max(0, g.ox + dx);
+          var ny = Math.max(0, g.oy + dy);
+          if (snap) { nx = Math.round(nx / 16) * 16; ny = Math.round(ny / 16) * 16; }
+          g.b.x = Math.round(nx); g.b.y = Math.round(ny);
+          g.el.style.left = g.b.x + 'px';
+          g.el.style.top = g.b.y + 'px';
+        });
       }
       function up() {
         handle.removeEventListener('pointermove', move);
         handle.removeEventListener('pointerup', up);
-        post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+        if (group.length > 1) {
+          post({ type: 'ploy-blocks-free-move-batch', sectionId: sec.id, moves: group.map(function (g) { return { id: g.b.id, x: g.b.x, y: g.b.y }; }) });
+        } else {
+          post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+        }
       }
       handle.addEventListener('pointermove', move);
       handle.addEventListener('pointerup', up);
     });
     childEl.appendChild(handle);
+  }
+
+  // Find a block by id anywhere in a section's tree (iframe-side mirror of
+  // the CMS's recursive lookup).
+  function findBlockInSection(sec, id) {
+    function walk(arr) {
+      for (var i = 0; i < (arr || []).length; i++) {
+        if (arr[i].id === id) return arr[i];
+        if (arr[i].type === 'container' && arr[i].blocks) { var hit = walk(arr[i].blocks); if (hit) return hit; }
+      }
+      return null;
+    }
+    return walk(sec.blocks);
   }
 
   // True when a click landed on something inside a section that should be
@@ -934,6 +976,52 @@
         moves.push({ id: i.id, x: nx, y: ny });
       });
       post({ type: 'ploy-blocks-free-move-batch', sectionId: d.sectionId, moves: moves });
+    } else if (d.type === 'ploy-convert-default') {
+      // Convert a default section's hand-built content into free-form widgets:
+      // measure every visible button / image / text element and report them
+      // (position, size, content, typography) so the CMS can rebuild the
+      // section as a fully editable free-form canvas.
+      var srcEl = extractedDefaultNodes[d.key] || document.querySelector('[data-default-section="' + d.key + '"]');
+      if (!srcEl || !srcEl.parentNode) return; // must be rendered to measure
+      var secRect = srcEl.getBoundingClientRect();
+      var blocks = [];
+      var used = [];
+      function taken(node) {
+        return used.some(function (u) { return u === node || u.contains(node) || node.contains(u); });
+      }
+      // CTA-style links become button widgets (before text capture, so their
+      // inner data-cms label isn't captured twice).
+      srcEl.querySelectorAll('a.button-link, a[class*="button-link"]').forEach(function (a) {
+        var r = a.getBoundingClientRect(); if (!r.width || !r.height) return;
+        blocks.push({ type: 'button', text: (a.textContent || '').trim(), url: a.getAttribute('href') || '#',
+          x: Math.round(r.left - secRect.left), y: Math.round(r.top - secRect.top), freeW: Math.round(r.width), width: 100 });
+        used.push(a);
+      });
+      srcEl.querySelectorAll('img').forEach(function (img) {
+        if (taken(img)) return;
+        var r = img.getBoundingClientRect(); if (!r.width || !r.height) return;
+        blocks.push({ type: 'image', src: img.getAttribute('src') || '', alt: img.getAttribute('alt') || '',
+          x: Math.round(r.left - secRect.left), y: Math.round(r.top - secRect.top), freeW: Math.round(r.width), width: 100 });
+        used.push(img);
+      });
+      srcEl.querySelectorAll('[data-cms], [data-f], h1, h2, h3, p').forEach(function (t) {
+        if (taken(t)) return;
+        // Skip wrappers that contain other capturable text (keep leaves only).
+        if (t.querySelector && t.querySelector('[data-cms], [data-f]')) return;
+        var r = t.getBoundingClientRect(); if (!r.width || !r.height) return;
+        var txt = (t.textContent || '').trim(); if (!txt) return;
+        var cs = getComputedStyle(t);
+        blocks.push({ type: 'text', tag: /^H[1-3]$/.test(t.tagName) ? t.tagName.toLowerCase() : 'p',
+          text: t.innerHTML, size: Math.round(parseFloat(cs.fontSize) || 16), color: cs.color,
+          bold: (parseInt(cs.fontWeight, 10) || 400) >= 600, align: 'left', font: '', fontCustom: '',
+          x: Math.round(r.left - secRect.left), y: Math.round(r.top - secRect.top), freeW: Math.round(r.width) + 2, width: 100 });
+        used.push(t);
+      });
+      post({
+        type: 'ploy-default-converted', sectionId: d.sectionId, key: d.key, blocks: blocks,
+        minHeight: Math.round(secRect.height), secWidth: Math.round(secRect.width),
+        bg: getComputedStyle(srcEl).backgroundColor
+      });
     }
   });
 

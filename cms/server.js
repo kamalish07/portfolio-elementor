@@ -30,6 +30,7 @@ const THEME_FILE = path.join(WEBSITE_ROOT, 'content', 'theme.json');
 const BLOCKS_FILE = path.join(WEBSITE_ROOT, 'content', 'blocks.json');
 const STYLES_FILE = path.join(WEBSITE_ROOT, 'content', 'styles.json');
 const PAGES_FILE = path.join(WEBSITE_ROOT, 'content', 'pages.json');
+const PRESETS_FILE = path.join(WEBSITE_ROOT, 'content', 'presets.json');
 const BACKUP_DIR = path.join(ROOT, 'backups');
 const UPLOAD_DIR = path.join(WEBSITE_ROOT, 'assets', 'images');
 const WEBSITE_ASSETS_DIR = path.join(WEBSITE_ROOT, 'assets');
@@ -322,6 +323,28 @@ async function handleApi(req, res, pathname) {
     fs.writeFileSync(target, Buffer.from(dataBase64, 'base64'));
     gitCommitAndPush();
     return sendJson(res, 200, { ok: true, path: '/assets/images/' + file });
+  }
+
+  // ---- Presets API (reusable saved sections) ----
+  if (pathname === '/api/presets' && req.method === 'GET') {
+    const raw = fs.existsSync(PRESETS_FILE) ? fs.readFileSync(PRESETS_FILE, 'utf8') : '{"presets":[]}';
+    return send(res, 200, raw, { 'Content-Type': 'application/json; charset=utf-8' });
+  }
+
+  if (pathname === '/api/presets' && req.method === 'POST') {
+    const body = await readBody(req);
+    let presets;
+    try {
+      presets = JSON.parse(body.toString('utf8'));
+    } catch (e) {
+      return sendJson(res, 400, { error: 'Invalid JSON' });
+    }
+    if (!presets || typeof presets !== 'object' || !Array.isArray(presets.presets)) {
+      return sendJson(res, 400, { error: 'Presets must include a "presets" array' });
+    }
+    saveJsonWithBackup(PRESETS_FILE, 'presets', presets);
+    gitCommitAndPush();
+    return sendJson(res, 200, { ok: true });
   }
 
   // ---- Pages API ----
