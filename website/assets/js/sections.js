@@ -82,6 +82,8 @@
     '.ploy-handle{position:absolute;width:14px;height:14px;border-radius:3px;z-index:60;box-shadow:0 0 0 2px #fff;touch-action:none}',
     '.ploy-handle--right{background:#2563eb;right:-8px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
     '.ploy-handle--bottom{background:#7c3aed;left:50%;bottom:-8px;transform:translateX(-50%);cursor:ns-resize}',
+    '.ploy-handle--move{width:22px;height:22px;background:#7c3aed;left:-11px;top:-11px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}',
+    '.ploy-freeframe--edit{outline:1px dashed rgba(124,58,237,.35);outline-offset:-1px;background-image:radial-gradient(rgba(124,58,237,.16) 1px, transparent 1px);background-size:16px 16px}',
     '.ploy-toolbar{position:absolute;display:flex;gap:4px;z-index:70;font-family:system-ui,sans-serif}',
     '.ploy-toolbar--sec{top:6px;right:6px}',
     '.ploy-toolbar--blk{top:-30px;left:0}',
@@ -265,16 +267,49 @@
       if (sec.bg) secEl.style.background = sec.bg;
       secEl.style.padding = paddingCss(sec, (sec.paddingY != null ? sec.paddingY : 64) + 'px 20px');
       if (sec.minHeight) secEl.style.minHeight = sec.minHeight + 'px';
-      var row = document.createElement('div');
-      row.className = 'ploy-sec__row';
-      row.style.maxWidth = (sec.maxWidth || 1152) + 'px';
-      row.style.margin = '0 auto';
-      row.style.display = 'flex';
-      row.style.flexWrap = 'wrap';
-      row.style.gap = (sec.gap != null ? sec.gap : 24) + 'px';
-      row.style.alignItems = { start: 'flex-start', center: 'center', end: 'flex-end', stretch: 'stretch' }[sec.align || 'start'];
-      (sec.blocks || []).forEach(function (b) { row.appendChild(renderBlock(sec, b)); });
-      secEl.appendChild(row);
+
+      if (sec.layout === 'free') {
+        // Free-form canvas: widgets are placed anywhere and dragged around,
+        // like a Figma frame. Bounded to the content max-width and centered.
+        var canvas = document.createElement('div');
+        canvas.className = 'ploy-sec__canvas';
+        canvas.style.position = 'relative';
+        canvas.style.maxWidth = (sec.maxWidth || 1152) + 'px';
+        canvas.style.margin = '0 auto';
+        canvas.style.minHeight = (sec.minHeight || 400) + 'px';
+        if (state.editMode) canvas.classList.add('ploy-freeframe--edit');
+        (sec.blocks || []).forEach(function (b) {
+          var childEl = renderBlock(sec, b, true);
+          childEl.style.position = 'absolute';
+          childEl.style.left = (b.x || 0) + 'px';
+          childEl.style.top = (b.y || 0) + 'px';
+          childEl.style.width = b.freeW ? b.freeW + 'px' : 'auto';
+          childEl.style.flex = '';
+          if (state.editMode && state.selected.b === b.id) {
+            addFreeMoveHandle(childEl, sec, b, canvas);
+            addFreeResizeHandle(childEl, sec, b);
+          }
+          canvas.appendChild(childEl);
+        });
+        if (state.editMode && !(sec.blocks && sec.blocks.length)) {
+          var cph = document.createElement('div');
+          cph.className = 'ploy-empty';
+          cph.textContent = 'Empty section — add widgets from the Elements panel, then drag them anywhere.';
+          canvas.appendChild(cph);
+        }
+        secEl.appendChild(canvas);
+      } else {
+        var row = document.createElement('div');
+        row.className = 'ploy-sec__row';
+        row.style.maxWidth = (sec.maxWidth || 1152) + 'px';
+        row.style.margin = '0 auto';
+        row.style.display = 'flex';
+        row.style.flexWrap = 'wrap';
+        row.style.gap = (sec.gap != null ? sec.gap : 24) + 'px';
+        row.style.alignItems = { start: 'flex-start', center: 'center', end: 'flex-end', stretch: 'stretch' }[sec.align || 'start'];
+        (sec.blocks || []).forEach(function (b) { row.appendChild(renderBlock(sec, b)); });
+        secEl.appendChild(row);
+      }
       if (state.editMode) attachSectionEditing(secEl, sec);
       applyAnimation(secEl, sec);
       applyHoverEffect(secEl, sec);
@@ -301,13 +336,13 @@
     applyDefaultOverrides(state.defaultOverrides);
   }
 
-  function renderBlock(sec, b) {
+  function renderBlock(sec, b, freeCtx) {
     var gap = sec.gap != null ? sec.gap : 24;
     var wrap = document.createElement('div');
     wrap.className = 'ploy-blk';
     wrap.dataset.bid = b.id;
-    wrap.style.flex = blockFlex(b, gap);
-    wrap.style.minWidth = '60px';
+    if (!freeCtx) wrap.style.flex = blockFlex(b, gap);
+    wrap.style.minWidth = freeCtx ? '' : '60px';
     wrap.style.position = 'relative';
     if (b.type === 'container') {
       var freeForm = b.layout === 'free';
@@ -316,6 +351,7 @@
         wrap.style.display = 'block';
         wrap.style.position = 'relative';
         wrap.style.minHeight = (b.minHeight || 240) + 'px';
+        if (state.editMode) wrap.classList.add('ploy-freeframe--edit');
       } else {
         // Auto-layout (flex stack), Framer/Figma-style.
         wrap.style.display = 'flex';
@@ -330,13 +366,18 @@
       if (b.bg) wrap.style.backgroundColor = b.bg;
       if (b.radius) wrap.style.borderRadius = b.radius + 'px';
       (b.blocks || []).forEach(function (child) {
-        var childEl = renderBlock(sec, child);
+        var childEl = renderBlock(sec, child, freeForm);
         if (freeForm) {
           childEl.style.position = 'absolute';
           childEl.style.left = (child.x || 0) + 'px';
           childEl.style.top = (child.y || 0) + 'px';
           if (child.freeW) childEl.style.width = child.freeW + 'px';
           childEl.style.flex = '';
+          // When selected, add drag + resize handles for the free-form child.
+          if (state.editMode && state.selected.b === child.id) {
+            addFreeMoveHandle(childEl, sec, child, wrap);
+            addFreeResizeHandle(childEl, sec, child);
+          }
         }
         wrap.appendChild(childEl);
       });
@@ -420,7 +461,7 @@
       var typeName = { text: 'Text', image: 'Image', button: 'Button', divider: 'Divider', container: 'Container' }[b.type] || 'Widget';
       var icon = { text: 'T', image: '🖼', button: '🔘', divider: '➖', container: '📦' }[b.type] || '▪';
       wrap.appendChild(makeNameLabel(icon + ' ' + typeName, false));
-      attachBlockEditing(wrap, sec, b);
+      attachBlockEditing(wrap, sec, b, freeCtx);
     }
     applyAnimation(wrap, b);
     applyHoverEffect(wrap, b);
@@ -459,6 +500,41 @@
     btn.title = title;
     btn.addEventListener('click', function (ev) { ev.stopPropagation(); fn(); });
     return btn;
+  }
+
+  // Adds a drag handle to a free-form child so it can be dragged around its
+  // frame on the canvas. Updates x/y live and posts the final position so the
+  // CMS persists it. Snaps to a 16px grid unless Alt is held.
+  function addFreeMoveHandle(childEl, sec, blk, frame) {
+    var handle = document.createElement('div');
+    handle.className = 'ploy-handle ploy-handle--move';
+    handle.title = 'Drag to move';
+    handle.textContent = '✥';
+    var startX = 0, startY = 0, origX = 0, origY = 0, snap = true;
+    handle.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      startX = ev.clientX; startY = ev.clientY;
+      origX = blk.x || 0; origY = blk.y || 0;
+      snap = !ev.altKey;
+      try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
+      function move(e) {
+        var nx = Math.max(0, origX + (e.clientX - startX));
+        var ny = Math.max(0, origY + (e.clientY - startY));
+        if (snap) { nx = Math.round(nx / 16) * 16; ny = Math.round(ny / 16) * 16; }
+        blk.x = Math.round(nx); blk.y = Math.round(ny);
+        childEl.style.left = blk.x + 'px';
+        childEl.style.top = blk.y + 'px';
+      }
+      function up() {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+      }
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    });
+    childEl.appendChild(handle);
   }
 
   // True when a click landed on something inside a section that should be
@@ -545,48 +621,72 @@
     dragHandle(handle, function (dx, dy) {
       sec.minHeight = Math.max(0, Math.round(startH + dy));
       secEl.style.minHeight = sec.minHeight + 'px';
+      var cv = secEl.querySelector('.ploy-sec__canvas');
+      if (cv) cv.style.minHeight = sec.minHeight + 'px';
     }, function () {
       post({ type: 'ploy-blocks-section-resize', sectionId: sec.id, minHeight: sec.minHeight });
     });
     secEl.appendChild(handle);
   }
 
-  function attachBlockEditing(wrap, sec, b) {
+  // Enter text "typewriter" editing on a text widget: make it editable, focus
+  // it, place the caret at the end, and show the rich-text toolbar.
+  function enterTextEdit(wrap, el) {
+    if (!el) return;
+    el.contentEditable = 'true';
+    el.focus();
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(el);
+      r.collapse(false);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    } catch (e) {}
+    if (!wrap.querySelector('.ploy-rt-toolbar')) {
+      var rt = document.createElement('div');
+      rt.className = 'ploy-rt-toolbar ploy-toolbar';
+      rt.style.top = '-60px'; rt.style.left = '0'; rt.style.zIndex = '80';
+      rt.append(
+        toolbarButton('B', 'Bold (Ctrl+B)', function () { document.execCommand('bold'); el.focus(); }),
+        toolbarButton('I', 'Italic (Ctrl+I)', function () { document.execCommand('italic'); el.focus(); }),
+        toolbarButton('U', 'Underline (Ctrl+U)', function () { document.execCommand('underline'); el.focus(); }),
+        toolbarButton('🔗', 'Add Link', function () {
+          var url = prompt('Enter link URL:');
+          if (url) { document.execCommand('createLink', false, url); }
+          else { document.execCommand('unlink'); }
+          el.focus();
+        }),
+        toolbarButton('</>', 'Clear Format', function () { document.execCommand('removeFormat'); el.focus(); })
+      );
+      wrap.appendChild(rt);
+    }
+  }
+
+  function attachBlockEditing(wrap, sec, b, freeCtx) {
+    var textEl = b.type === 'text' ? wrap.querySelector('.ploy-blk__text') : null;
+
+    // Single click SELECTS the widget (shows its properties). Clicking an
+    // already-selected text widget again enters edit mode — like Figma:
+    // click to select the box, click again to type.
     wrap.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      if (state.selected.b === b.id) return;
-      select(sec.id, b.id, b.type === 'text');
+      if (state.selected.b === b.id) {
+        if (textEl && textEl.contentEditable !== 'true') enterTextEdit(wrap, textEl);
+        return;
+      }
+      select(sec.id, b.id);
     });
 
-    if (b.type === 'text') {
-      var el = wrap.querySelector('.ploy-blk__text');
-      el.contentEditable = 'true';
-      el.addEventListener('input', function () {
-        b.text = el.innerHTML;
+    if (textEl) {
+      textEl.contentEditable = 'false';
+      textEl.addEventListener('input', function () {
+        b.text = textEl.innerHTML;
         post({ type: 'ploy-blocks-text', sectionId: sec.id, blockId: b.id, text: b.text });
       });
-      // Add floating rich text toolbar on focus
-      el.addEventListener('focus', function() {
-        if (wrap.querySelector('.ploy-rt-toolbar')) return;
-        var rt = document.createElement('div');
-        rt.className = 'ploy-rt-toolbar ploy-toolbar';
-        rt.style.top = '-60px'; rt.style.left = '0'; rt.style.zIndex = '80';
-        rt.append(
-          toolbarButton('B', 'Bold (Ctrl+B)', function() { document.execCommand('bold'); el.focus(); }),
-          toolbarButton('I', 'Italic (Ctrl+I)', function() { document.execCommand('italic'); el.focus(); }),
-          toolbarButton('U', 'Underline (Ctrl+U)', function() { document.execCommand('underline'); el.focus(); }),
-          toolbarButton('🔗', 'Add Link', function() { 
-            var url = prompt('Enter link URL:'); 
-            if (url) { document.execCommand('createLink', false, url); }
-            else { document.execCommand('unlink'); }
-            el.focus();
-          }),
-          toolbarButton('</>', 'Clear Format', function() { document.execCommand('removeFormat'); el.focus(); })
-        );
-        wrap.appendChild(rt);
-      });
-      el.addEventListener('blur', function() {
-        setTimeout(function() {
+      textEl.addEventListener('blur', function () {
+        textEl.contentEditable = 'false';
+        setTimeout(function () {
           var rt = wrap.querySelector('.ploy-rt-toolbar');
           if (rt && !rt.contains(document.activeElement)) rt.remove();
         }, 200);
@@ -600,37 +700,64 @@
     bar.className = 'ploy-toolbar ploy-toolbar--blk';
     if (b.type === 'container') {
        bar.append(
-         toolbarButton('⬆ Parent', 'Select parent section', function() { select(sec.id, null); }),
+         toolbarButton('⬆', 'Select parent', function() { select(sec.id, null); }),
        );
     }
+    // Move buttons only make sense in flow (stacked) layout; free-form uses drag.
+    if (!freeCtx) {
+      bar.append(
+        toolbarButton('◀', 'Move left', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: -1 }); }),
+        toolbarButton('▶', 'Move right', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: 1 }); })
+      );
+    }
+    if (textEl) bar.append(toolbarButton('✎', 'Edit text', function () { enterTextEdit(wrap, textEl); }));
     bar.append(
-      toolbarButton('◀', 'Move block left', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: -1 }); }),
-      toolbarButton('▶', 'Move block right', function () { post({ type: 'ploy-blocks-op', op: 'moveBlock', sectionId: sec.id, blockId: b.id, dir: 1 }); }),
-      toolbarButton('✕', 'Delete block', function () { post({ type: 'ploy-blocks-op', op: 'deleteBlock', sectionId: sec.id, blockId: b.id }); }),
+      toolbarButton('✕', 'Delete', function () { post({ type: 'ploy-blocks-op', op: 'deleteBlock', sectionId: sec.id, blockId: b.id }); })
     );
     wrap.appendChild(bar);
 
+    // Width resize handle — only in flow layout. Free-form widgets resize via
+    // the freeW handle added by the free-form renderer.
+    if (!freeCtx) {
+      var handle = document.createElement('div');
+      handle.className = 'ploy-handle ploy-handle--right';
+      handle.title = 'Drag to resize';
+      var startW = 0;
+      var rowW = 1;
+      handle.addEventListener('pointerdown', function () {
+        startW = wrap.getBoundingClientRect().width;
+        rowW = wrap.parentElement.getBoundingClientRect().width || 1;
+      });
+      var SNAPS = [25, 33.33, 50, 66.67, 75, 100];
+      dragHandle(handle, function (dx) {
+        var pct = clamp(((startW + dx) / rowW) * 100, 8, 100);
+        for (var i = 0; i < SNAPS.length; i += 1) {
+          if (Math.abs(pct - SNAPS[i]) < 2.5) { pct = SNAPS[i]; break; }
+        }
+        b.width = Math.round(pct * 100) / 100;
+        wrap.style.flex = blockFlex(b, sec.gap != null ? sec.gap : 24);
+      }, function () {
+        post({ type: 'ploy-blocks-resize', sectionId: sec.id, blockId: b.id, width: b.width });
+      });
+      wrap.appendChild(handle);
+    }
+  }
+
+  // Resize handle for a free-form widget: drags set an explicit pixel width.
+  function addFreeResizeHandle(childEl, sec, blk) {
     var handle = document.createElement('div');
     handle.className = 'ploy-handle ploy-handle--right';
-    handle.title = 'Drag to resize';
+    handle.title = 'Drag to resize width';
     var startW = 0;
-    var rowW = 1;
-    handle.addEventListener('pointerdown', function () {
-      startW = wrap.getBoundingClientRect().width;
-      rowW = wrap.parentElement.getBoundingClientRect().width || 1;
-    });
-    var SNAPS = [25, 33.33, 50, 66.67, 75, 100];
+    handle.addEventListener('pointerdown', function () { startW = childEl.getBoundingClientRect().width; });
     dragHandle(handle, function (dx) {
-      var pct = clamp(((startW + dx) / rowW) * 100, 8, 100);
-      for (var i = 0; i < SNAPS.length; i += 1) {
-        if (Math.abs(pct - SNAPS[i]) < 2.5) { pct = SNAPS[i]; break; }
-      }
-      b.width = Math.round(pct * 100) / 100;
-      wrap.style.flex = blockFlex(b, sec.gap != null ? sec.gap : 24);
+      var w = Math.max(40, Math.round(startW + dx));
+      blk.freeW = w;
+      childEl.style.width = w + 'px';
     }, function () {
-      post({ type: 'ploy-blocks-resize', sectionId: sec.id, blockId: b.id, width: b.width });
+      post({ type: 'ploy-blocks-free-resize', sectionId: sec.id, blockId: blk.id, freeW: blk.freeW });
     });
-    wrap.appendChild(handle);
+    childEl.appendChild(handle);
   }
 
   document.addEventListener('click', function (ev) {
@@ -701,6 +828,22 @@
       // CMS asks us to scroll a default section into view
       var target = document.querySelector('[data-default-section="' + d.sectionKey + '"]');
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (d.type === 'ploy-free-align') {
+      // Center a free-form widget within its frame. Measured here (in the
+      // iframe) where real element/frame sizes are known, then the new x/y
+      // is posted back so the CMS persists it.
+      var childEl = document.querySelector('[data-bid="' + d.blockId + '"]');
+      if (!childEl) return;
+      var frameEl = childEl.parentElement;
+      if (!frameEl) return;
+      var cr = childEl.getBoundingClientRect();
+      var fr = frameEl.getBoundingClientRect();
+      var nx = childEl.offsetLeft, ny = childEl.offsetTop;
+      if (d.mode === 'centerH' || d.mode === 'center') nx = Math.max(0, Math.round((fr.width - cr.width) / 2));
+      if (d.mode === 'centerV' || d.mode === 'center') ny = Math.max(0, Math.round((fr.height - cr.height) / 2));
+      childEl.style.left = nx + 'px';
+      childEl.style.top = ny + 'px';
+      post({ type: 'ploy-blocks-free-move', sectionId: d.sectionId, blockId: d.blockId, x: nx, y: ny });
     }
   });
 

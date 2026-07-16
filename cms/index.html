@@ -1517,6 +1517,11 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   // is selected — set by the in-preview "+ Add Widget" button so users can
   // actually pick a widget type to drop into that section.
   let showWidgetGrid = false;
+  // Ids of widgets multi-selected in the Navigator (ctrl/⌘-click) for grouping.
+  let multiSel = new Set();
+  // Remembered inspector sub-tab ('c'ontent / 's'tyle / 'a'dvanced) so it
+  // survives inspector re-renders (e.g. after changing a layout control).
+  let propsTab = 'c';
 
   const statusEl = document.getElementById('blocksStatus');
   const saveBtn = document.getElementById('blocksSaveBtn');
@@ -1613,7 +1618,19 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   function newImageBlock() { return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 }; }
   function newContainerBlock() { return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] }; }
   function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 }; }
-  function newSection() { return { id: uid('s'), bg: '', paddingY: 64, gap: 24, maxWidth: 1152, minHeight: 0, align: 'start', blocks: [newTextBlock()] }; }
+  function newSection() {
+    // New sections are free-form canvases by default: drop widgets in and
+    // drag them anywhere, then select + group to apply auto-layout.
+    const t = newTextBlock(); t.x = 40; t.y = 40; t.freeW = 320;
+    return { id: uid('s'), bg: '', paddingY: 40, gap: 24, maxWidth: 1152, minHeight: 420, align: 'start', layout: 'free', blocks: [t] };
+  }
+  // Give a new widget a sensible starting position when it lands in a
+  // free-form section/container so it's visible and draggable.
+  function placeFree(blk, targetBlocks) {
+    const n = targetBlocks ? targetBlocks.length : 0;
+    blk.x = 40 + (n % 6) * 28;
+    blk.y = 40 + (n % 8) * 44;
+  }
 
   // ---- TABS ----
   const tabElementsBtn = document.getElementById('tabElementsBtn');
@@ -1777,6 +1794,15 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       const sec = findSec(d.sectionId); if (!sec) return;
       sec.minHeight = d.minHeight; markBlocksDirty();
       const mh = inspector.querySelector('[data-role=secminh]'); if (mh && document.activeElement !== mh) mh.value = d.minHeight;
+    } else if (d.type === 'ploy-blocks-free-move') {
+      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
+      blk.x = d.x; blk.y = d.y; markBlocksDirty();
+      const xi = inspector.querySelector('[data-role=freex]'); if (xi && document.activeElement !== xi) xi.value = d.x;
+      const yi = inspector.querySelector('[data-role=freey]'); if (yi && document.activeElement !== yi) yi.value = d.y;
+    } else if (d.type === 'ploy-blocks-free-resize') {
+      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
+      blk.freeW = d.freeW; markBlocksDirty();
+      const wi = inspector.querySelector('[data-role=freew]'); if (wi && document.activeElement !== wi) wi.value = d.freeW;
     } else if (d.type === 'ploy-blocks-op') { handleOp(d); }
   });
 
@@ -1792,7 +1818,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       else if (d.blockType === 'button') blk = newButtonBlock();
       else if (d.blockType === 'container') blk = newContainerBlock();
       else blk = newTextBlock();
-      sec.blocks = sec.blocks || []; sec.blocks.push(blk);
+      sec.blocks = sec.blocks || [];
+      if (sec.layout === 'free') placeFree(blk, sec.blocks);
+      sec.blocks.push(blk);
       selected = { s: sec.id, b: blk.id };
     } else if (d.op === 'moveBlock' || d.op === 'deleteBlock') {
       // Locate the array that directly holds the block (top-level or nested
@@ -1817,6 +1845,52 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       return null;
     }
     return walk(sec.blocks || []);
+  }
+
+  // Wrap the multi-selected sibling widgets into a new auto-layout container,
+  // in place, preserving their order (Figma's "group"). Requires that every
+  // selected widget shares the same parent array.
+  function groupSelection() {
+    const sec = findSec(selected.s);
+    if (!sec) { multiSel.clear(); renderAll(); return; }
+    const ids = Array.from(multiSel);
+    const locs = ids.map((id) => ({ id, loc: locateBlock(sec, id) })).filter((x) => x.loc);
+    if (locs.length < 2) { toast('Select at least two widgets in the same group to combine.', true); return; }
+    const parentArr = locs[0].loc.arr;
+    if (!locs.every((x) => x.loc.arr === parentArr)) { toast('Grouping needs widgets that share the same parent.', true); return; }
+    // Order by current index, then extract (highest first so indices stay valid).
+    locs.sort((a, b) => a.loc.idx - b.loc.idx);
+    const insertAt = locs[0].loc.idx;
+    const ordered = locs.map((x) => x.loc.arr[x.loc.idx]);
+    locs.slice().sort((a, b) => b.loc.idx - a.loc.idx).forEach((x) => parentArr.splice(x.loc.idx, 1));
+    const container = newContainerBlock();
+    container.blocks = ordered;
+    // If we're grouping on a free-form canvas (section or free container), the
+    // new auto-layout frame takes the top-left corner of the selection so it
+    // stays roughly where the widgets were.
+    const parentC = findParentContainer(sec, ordered[0].id);
+    const parentIsFree = parentC ? parentC.layout === 'free' : sec.layout === 'free';
+    if (parentIsFree) {
+      container.x = Math.min.apply(null, ordered.map((b) => b.x || 0));
+      container.y = Math.min.apply(null, ordered.map((b) => b.y || 0));
+    }
+    parentArr.splice(insertAt, 0, container);
+    multiSel.clear();
+    selected = { s: sec.id, b: container.id };
+    markBlocksDirty(); renderAll(); push();
+    toast('Grouped ' + ordered.length + ' widgets into an auto-layout frame.');
+  }
+
+  // Dissolve a container, splicing its children back into the parent array at
+  // the container's position (Figma's "ungroup").
+  function ungroupContainer(sec, container) {
+    const loc = locateBlock(sec, container.id);
+    if (!loc) return;
+    const kids = container.blocks || [];
+    loc.arr.splice(loc.idx, 1, ...kids);
+    selected = { s: sec.id, b: kids.length ? kids[0].id : null };
+    markBlocksDirty(); renderAll(); push();
+    toast('Ungrouped ' + kids.length + ' widgets.');
   }
 
   // ---- WIDGET ADD HANDLERS ----
@@ -1879,6 +1953,13 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         }
       }
       
+      // If the new widget landed in a free-form parent, give it a starting
+      // position so it appears on the canvas and can be dragged.
+      const parentC = findParentContainer(sec, blk.id);
+      if (parentC ? parentC.layout === 'free' : sec.layout === 'free') {
+        placeFree(blk, parentC ? parentC.blocks : sec.blocks);
+      }
+
       selected = { s: sec.id, b: blk.id };
       showWidgetGrid = false;
       markBlocksDirty(); renderAll(); push();
@@ -2017,6 +2098,31 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     wrap.append(cb, lb);
     return wrap;
   }
+  // Figma-style 3x3 alignment grid for an auto-layout container. Cells map to
+  // justifyContent (main axis) + alignItems (cross axis) based on direction.
+  function alignGrid(blk, onCh) {
+    const map = ['flex-start', 'center', 'flex-end'];
+    const isRow = (blk.flexDirection || 'column') === 'row';
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:90px';
+    let activeR, activeC;
+    if (isRow) { activeC = map.indexOf(blk.justifyContent || 'flex-start'); activeR = map.indexOf(blk.alignItems || 'stretch'); }
+    else { activeR = map.indexOf(blk.justifyContent || 'flex-start'); activeC = map.indexOf(blk.alignItems || 'stretch'); }
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+      const cell = document.createElement('button'); cell.type = 'button';
+      const on = (r === activeR && c === activeC);
+      cell.style.cssText = 'height:26px;border:1px solid var(--sb-border);background:' + (on ? 'var(--sb-accent)' : 'var(--sb-panel)') + ';border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0';
+      const dot = document.createElement('span'); dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:' + (on ? '#fff' : 'var(--sb-text-muted)');
+      cell.append(dot);
+      cell.addEventListener('click', () => {
+        if (isRow) { blk.justifyContent = map[c]; blk.alignItems = map[r]; }
+        else { blk.justifyContent = map[r]; blk.alignItems = map[c]; }
+        onCh(); renderInspector();
+      });
+      wrap.append(cell);
+    }
+    return wrap;
+  }
 
   // ---- RENDER ----
   function renderAll() { renderList(); renderInspector(); }
@@ -2024,7 +2130,23 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   function renderList() {
     listEl.innerHTML = '';
     if (!blocksData) return;
-    
+
+    // Group action bar — shown when 2+ widgets are multi-selected.
+    if (multiSel.size >= 2) {
+      const barWrap = document.createElement('div');
+      barWrap.style.cssText = 'display:flex;gap:6px;align-items:center;padding:8px;margin-bottom:6px;background:var(--sb-accent);border-radius:6px';
+      const lbl = document.createElement('span');
+      lbl.textContent = multiSel.size + ' selected'; lbl.style.cssText = 'font-size:11px;color:#fff;font-weight:600;flex:1';
+      const gBtn = document.createElement('button'); gBtn.type = 'button'; gBtn.textContent = '📦 Group';
+      gBtn.style.cssText = 'background:#fff;color:#111;border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer';
+      gBtn.addEventListener('click', groupSelection);
+      const xBtn = document.createElement('button'); xBtn.type = 'button'; xBtn.textContent = '✕';
+      xBtn.style.cssText = 'background:transparent;color:#fff;border:none;cursor:pointer;font-size:12px';
+      xBtn.addEventListener('click', () => { multiSel.clear(); renderList(); });
+      barWrap.append(lbl, gBtn, xBtn);
+      listEl.append(barWrap);
+    }
+
     const activeSecs = cur().sections;
     const allSecs = [...activeSecs];
     
@@ -2137,7 +2259,21 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           const label = blk.type === 'text' ? (blk.text || '').substring(0, 25).replace(/<[^>]+>/g, '') : blk.type.charAt(0).toUpperCase() + blk.type.slice(1);
           bb.innerHTML = '<span class="nav-tree-item__icon">' + icon + '</span><span class="nav-tree-item__label">' + (label || blk.type) + '</span>';
           if (selected.s === secId && selected.b === blk.id) bb.classList.add('active');
-          bb.addEventListener('click', (e) => { e.stopPropagation(); selected = { s: secId, b: blk.id }; showWidgetGrid = false; renderAll(); push(); });
+          if (multiSel.has(blk.id)) { bb.classList.add('active'); bb.style.boxShadow = 'inset 3px 0 0 var(--sb-accent)'; }
+          bb.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (e.ctrlKey || e.metaKey || e.shiftKey) {
+              // Toggle into the multi-selection (scoped to this section).
+              if (selected.s !== secId) multiSel.clear();
+              if (selected.b && selected.s === secId) multiSel.add(selected.b);
+              if (multiSel.has(blk.id)) multiSel.delete(blk.id); else multiSel.add(blk.id);
+              selected = { s: secId, b: blk.id };
+            } else {
+              multiSel.clear();
+              selected = { s: secId, b: blk.id };
+            }
+            showWidgetGrid = false; renderAll(); push();
+          });
           
           bb.draggable = true;
           bb.addEventListener('dragstart', (e) => {
@@ -2311,6 +2447,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     inspector.append(panelC, panelS, panelA);
 
     const switchPropsTab = (t) => {
+      propsTab = t;
       btnC.className = t === 'c' ? 'active' : '';
       btnS.className = t === 's' ? 'active' : '';
       btnA.className = t === 'a' ? 'active' : '';
@@ -2321,6 +2458,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     btnC.addEventListener('click', () => switchPropsTab('c'));
     btnS.addEventListener('click', () => switchPropsTab('s'));
     btnA.addEventListener('click', () => switchPropsTab('a'));
+    // Restore the previously-active sub-tab so it survives re-renders.
+    switchPropsTab(propsTab);
 
     // Content Tab
     if (!blk) {
@@ -2341,16 +2480,22 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
     // Style Tab
     if (!blk) {
+      panelS.append(field('Layout mode', selInput(
+        [{ v: 'free', l: 'Free-form (drag anywhere)' }, { v: 'flow', l: 'Stacked (auto-wrap row)' }],
+        sec.layout === 'free' ? 'free' : 'flow', (v) => { sec.layout = v === 'free' ? 'free' : 'flow'; upd(); renderInspector(); }
+      )));
       panelS.append(field('Background color', colorInput(sec.bg, (v) => { sec.bg = v; upd(); })));
       panelS.append(field('Vertical padding (px)', numInput(sec.paddingY, (v) => { sec.paddingY = v; upd(); }, 0, 400)));
       panelS.append(field('Padding — per side (px, overrides above)', sidePadding(sec, upd)));
-      panelS.append(field('Gap between blocks (px)', numInput(sec.gap, (v) => { sec.gap = v; upd(); }, 0, 120)));
+      if (sec.layout !== 'free') {
+        panelS.append(field('Gap between blocks (px)', numInput(sec.gap, (v) => { sec.gap = v; upd(); }, 0, 120)));
+        panelS.append(field('Block alignment', selInput(
+          [{ v: 'start', l: 'Top' }, { v: 'center', l: 'Center' }, { v: 'end', l: 'Bottom' }, { v: 'stretch', l: 'Stretch' }],
+          sec.align || 'start', (v) => { sec.align = v; upd(); }
+        )));
+      }
       panelS.append(field('Content max width (px)', numInput(sec.maxWidth, (v) => { sec.maxWidth = v || 1152; upd(); }, 320, 2400)));
-      panelS.append(field('Min height (px)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000), 'secminh'));
-      panelS.append(field('Block alignment', selInput(
-        [{ v: 'start', l: 'Top' }, { v: 'center', l: 'Center' }, { v: 'end', l: 'Bottom' }, { v: 'stretch', l: 'Stretch' }],
-        sec.align || 'start', (v) => { sec.align = v; upd(); }
-      )));
+      panelS.append(field(sec.layout === 'free' ? 'Canvas height (px)' : 'Min height (px)', numInput(sec.minHeight, (v) => { sec.minHeight = v; upd(); }, 0, 2000), 'secminh'));
     } else {
       if (blk.type === 'image') {
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
@@ -2376,10 +2521,11 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       } else if (blk.type === 'container') {
         panelS.append(field('Layout mode', selInput([{v:'auto',l:'Auto-layout (stack)'},{v:'free',l:'Free-form (absolute)'}], blk.layout === 'free' ? 'free' : 'auto', (v) => { blk.layout = v === 'free' ? 'free' : 'auto'; upd(); renderInspector(); })));
         if (blk.layout !== 'free') {
-          panelS.append(field('Direction', selInput([{v:'column',l:'Column (Vertical)'},{v:'row',l:'Row (Horizontal)'}], blk.flexDirection || 'column', (v) => { blk.flexDirection = v; upd(); })));
+          panelS.append(field('Direction', selInput([{v:'column',l:'Column (Vertical)'},{v:'row',l:'Row (Horizontal)'}], blk.flexDirection || 'column', (v) => { blk.flexDirection = v; upd(); renderInspector(); })));
+          panelS.append(field('Alignment', alignGrid(blk, upd)));
           panelS.append(field('Gap (px)', numInput(blk.gap, (v) => { blk.gap = v; upd(); }, 0, 100)));
-          panelS.append(field('Align Items', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'stretch',l:'Stretch'}], blk.alignItems || 'stretch', (v) => { blk.alignItems = v; upd(); })));
-          panelS.append(field('Justify Content', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'space-between',l:'Space Between'}], blk.justifyContent || 'flex-start', (v) => { blk.justifyContent = v; upd(); })));
+          panelS.append(field('Align Items', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'stretch',l:'Stretch'}], blk.alignItems || 'stretch', (v) => { blk.alignItems = v; upd(); renderInspector(); })));
+          panelS.append(field('Justify Content', selInput([{v:'flex-start',l:'Start'},{v:'center',l:'Center'},{v:'flex-end',l:'End'},{v:'space-between',l:'Space Between'}], blk.justifyContent || 'flex-start', (v) => { blk.justifyContent = v; upd(); renderInspector(); })));
           panelS.append(field('Wrap children', checkboxRow('Wrap onto multiple lines', blk.wrap, (v) => { blk.wrap = v; upd(); })));
         } else {
           panelS.append(field('Frame min height (px)', numInput(blk.minHeight, (v) => { blk.minHeight = v; upd(); }, 0, 2000)));
@@ -2391,16 +2537,28 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelS.append(field('Background', colorInput(blk.bg, (v) => { blk.bg = v; upd(); })));
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
       }
-      // Free-form child position controls
-      if (blk.type !== 'container') {
-        const parent = findParentContainer(sec, blk.id);
-        if (parent && parent.layout === 'free') {
-          panelS.append(field('X position (px)', numInput(blk.x || 0, (v) => { blk.x = v; upd(); }, 0, 4000)));
-          panelS.append(field('Y position (px)', numInput(blk.y || 0, (v) => { blk.y = v; upd(); }, 0, 4000)));
-          panelS.append(field('Fixed width (px, 0 = auto)', numInput(blk.freeW || 0, (v) => { blk.freeW = v || 0; upd(); }, 0, 2000)));
-        }
+      // Free-form position controls — shown whenever the widget sits directly
+      // on a free-form section canvas or inside a free-form container.
+      const parent = findParentContainer(sec, blk.id);
+      const inFree = parent ? parent.layout === 'free' : (sec.layout === 'free');
+      if (inFree) {
+        // Quick align relative to the frame/section (measured in the preview).
+        const alignRow = document.createElement('div');
+        alignRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+        const mk = (label, mode) => {
+          const bn = document.createElement('button'); bn.type = 'button'; bn.textContent = label;
+          bn.style.cssText = 'flex:1;min-width:70px;background:var(--sb-panel);border:1px solid var(--sb-border);border-radius:4px;padding:5px;font-size:11px;cursor:pointer;color:var(--sb-text)';
+          bn.addEventListener('click', () => { try { frame.contentWindow.postMessage({ type: 'ploy-free-align', sectionId: sec.id, blockId: blk.id, mode }, ORIGIN); } catch (e) {} });
+          return bn;
+        };
+        alignRow.append(mk('↔ Center H', 'centerH'), mk('↕ Center V', 'centerV'), mk('⊹ Center', 'center'));
+        panelS.append(field('Align in section', alignRow));
+        panelS.append(field('X position (px)', numInput(blk.x || 0, (v) => { blk.x = v; upd(); }, 0, 4000), 'freex'));
+        panelS.append(field('Y position (px)', numInput(blk.y || 0, (v) => { blk.y = v; upd(); }, 0, 4000), 'freey'));
+        panelS.append(field('Fixed width (px, 0 = auto)', numInput(blk.freeW || 0, (v) => { blk.freeW = v || 0; upd(); }, 0, 2000), 'freew'));
+      } else {
+        panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
       }
-      panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
     }
 
     // Advanced Tab
@@ -2427,7 +2585,12 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       );
     } else {
       acts.append(
-        actionBtn('⬆ Parent', () => { selected = { s: sec.id, b: null }; renderAll(); push(); }),
+        actionBtn('⬆ Parent', () => { const p = findParentContainer(sec, blk.id); selected = { s: sec.id, b: p ? p.id : null }; renderAll(); push(); }),
+      );
+      if (blk.type === 'container') {
+        acts.append(actionBtn('⤢ Ungroup', () => ungroupContainer(sec, blk)));
+      }
+      acts.append(
         actionBtn('✕ Delete', () => handleOp({ op: 'deleteBlock', sectionId: sec.id, blockId: blk.id }), true),
       );
     }
