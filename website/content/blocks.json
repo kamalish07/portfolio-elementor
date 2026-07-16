@@ -12,19 +12,10 @@
           "id": "default:hero",
           "type": "default_section",
           "key": "hero",
-          "blocks": [
-            {
-              "id": "b_te5yxij",
-              "type": "image",
-              "src": "/assets/images/Frame-21218-tb.png",
-              "alt": "",
-              "width": 48,
-              "radius": 0,
-              "x": 416,
-              "y": 64,
-              "freeW": 278
-            }
-          ]
+          "blocks": [],
+          "animation": "slide-up",
+          "animDuration": 1.1,
+          "hoverEffect": ""
         },
         {
           "id": "s_n4ikngv",
