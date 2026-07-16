@@ -11,7 +11,20 @@
         {
           "id": "default:hero",
           "type": "default_section",
-          "key": "hero"
+          "key": "hero",
+          "blocks": [
+            {
+              "id": "b_te5yxij",
+              "type": "image",
+              "src": "/assets/images/Frame-21218-tb.png",
+              "alt": "",
+              "width": 48,
+              "radius": 0,
+              "x": 256,
+              "y": 48,
+              "freeW": 278
+            }
+          ]
         },
         {
           "id": "s_n4ikngv",
@@ -92,7 +105,8 @@
       ],
       "defaultOverrides": {
         "footer": {},
-        "header": {}
+        "header": {},
+        "hero": {}
       },
       "migrated": true
     },
