@@ -80,27 +80,27 @@
     '.ploy-sec{position:relative}',
     /* Widget (block) hover + selection */
     '.custom-sections--edit .ploy-blk{cursor:pointer}',
-    '.custom-sections--edit .ploy-blk:hover{outline:1px dashed rgba(37,99,235,.55);outline-offset:2px}',
-    '.ploy-blk.ploy-sel{outline:2px solid #2563eb!important;outline-offset:2px}',
+    '.custom-sections--edit .ploy-blk:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:2px}',
+    '.ploy-blk.ploy-sel{outline:2px solid #6366f1!important;outline-offset:2px}',
     '.ploy-blk.ploy-multisel{outline:2px solid #f59e0b!important;outline-offset:2px}',
-    '.ploy-sec.ploy-sel-sec{outline:2px solid #7c3aed;outline-offset:-2px}',
+    '.ploy-sec.ploy-sel-sec{outline:2px solid #6366f1;outline-offset:-2px}',
     /* Floating element-name label (Webflow-style), shown on hover/selection */
-    '.ploy-name-label{position:absolute;top:0;left:0;transform:translateY(-100%);z-index:71;background:#2563eb;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:2px 8px;border-radius:3px 3px 0 0;pointer-events:none;letter-spacing:.2px;white-space:nowrap}',
-    '.ploy-name-label--sec{background:#7c3aed}',
+    '.ploy-name-label{position:absolute;top:0;left:0;transform:translateY(-100%);z-index:71;background:#6366f1;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:2px 8px;border-radius:3px 3px 0 0;pointer-events:none;letter-spacing:.2px;white-space:nowrap}',
+    '.ploy-name-label--sec{background:#6366f1}',
     '.ploy-blk{position:relative}',
     '.ploy-blk > .ploy-name-label{opacity:0;transition:opacity .12s}',
     '.custom-sections--edit .ploy-blk:hover > .ploy-name-label{opacity:1}',
     '.ploy-blk.ploy-sel > .ploy-name-label{opacity:1}',
     '.ploy-handle{position:absolute;width:14px;height:14px;border-radius:3px;z-index:60;box-shadow:0 0 0 2px #fff;touch-action:none}',
-    '.ploy-handle--right{background:#2563eb;right:-8px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
-    '.ploy-handle--bottom{background:#7c3aed;left:50%;bottom:-8px;transform:translateX(-50%);cursor:ns-resize}',
-    '.ploy-handle--move{width:22px;height:22px;background:#7c3aed;left:-11px;top:-11px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}',
-    '.ploy-freeframe--edit{outline:1px dashed rgba(124,58,237,.35);outline-offset:-1px;background-image:radial-gradient(rgba(124,58,237,.16) 1px, transparent 1px);background-size:16px 16px}',
+    '.ploy-handle--right{background:#6366f1;right:-8px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
+    '.ploy-handle--bottom{background:#6366f1;left:50%;bottom:-8px;transform:translateX(-50%);cursor:ns-resize}',
+    '.ploy-handle--move{width:22px;height:22px;background:#6366f1;left:-11px;top:-11px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}',
+    '.ploy-freeframe--edit{outline:1px dashed rgba(99,102,241,.35);outline-offset:-1px;background-image:radial-gradient(rgba(99,102,241,.16) 1px, transparent 1px);background-size:16px 16px}',
     '.ploy-toolbar{position:absolute;display:flex;gap:4px;z-index:70;font-family:system-ui,sans-serif}',
     '.ploy-toolbar--sec{top:6px;right:6px}',
     '.ploy-toolbar--blk{top:-30px;left:0}',
     '.ploy-toolbar button{border:0;border-radius:3px;padding:3px 9px;font-size:12px;line-height:1.5;cursor:pointer;background:#1f2937;color:#fff}',
-    '.ploy-toolbar--sec button{background:#7c3aed}',
+    '.ploy-toolbar--sec button{background:#6366f1}',
     '.ploy-empty{border:2px dashed #b9b2a6;border-radius:8px;margin:28px auto;max-width:900px;padding:44px 20px;text-align:center;color:#8a8375;font:14px/1.5 system-ui,sans-serif}',
     '.ploy-imgph{border:2px dashed #999;border-radius:6px;min-height:140px;display:flex;align-items:center;justify-content:center;color:#777;font:13px system-ui,sans-serif;background:rgba(0,0,0,.04);padding:12px;text-align:center}',
     '.ploy-blk__text:focus{outline:none}',
@@ -108,17 +108,17 @@
        chrome (empty areas), but inner text/image fields stay directly
        clickable for inline editing — so no blocking overlay. */
     '.ploy-defsec--edit{position:relative;transition:outline .15s}',
-    '.ploy-defsec--edit:hover{outline:2px dashed rgba(124,58,237,.45);outline-offset:-2px}',
+    '.ploy-defsec--edit:hover{outline:2px dashed rgba(99,102,241,.45);outline-offset:-2px}',
     '.ploy-defsec--edit:hover > .ploy-defsec-label{opacity:1}',
-    '.ploy-defsec--selected{outline:2px solid #7c3aed!important;outline-offset:-2px}',
+    '.ploy-defsec--selected{outline:2px solid #6366f1!important;outline-offset:-2px}',
     '.ploy-defsec--selected > .ploy-defsec-label{opacity:1}',
-    '.ploy-defsec-label{position:absolute;top:0;left:0;z-index:72;background:#7c3aed;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:3px 10px;border-radius:0 0 4px 0;pointer-events:none;letter-spacing:.3px;opacity:.55;transition:opacity .12s}',
+    '.ploy-defsec-label{position:absolute;top:0;left:0;z-index:72;background:#6366f1;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:3px 10px;border-radius:0 0 4px 0;pointer-events:none;letter-spacing:.3px;opacity:.55;transition:opacity .12s}',
     /* Extra-widgets zone dropped into a default section */
     '.ploy-defsec-extra{position:relative;z-index:2}',
     /* Inline-editable fields get a subtle affordance on hover in edit mode */
-    '.ploy-defsec--edit [data-cms]:hover,.ploy-defsec--edit [data-f]:hover{outline:1px dashed rgba(37,99,235,.5);outline-offset:2px;cursor:text}',
+    '.ploy-defsec--edit [data-cms]:hover,.ploy-defsec--edit [data-f]:hover{outline:1px dashed rgba(99,102,241,.5);outline-offset:2px;cursor:text}',
     /* Link styling */
-    '.ploy-blk__text a{color:var(--ploy-accent-primary, #2563eb);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}',
+    '.ploy-blk__text a{color:var(--ploy-accent-primary, #6366f1);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}',
     '.ploy-blk__text a:hover{border-color:currentColor}',
   ].join('\n');
   document.head.appendChild(styleEl);
@@ -644,7 +644,7 @@
     if (!selectedHere) return;
 
     secEl.classList.add('ploy-sel-sec');
-    secEl.style.outlineColor = 'var(--ploy-sel, #3b82f6)';
+    secEl.style.outlineColor = 'var(--ploy-sel, #6366f1)';
     secEl.appendChild(sectionToolbar(sec, false));
 
     var handle = document.createElement('div');

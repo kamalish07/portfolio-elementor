@@ -43,7 +43,7 @@
     if (inCMS) {
       el.setAttribute('contenteditable', 'true');
       el.style.outline = 'none';
-      el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+      el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #6366f1'; });
       if (window.PloyRTToolbar) window.PloyRTToolbar.attach(el);
       el.addEventListener('blur', function() {
         el.style.boxShadow = 'none';
@@ -68,7 +68,7 @@
         e.stopPropagation();
         window.parent.postMessage({ type: 'ploy-image-edit', path: path, current: el.getAttribute('src') }, '*');
       });
-      el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #3b82f6'; });
+      el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #6366f1'; });
       el.addEventListener('mouseout', function() { el.style.outline = 'none'; });
     }
   });
@@ -107,7 +107,7 @@
         if (inCMS) {
           el.setAttribute('contenteditable', 'true');
           el.style.outline = 'none';
-          el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #3b82f6'; });
+          el.addEventListener('focus', function() { el.style.boxShadow = '0 0 0 2px #6366f1'; });
           if (window.PloyRTToolbar) window.PloyRTToolbar.attach(el);
           el.addEventListener('blur', function() {
             el.style.boxShadow = 'none';
@@ -131,7 +131,7 @@
             e.stopPropagation();
             window.parent.postMessage({ type: 'ploy-image-edit', path: path, current: el.getAttribute('src') }, '*');
           });
-          el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #3b82f6'; });
+          el.addEventListener('mouseover', function() { el.style.outline = '2px dashed #6366f1'; });
           el.addEventListener('mouseout', function() { el.style.outline = 'none'; });
         }
       });
