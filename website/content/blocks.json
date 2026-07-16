@@ -39,8 +39,8 @@
               "bold": true,
               "align": "left",
               "width": 100,
-              "x": 32,
-              "y": 128,
+              "x": 624,
+              "y": 192,
               "freeW": 490
             },
             {
@@ -86,7 +86,8 @@
       "defaultOverrides": {
         "footer": {},
         "header": {},
-        "hero": {}
+        "hero": {},
+        "projects": {}
       },
       "migrated": true
     },
