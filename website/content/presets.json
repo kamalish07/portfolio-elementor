@@ -1,0 +1,24 @@
+{
+  "presets": [
+    {
+      "name": "Test Hero",
+      "section": {
+        "id": "s_test",
+        "layout": "free",
+        "minHeight": 300,
+        "blocks": [
+          {
+            "id": "b1",
+            "type": "text",
+            "tag": "h2",
+            "text": "Preset heading",
+            "x": 40,
+            "y": 40,
+            "freeW": 300,
+            "width": 100
+          }
+        ]
+      }
+    }
+  ]
+}
