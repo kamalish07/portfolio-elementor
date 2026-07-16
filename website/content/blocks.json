@@ -3,9 +3,69 @@
     "home": {
       "sections": [
         {
+          "id": "default:header",
+          "type": "default_section",
+          "key": "header",
+          "blocks": []
+        },
+        {
           "id": "default:hero",
           "type": "default_section",
           "key": "hero"
+        },
+        {
+          "id": "s_n4ikngv",
+          "bg": "#ffffff",
+          "paddingY": 40,
+          "gap": 24,
+          "maxWidth": 1152,
+          "minHeight": 529,
+          "align": "start",
+          "layout": "free",
+          "blocks": [
+            {
+              "id": "b_tgph0p9",
+              "type": "text",
+              "tag": "p",
+              "text": "GEN-Z in the B2B<div>SaaS industy</div>",
+              "font": "inter",
+              "fontCustom": "Roboto",
+              "size": 56,
+              "color": "",
+              "bold": true,
+              "align": "left",
+              "width": 100,
+              "x": 32,
+              "y": 128,
+              "freeW": 490
+            },
+            {
+              "id": "b_23mxcqe",
+              "type": "image",
+              "src": "/assets/images/rere-1.webp",
+              "alt": "",
+              "width": 48,
+              "radius": 0,
+              "x": 560,
+              "y": 0,
+              "freeW": 556
+            },
+            {
+              "id": "b_3290hts",
+              "type": "text",
+              "tag": "p",
+              "text": "Gen-Z play a vey significant Role in B2B SaaS <div>Industry so we shouldn't just Ignore them</div>",
+              "font": "inter",
+              "fontCustom": "",
+              "size": 0,
+              "color": "",
+              "bold": false,
+              "align": "left",
+              "width": 100,
+              "x": 48,
+              "y": 320
+            }
+          ]
         },
         {
           "id": "default:practice",
@@ -25,10 +85,14 @@
         {
           "id": "default:footer",
           "type": "default_section",
-          "key": "footer"
+          "key": "footer",
+          "blocks": []
         }
       ],
-      "defaultOverrides": {},
+      "defaultOverrides": {
+        "footer": {},
+        "header": {}
+      },
       "migrated": true
     },
     "product-wireframes": {
@@ -67,6 +131,16 @@
     },
     "about-me": {
       "sections": []
+    }
+  },
+  "global": {
+    "footer": {
+      "blocks": [],
+      "override": {}
+    },
+    "header": {
+      "blocks": [],
+      "override": {}
     }
   }
 }
