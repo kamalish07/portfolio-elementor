@@ -44,17 +44,6 @@
               "freeW": 490
             },
             {
-              "id": "b_23mxcqe",
-              "type": "image",
-              "src": "/assets/images/rere-1.webp",
-              "alt": "",
-              "width": 48,
-              "radius": 0,
-              "x": 688,
-              "y": 0,
-              "freeW": 586
-            },
-            {
               "id": "b_3290hts",
               "type": "text",
               "tag": "p",
