@@ -1014,6 +1014,10 @@ body { font-size: 13.5px; }
 .cms-bottom { font-size: 12.5px; }
 .panel-left__editing { font-size: 12.5px; }
 .panel-left__content-hd { font-size: 13px; }
+
+/* Collapsible side panels → full-screen canvas */
+.panel-left.collapsed, .panel-right.collapsed { display: none; }
+.icon-btn.active { background: var(--sb-accent-bg); color: var(--sb-accent); }
 </style>
 </head>
 <body>
@@ -1024,6 +1028,9 @@ body { font-size: 13.5px; }
   <!-- HEADER -->
   <header class="cms-header">
     <div class="cms-header__left">
+      <button class="icon-btn" id="toggleLeftBtn" type="button" title="Toggle layers panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+      </button>
       <div class="pages-crumb">
         <span class="pages-crumb__root">Pages</span>
         <span class="pages-crumb__sep">›</span>
@@ -1048,9 +1055,15 @@ body { font-size: 13.5px; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Preview
       </button>
+      <button class="icon-btn" id="fullscreenBtn" type="button" title="Full-screen canvas (hide both panels)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/></svg>
+      </button>
     </div>
 
     <div class="cms-header__actions">
+      <button class="icon-btn" id="toggleRightBtn" type="button" title="Toggle inspector panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
+      </button>
       <button class="btn-publish" id="publishBtn" type="button">Publish</button>
       <button class="icon-btn" id="menuBtn" type="button" title="Open live site">⋯</button>
       <!-- Legacy save buttons kept (hidden) — Publish orchestrates them -->
@@ -1209,6 +1222,28 @@ body { font-size: 13.5px; }
   // "⋯" opens the live site in a new tab
   document.getElementById('menuBtn').addEventListener('click', () => {
     window.open(window.WEBSITE_ORIGIN, '_blank');
+  });
+
+  // Panel toggles + full-screen canvas (collapse both sidebars at once)
+  const leftPanel = document.getElementById('sidebar');
+  const rightPanel = document.querySelector('.panel-right');
+  const tL = document.getElementById('toggleLeftBtn');
+  const tR = document.getElementById('toggleRightBtn');
+  const fs = document.getElementById('fullscreenBtn');
+  function syncPanelButtons() {
+    const l = leftPanel.classList.contains('collapsed');
+    const r = rightPanel.classList.contains('collapsed');
+    tL.classList.toggle('active', l);
+    tR.classList.toggle('active', r);
+    fs.classList.toggle('active', l && r);
+  }
+  tL.addEventListener('click', () => { leftPanel.classList.toggle('collapsed'); syncPanelButtons(); });
+  tR.addEventListener('click', () => { rightPanel.classList.toggle('collapsed'); syncPanelButtons(); });
+  fs.addEventListener('click', () => {
+    const both = leftPanel.classList.contains('collapsed') && rightPanel.classList.contains('collapsed');
+    leftPanel.classList.toggle('collapsed', !both);
+    rightPanel.classList.toggle('collapsed', !both);
+    syncPanelButtons();
   });
 })();
 </script>
@@ -2178,6 +2213,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         try { frame.contentWindow.postMessage({ type: 'ploy-image-updated', path: d.path, value: tempVal }, ORIGIN); } catch (e) {}
       };
     } else if (d.type === 'ploy-blocks-select') {
+      // A plain (non-modifier) selection always replaces the multi-selection —
+      // clicking blank canvas posts nulls here, which fully deselects.
+      multiSel.clear();
       selected = { s: d.sectionId, b: d.blockId };
       showWidgetGrid = !!d.openWidgets;
       if (window.showBlockTab) window.showBlockTab();
@@ -2746,7 +2784,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         if (!sec._hidden) {
           if (selected.s === sec.id && !selected.b) b.classList.add('active');
           b.addEventListener('click', () => {
-            selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push();
+            multiSel.clear(); selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push();
             try { frame.contentWindow.postMessage({ type: 'ploy-scroll-to-section', sectionKey: sec.key }, ORIGIN); } catch (e) {}
           });
         }
@@ -2755,7 +2793,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         b.innerHTML = '<span class="nav-tree-item__icon">▦</span><span class="nav-tree-item__label">Section ' + (i + 1) + '</span><span class="nav-tree-item__badge">' + blkCount + '</span>';
         b.prepend(eyeBtn);
         if (selected.s === sec.id && !selected.b) b.classList.add('active');
-        b.addEventListener('click', () => { selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); });
+        b.addEventListener('click', () => { multiSel.clear(); selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); });
       }
       group.append(b);
 
@@ -2870,7 +2908,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const secLabel = sec.type === 'default_section'
       ? '📌 ' + ((knownDefaultSections.find((d) => d.id === sec.id) || {}).label || sec.key || 'Section')
       : '▦ Section';
-    bc.append(crumb(secLabel, () => { selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); }, !blk));
+    bc.append(crumb(secLabel, () => { multiSel.clear(); selected = { s: sec.id, b: null }; showWidgetGrid = false; renderAll(); push(); }, !blk));
     if (blk) {
       const chain = [];
       let p = findParentContainer(sec, blk.id);

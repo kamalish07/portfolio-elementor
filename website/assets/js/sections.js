@@ -771,7 +771,9 @@
         if (a) ev.preventDefault();
         if (isInnerEditTarget(ev.target)) return; // let inline editing handle it
         ev.stopPropagation();
-        if (selectedHere) return;
+        // Blank click with an active multi-selection still re-posts, so the
+        // CMS clears the multi-selection (standard click-empty-to-deselect).
+        if (selectedHere && !(state.multi && state.multi.length)) return;
         select(sec.id, null);
       };
       secEl.addEventListener('click', secEl._ployClickHandler);
@@ -788,7 +790,7 @@
     secEl.addEventListener('click', function (ev) {
       if (isInnerEditTarget(ev.target)) return;
       ev.stopPropagation();
-      if (selectedHere) return;
+      if (selectedHere && !(state.multi && state.multi.length)) return;
       select(sec.id, null);
     });
     if (!selectedHere) return;
@@ -963,7 +965,7 @@
     // Don't deselect if clicking inside a default section
     var defaultEl = ev.target.closest && ev.target.closest('[data-default-section]');
     if (defaultEl) return;
-    if (state.selected.s || state.selected.b) select(null, null);
+    if (state.selected.s || state.selected.b || (state.multi && state.multi.length)) select(null, null);
   });
 
   // Keyboard: arrows nudge the selected free-form widget (Shift = 10px),
