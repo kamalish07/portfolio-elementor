@@ -91,16 +91,21 @@
     '.ploy-blk > .ploy-name-label{opacity:0;transition:opacity .12s}',
     '.custom-sections--edit .ploy-blk:hover > .ploy-name-label{opacity:1}',
     '.ploy-blk.ploy-sel > .ploy-name-label{opacity:1}',
-    '.ploy-handle{position:absolute;width:14px;height:14px;border-radius:3px;z-index:60;box-shadow:0 0 0 2px #fff;touch-action:none}',
-    '.ploy-handle--right{background:#6366f1;right:-8px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
-    '.ploy-handle--bottom{background:#6366f1;left:50%;bottom:-8px;transform:translateX(-50%);cursor:ns-resize}',
-    '.ploy-handle--move{width:22px;height:22px;background:#6366f1;left:-11px;top:-11px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}',
+    '.ploy-handle{position:absolute;width:12px;height:12px;border-radius:50%;z-index:60;background:#fff;border:2px solid #6366f1;box-shadow:0 1px 4px rgba(15,23,42,.28);touch-action:none;box-sizing:border-box}',
+    '.ploy-handle--right{right:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
+    '.ploy-handle--bottom{left:50%;bottom:-7px;transform:translateX(-50%);cursor:ns-resize}',
+    '.ploy-handle--move{width:20px;height:20px;background:#6366f1;border:2px solid #fff;left:-10px;top:-10px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}',
+    /* Smart alignment guides shown while dragging (Figma-style) */
+    '.ploy-guide{position:absolute;z-index:65;pointer-events:none;background:#ec4899}',
+    '.ploy-guide--v{top:0;bottom:0;width:1px}',
+    '.ploy-guide--h{left:0;right:0;height:1px}',
     '.ploy-freeframe--edit{outline:1px dashed rgba(99,102,241,.35);outline-offset:-1px;background-image:radial-gradient(rgba(99,102,241,.16) 1px, transparent 1px);background-size:16px 16px}',
-    '.ploy-toolbar{position:absolute;display:flex;gap:4px;z-index:70;font-family:system-ui,sans-serif}',
+    '.ploy-toolbar{position:absolute;display:flex;gap:3px;z-index:70;font-family:system-ui,sans-serif;background:#1f2430;padding:3px;border-radius:7px;box-shadow:0 4px 14px rgba(15,23,42,.3)}',
     '.ploy-toolbar--sec{top:6px;right:6px}',
-    '.ploy-toolbar--blk{top:-30px;left:0}',
-    '.ploy-toolbar button{border:0;border-radius:3px;padding:3px 9px;font-size:12px;line-height:1.5;cursor:pointer;background:#1f2937;color:#fff}',
-    '.ploy-toolbar--sec button{background:#6366f1}',
+    '.ploy-toolbar--blk{top:-38px;left:0}',
+    '.ploy-toolbar button{border:0;border-radius:5px;padding:3px 9px;font-size:12px;line-height:1.5;cursor:pointer;background:transparent;color:#fff;transition:background .1s}',
+    '.ploy-toolbar button:hover{background:rgba(255,255,255,.16)}',
+    '.ploy-toolbar--sec{background:#6366f1}',
     '.ploy-empty{border:2px dashed #b9b2a6;border-radius:8px;margin:28px auto;max-width:900px;padding:44px 20px;text-align:center;color:#8a8375;font:14px/1.5 system-ui,sans-serif}',
     '.ploy-imgph{border:2px dashed #999;border-radius:6px;min-height:140px;display:flex;align-items:center;justify-content:center;color:#777;font:13px system-ui,sans-serif;background:rgba(0,0,0,.04);padding:12px;text-align:center}',
     '.ploy-blk__text:focus{outline:none}',
@@ -274,6 +279,7 @@
               if (state.editMode && state.selected.b === b.id) {
                 addFreeMoveHandle(childEl, sec, b, el);
                 addFreeResizeHandle(childEl, sec, b);
+                addFreeHeightHandle(childEl, sec, b);
               }
               extraZone.appendChild(childEl);
             });
@@ -315,6 +321,7 @@
           if (state.editMode && state.selected.b === b.id) {
             addFreeMoveHandle(childEl, sec, b, canvas);
             addFreeResizeHandle(childEl, sec, b);
+            addFreeHeightHandle(childEl, sec, b);
           }
           canvas.appendChild(childEl);
         });
@@ -405,6 +412,7 @@
           if (state.editMode && state.selected.b === child.id) {
             addFreeMoveHandle(childEl, sec, child, wrap);
             addFreeResizeHandle(childEl, sec, child);
+            addFreeHeightHandle(childEl, sec, child);
           }
         }
         wrap.appendChild(childEl);
@@ -494,7 +502,7 @@
       el.style.whiteSpace = 'pre-wrap';
       el.style.fontSize = (b.size || d.size) + 'px';
       el.style.fontWeight = b.bold ? 700 : d.weight;
-      el.style.lineHeight = d.heading ? '1.15' : '1.6';
+      el.style.lineHeight = b.lineHeight ? String(b.lineHeight) : (d.heading ? '1.15' : '1.6');
       el.style.textAlign = b.align || 'left';
       el.style.fontFamily = (b.font && window.PloyTheme)
         ? window.PloyTheme.fontStack(b.font, b.fontCustom)
@@ -508,6 +516,7 @@
       wrap.appendChild(makeNameLabel(icon + ' ' + typeName, false));
       if (state.multi && state.multi.indexOf(b.id) !== -1) wrap.classList.add('ploy-multisel');
       attachBlockEditing(wrap, sec, b, freeCtx);
+      if (freeCtx) attachFreeDrag(wrap, sec, b);
     }
     applyAnimation(wrap, b);
     applyHoverEffect(wrap, b);
@@ -549,53 +558,152 @@
     return btn;
   }
 
-  // Adds a drag handle to a free-form child so it can be dragged around its
-  // frame on the canvas. Updates x/y live and posts the final position so the
-  // CMS persists it. Snaps to a 16px grid unless Alt is held. When the block
-  // belongs to a multi-selection, every selected sibling moves together.
+  // ------- free-form dragging: grab the widget anywhere, with smart guides -
+  // Tracks the last completed drag so the click that fires right after a drag
+  // doesn't get treated as a select/edit click.
+  var justDragged = { id: null, t: 0 };
+
+  function clearGuides() {
+    var gs = document.querySelectorAll('.ploy-guide');
+    for (var i = 0; i < gs.length; i++) gs[i].remove();
+  }
+  function showGuide(frame, axis, pos) {
+    var g = document.createElement('div');
+    g.className = 'ploy-guide ploy-guide--' + axis;
+    if (axis === 'v') g.style.left = pos + 'px';
+    else g.style.top = pos + 'px';
+    frame.appendChild(g);
+  }
+
+  // Core drag loop shared by the move handle and whole-widget dragging.
+  // Snaps the dragged widget's edges/center to the frame's edges/center and
+  // to sibling widgets' edges/centers, drawing guide lines while snapped
+  // (hold Alt for free movement). Multi-selected widgets move as one group.
+  function startFreeDrag(ev, sec, blk, childEl) {
+    ev.preventDefault();
+    var frame = childEl.parentElement;
+    if (!frame) return;
+    var startX = ev.clientX, startY = ev.clientY;
+    var ids = (state.multi && state.multi.indexOf(blk.id) !== -1) ? state.multi : [blk.id];
+    var group = [];
+    ids.forEach(function (id) {
+      var b2 = id === blk.id ? blk : findBlockInSection(sec, id);
+      var el2 = id === blk.id ? childEl : document.querySelector('[data-bid="' + id + '"]');
+      if (b2 && el2) group.push({ b: b2, el: el2, ox: b2.x || 0, oy: b2.y || 0 });
+    });
+    // Collect snap lines from the frame and non-dragged siblings.
+    var fw = frame.clientWidth, fh = frame.clientHeight;
+    var xLines = [0, Math.round(fw / 2), fw];
+    var yLines = [0, Math.round(fh / 2), fh];
+    Array.prototype.forEach.call(frame.children, function (sib) {
+      if (!sib.classList || !sib.classList.contains('ploy-blk')) return;
+      if (ids.indexOf(sib.dataset.bid) !== -1) return;
+      var l = sib.offsetLeft, t = sib.offsetTop, w = sib.offsetWidth, h = sib.offsetHeight;
+      xLines.push(l, l + Math.round(w / 2), l + w);
+      yLines.push(t, t + Math.round(h / 2), t + h);
+    });
+    var bw = childEl.offsetWidth, bh = childEl.offsetHeight;
+    var origX = blk.x || 0, origY = blk.y || 0;
+    var moved = false;
+    var SNAP = 6;
+    try { childEl.setPointerCapture(ev.pointerId); } catch (e) {}
+
+    function onMove(e) {
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!moved && Math.abs(dx) < 3 && Math.abs(dy) < 3) return; // click, not drag
+      moved = true;
+      var nx = origX + dx, ny = origY + dy;
+      clearGuides();
+      if (!e.altKey) {
+        var bestX = null, bestXd = SNAP + 1, guideX = null;
+        [[nx, 0], [nx + bw / 2, bw / 2], [nx + bw, bw]].forEach(function (pair) {
+          xLines.forEach(function (line) {
+            var d = Math.abs(pair[0] - line);
+            if (d < bestXd) { bestXd = d; bestX = line - pair[1]; guideX = line; }
+          });
+        });
+        var bestY = null, bestYd = SNAP + 1, guideY = null;
+        [[ny, 0], [ny + bh / 2, bh / 2], [ny + bh, bh]].forEach(function (pair) {
+          yLines.forEach(function (line) {
+            var d = Math.abs(pair[0] - line);
+            if (d < bestYd) { bestYd = d; bestY = line - pair[1]; guideY = line; }
+          });
+        });
+        if (bestX != null) { nx = bestX; showGuide(frame, 'v', guideX); }
+        if (bestY != null) { ny = bestY; showGuide(frame, 'h', guideY); }
+      }
+      nx = Math.max(0, Math.round(nx)); ny = Math.max(0, Math.round(ny));
+      var gdx = nx - origX, gdy = ny - origY;
+      group.forEach(function (g) {
+        g.b.x = Math.max(0, Math.round(g.ox + gdx));
+        g.b.y = Math.max(0, Math.round(g.oy + gdy));
+        g.el.style.left = g.b.x + 'px';
+        g.el.style.top = g.b.y + 'px';
+      });
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      clearGuides();
+      if (!moved) return;
+      justDragged = { id: blk.id, t: Date.now() };
+      if (group.length > 1) {
+        post({ type: 'ploy-blocks-free-move-batch', sectionId: sec.id, moves: group.map(function (g) { return { id: g.b.id, x: g.b.x, y: g.b.y }; }) });
+      } else {
+        post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+      }
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  // Whole-widget dragging: grab anywhere on a free-form widget to move it,
+  // Figma-style. The 3px threshold in startFreeDrag keeps plain clicks
+  // behaving as selection clicks.
+  function attachFreeDrag(childEl, sec, blk) {
+    childEl.style.cursor = 'move';
+    childEl.addEventListener('pointerdown', function (ev) {
+      if (ev.button !== 0) return;
+      if (ev.target.closest && ev.target.closest('.ploy-toolbar, .ploy-handle, .ploy-rt-toolbar, input, select, textarea')) return;
+      if (ev.target.closest && ev.target.closest('[contenteditable="true"]')) return; // typing
+      startFreeDrag(ev, sec, blk, childEl);
+    });
+  }
+
   function addFreeMoveHandle(childEl, sec, blk, frame) {
     var handle = document.createElement('div');
     handle.className = 'ploy-handle ploy-handle--move';
-    handle.title = 'Drag to move';
+    handle.title = 'Drag to move (Alt = no snapping)';
     handle.textContent = '✥';
-    var startX = 0, startY = 0, snap = true, group = [];
     handle.addEventListener('pointerdown', function (ev) {
-      ev.preventDefault();
       ev.stopPropagation();
-      startX = ev.clientX; startY = ev.clientY;
-      snap = !ev.altKey;
-      // Build the drag group: the block itself plus any multi-selected
-      // siblings that are also visible on this canvas.
-      var ids = (state.multi && state.multi.indexOf(blk.id) !== -1) ? state.multi : [blk.id];
-      group = [];
-      ids.forEach(function (id) {
-        var b2 = id === blk.id ? blk : findBlockInSection(sec, id);
-        var el2 = id === blk.id ? childEl : document.querySelector('[data-bid="' + id + '"]');
-        if (b2 && el2) group.push({ b: b2, el: el2, ox: b2.x || 0, oy: b2.y || 0 });
-      });
-      try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
-      function move(e) {
-        var dx = e.clientX - startX, dy = e.clientY - startY;
-        group.forEach(function (g) {
-          var nx = Math.max(0, g.ox + dx);
-          var ny = Math.max(0, g.oy + dy);
-          if (snap) { nx = Math.round(nx / 16) * 16; ny = Math.round(ny / 16) * 16; }
-          g.b.x = Math.round(nx); g.b.y = Math.round(ny);
-          g.el.style.left = g.b.x + 'px';
-          g.el.style.top = g.b.y + 'px';
-        });
+      startFreeDrag(ev, sec, blk, childEl);
+    });
+    childEl.appendChild(handle);
+  }
+
+  // Height resize for shapes and containers on a free canvas.
+  function addFreeHeightHandle(childEl, sec, blk) {
+    if (blk.type !== 'shape' && blk.type !== 'container') return;
+    var handle = document.createElement('div');
+    handle.className = 'ploy-handle ploy-handle--bottom';
+    handle.title = 'Drag to resize height';
+    var startH = 0;
+    handle.addEventListener('pointerdown', function () { startH = childEl.getBoundingClientRect().height; });
+    dragHandle(handle, function (dx, dy) {
+      var h = Math.max(8, Math.round(startH + dy));
+      if (blk.type === 'shape') {
+        if ((blk.shape || 'rectangle') === 'line') blk.thickness = h; else blk.height = h;
+        if (childEl.firstElementChild) childEl.firstElementChild.style.height = h + 'px';
+      } else {
+        blk.minHeight = h;
+        childEl.style.minHeight = h + 'px';
       }
-      function up() {
-        handle.removeEventListener('pointermove', move);
-        handle.removeEventListener('pointerup', up);
-        if (group.length > 1) {
-          post({ type: 'ploy-blocks-free-move-batch', sectionId: sec.id, moves: group.map(function (g) { return { id: g.b.id, x: g.b.x, y: g.b.y }; }) });
-        } else {
-          post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
-        }
-      }
-      handle.addEventListener('pointermove', move);
-      handle.addEventListener('pointerup', up);
+    }, function () {
+      var props = blk.type === 'shape'
+        ? ((blk.shape || 'rectangle') === 'line' ? { thickness: blk.thickness } : { height: blk.height })
+        : { minHeight: blk.minHeight };
+      post({ type: 'ploy-blocks-prop', sectionId: sec.id, blockId: blk.id, props: props });
     });
     childEl.appendChild(handle);
   }
@@ -748,6 +856,8 @@
     // adds the widget to a multi-selection for grouping/alignment.
     wrap.addEventListener('click', function (ev) {
       ev.stopPropagation();
+      // A drag just ended on this widget — swallow the trailing click.
+      if (justDragged.id === b.id && Date.now() - justDragged.t < 400) { justDragged.id = null; return; }
       if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
         post({ type: 'ploy-blocks-multiselect', sectionId: sec.id, blockId: b.id });
         return;
@@ -854,6 +964,42 @@
     var defaultEl = ev.target.closest && ev.target.closest('[data-default-section]');
     if (defaultEl) return;
     if (state.selected.s || state.selected.b) select(null, null);
+  });
+
+  // Keyboard: arrows nudge the selected free-form widget (Shift = 10px),
+  // Delete removes it, Escape steps the selection up / clears it. Ignored
+  // while typing in text fields.
+  document.addEventListener('keydown', function (ev) {
+    if (!state.editMode) return;
+    var ae = document.activeElement;
+    if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return;
+    if (!state.selected.b) {
+      if (ev.key === 'Escape' && state.selected.s) select(null, null);
+      return;
+    }
+    var sec = null;
+    for (var i = 0; i < state.sections.length; i++) {
+      if (state.sections[i].id === state.selected.s) { sec = state.sections[i]; break; }
+    }
+    if (!sec) return;
+    var blk = findBlockInSection(sec, state.selected.b);
+    if (!blk) return;
+    if (ev.key === 'Escape') { select(sec.id, null); return; }
+    if (ev.key === 'Delete' || ev.key === 'Backspace') {
+      ev.preventDefault();
+      post({ type: 'ploy-blocks-op', op: 'deleteBlock', sectionId: sec.id, blockId: blk.id });
+      return;
+    }
+    var ARROWS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (ARROWS[ev.key] && typeof blk.x === 'number') {
+      ev.preventDefault();
+      var step = ev.shiftKey ? 10 : 1;
+      blk.x = Math.max(0, (blk.x || 0) + ARROWS[ev.key][0] * step);
+      blk.y = Math.max(0, (blk.y || 0) + ARROWS[ev.key][1] * step);
+      var el = document.querySelector('[data-bid="' + blk.id + '"]');
+      if (el) { el.style.left = blk.x + 'px'; el.style.top = blk.y + 'px'; }
+      post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+    }
   });
 
   // ---------------- text style overrides ----------------
@@ -1011,10 +1157,12 @@
         var r = t.getBoundingClientRect(); if (!r.width || !r.height) return;
         var txt = (t.textContent || '').trim(); if (!txt) return;
         var cs = getComputedStyle(t);
+        var lh = Math.round((parseFloat(cs.lineHeight) / parseFloat(cs.fontSize)) * 100) / 100;
         blocks.push({ type: 'text', tag: /^H[1-3]$/.test(t.tagName) ? t.tagName.toLowerCase() : 'p',
           text: t.innerHTML, size: Math.round(parseFloat(cs.fontSize) || 16), color: cs.color,
-          bold: (parseInt(cs.fontWeight, 10) || 400) >= 600, align: 'left', font: '', fontCustom: '',
-          x: Math.round(r.left - secRect.left), y: Math.round(r.top - secRect.top), freeW: Math.round(r.width) + 2, width: 100 });
+          bold: (parseInt(cs.fontWeight, 10) || 400) >= 600, align: 'left',
+          font: 'custom', fontCustom: cs.fontFamily, lineHeight: isFinite(lh) ? lh : 1.4,
+          x: Math.round(r.left - secRect.left), y: Math.round(r.top - secRect.top), freeW: Math.round(r.width) + 4, width: 100 });
         used.push(t);
       });
       post({

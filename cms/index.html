@@ -2216,6 +2216,13 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       const sec = findSec(d.sectionId); if (!sec) return;
       (d.moves || []).forEach((m) => { const blk = findBlk(sec, m.id); if (blk) { blk.x = m.x; blk.y = m.y; } });
       markBlocksDirty();
+    } else if (d.type === 'ploy-blocks-prop') {
+      // Generic property merge from an in-canvas interaction (e.g. height
+      // resize of a shape/container).
+      const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
+      Object.assign(blk, d.props || {});
+      markBlocksDirty();
+      renderInspector();
     } else if (d.type === 'ploy-default-converted') {
       // Replace the default section with a free-form section whose widgets
       // mirror the measured elements. The original stays recoverable via the
