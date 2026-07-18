@@ -82,7 +82,8 @@
     '.custom-sections--edit .ploy-blk{cursor:pointer}',
     '.custom-sections--edit .ploy-blk:hover{outline:1px dashed rgba(99,102,241,.55);outline-offset:2px}',
     '.ploy-blk.ploy-sel{outline:2px solid #6366f1!important;outline-offset:2px}',
-    '.ploy-blk.ploy-multisel{outline:2px solid #f59e0b!important;outline-offset:2px}',
+    '.ploy-blk.ploy-multisel{outline:2px solid #6366f1!important;outline-offset:2px}',
+    '.ploy-marquee{position:absolute;z-index:64;pointer-events:none;border:1px solid #6366f1;background:rgba(99,102,241,.08);border-radius:2px}',
     '.ploy-sec.ploy-sel-sec{outline:2px solid #6366f1;outline-offset:-2px}',
     /* Floating element-name label (Webflow-style), shown on hover/selection */
     '.ploy-name-label{position:absolute;top:0;left:0;transform:translateY(-100%);z-index:71;background:#6366f1;color:#fff;font:600 11px/1.4 system-ui,sans-serif;padding:2px 8px;border-radius:3px 3px 0 0;pointer-events:none;letter-spacing:.2px;white-space:nowrap}',
@@ -310,7 +311,10 @@
         canvas.style.maxWidth = (sec.maxWidth || 1152) + 'px';
         canvas.style.margin = '0 auto';
         canvas.style.minHeight = (sec.minHeight || 400) + 'px';
-        if (state.editMode) canvas.classList.add('ploy-freeframe--edit');
+        if (state.editMode) {
+          canvas.classList.add('ploy-freeframe--edit');
+          attachMarquee(canvas, sec);
+        }
         (sec.blocks || []).forEach(function (b) {
           var childEl = renderBlock(sec, b, true);
           childEl.style.position = 'absolute';
@@ -562,6 +566,54 @@
   // Tracks the last completed drag so the click that fires right after a drag
   // doesn't get treated as a select/edit click.
   var justDragged = { id: null, t: 0 };
+  // Same idea for marquee selection: the click that follows a rubber-band
+  // drag must not fall through to the section's select-on-click handler.
+  var marqueeJustEnded = 0;
+
+  // Rubber-band (marquee) selection on a free-form canvas: drag on blank
+  // canvas to draw a box; every widget it touches joins the multi-selection.
+  function attachMarquee(canvas, sec) {
+    canvas.addEventListener('pointerdown', function (ev) {
+      if (!state.editMode || ev.button !== 0) return;
+      if (ev.target.closest && ev.target.closest('.ploy-blk, .ploy-toolbar, .ploy-handle, .ploy-rt-toolbar, [contenteditable="true"]')) return;
+      var rect = canvas.getBoundingClientRect();
+      var sx = ev.clientX, sy = ev.clientY;
+      var box = null, started = false;
+      function onMove(e) {
+        var dx = e.clientX - sx, dy = e.clientY - sy;
+        if (!started && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+        if (!started) {
+          started = true;
+          box = document.createElement('div');
+          box.className = 'ploy-marquee';
+          canvas.appendChild(box);
+        }
+        box.style.left = (Math.min(e.clientX, sx) - rect.left) + 'px';
+        box.style.top = (Math.min(e.clientY, sy) - rect.top) + 'px';
+        box.style.width = Math.abs(dx) + 'px';
+        box.style.height = Math.abs(dy) + 'px';
+      }
+      function onUp(e) {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        if (!started) return; // plain click — section select handles it
+        box.remove();
+        marqueeJustEnded = Date.now();
+        var mx1 = Math.min(e.clientX, sx) - rect.left, my1 = Math.min(e.clientY, sy) - rect.top;
+        var mx2 = Math.max(e.clientX, sx) - rect.left, my2 = Math.max(e.clientY, sy) - rect.top;
+        var ids = [];
+        Array.prototype.forEach.call(canvas.children, function (ch) {
+          if (!ch.classList || !ch.classList.contains('ploy-blk')) return;
+          var l = ch.offsetLeft, t = ch.offsetTop;
+          var r = l + ch.offsetWidth, btm = t + ch.offsetHeight;
+          if (l < mx2 && r > mx1 && t < my2 && btm > my1) ids.push(ch.dataset.bid);
+        });
+        post({ type: 'ploy-blocks-multiselect-set', sectionId: sec.id, ids: ids });
+      }
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  }
 
   function clearGuides() {
     var gs = document.querySelectorAll('.ploy-guide');
@@ -771,6 +823,7 @@
         if (a) ev.preventDefault();
         if (isInnerEditTarget(ev.target)) return; // let inline editing handle it
         ev.stopPropagation();
+        if (Date.now() - marqueeJustEnded < 300) return; // marquee, not a click
         // Blank click with an active multi-selection still re-posts, so the
         // CMS clears the multi-selection (standard click-empty-to-deselect).
         if (selectedHere && !(state.multi && state.multi.length)) return;
@@ -790,6 +843,7 @@
     secEl.addEventListener('click', function (ev) {
       if (isInnerEditTarget(ev.target)) return;
       ev.stopPropagation();
+      if (Date.now() - marqueeJustEnded < 300) return; // marquee, not a click
       if (selectedHere && !(state.multi && state.multi.length)) return;
       select(sec.id, null);
     });
@@ -987,20 +1041,33 @@
     var blk = findBlockInSection(sec, state.selected.b);
     if (!blk) return;
     if (ev.key === 'Escape') { select(sec.id, null); return; }
+    // Delete and arrow keys act on the WHOLE selection, not just the primary.
+    var actIds = (state.multi && state.multi.length > 1 && state.multi.indexOf(blk.id) !== -1) ? state.multi.slice() : [blk.id];
     if (ev.key === 'Delete' || ev.key === 'Backspace') {
       ev.preventDefault();
-      post({ type: 'ploy-blocks-op', op: 'deleteBlock', sectionId: sec.id, blockId: blk.id });
+      if (actIds.length > 1) {
+        post({ type: 'ploy-blocks-op', op: 'deleteBlocks', sectionId: sec.id, ids: actIds });
+      } else {
+        post({ type: 'ploy-blocks-op', op: 'deleteBlock', sectionId: sec.id, blockId: blk.id });
+      }
       return;
     }
     var ARROWS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (ARROWS[ev.key] && typeof blk.x === 'number') {
       ev.preventDefault();
       var step = ev.shiftKey ? 10 : 1;
-      blk.x = Math.max(0, (blk.x || 0) + ARROWS[ev.key][0] * step);
-      blk.y = Math.max(0, (blk.y || 0) + ARROWS[ev.key][1] * step);
-      var el = document.querySelector('[data-bid="' + blk.id + '"]');
-      if (el) { el.style.left = blk.x + 'px'; el.style.top = blk.y + 'px'; }
-      post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: blk.id, x: blk.x, y: blk.y });
+      var moves = [];
+      actIds.forEach(function (id) {
+        var b2 = findBlockInSection(sec, id);
+        if (!b2 || typeof b2.x !== 'number') return;
+        b2.x = Math.max(0, (b2.x || 0) + ARROWS[ev.key][0] * step);
+        b2.y = Math.max(0, (b2.y || 0) + ARROWS[ev.key][1] * step);
+        var el2 = document.querySelector('[data-bid="' + id + '"]');
+        if (el2) { el2.style.left = b2.x + 'px'; el2.style.top = b2.y + 'px'; }
+        moves.push({ id: id, x: b2.x, y: b2.y });
+      });
+      if (moves.length > 1) post({ type: 'ploy-blocks-free-move-batch', sectionId: sec.id, moves: moves });
+      else if (moves.length === 1) post({ type: 'ploy-blocks-free-move', sectionId: sec.id, blockId: moves[0].id, x: moves[0].x, y: moves[0].y });
     }
   });
 

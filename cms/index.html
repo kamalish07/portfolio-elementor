@@ -1965,6 +1965,24 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     markContentDirty(); pushContentPreview(); renderInspector();
   }
 
+  // Unified multi-select toggle (Figma-style): the selection is ONE set that
+  // includes the primary. Toggling an item off falls back to another member;
+  // dropping to a single item collapses back to a plain selection.
+  function toggleMultiSelect(secId, blkId) {
+    if (selected.s !== secId) multiSel.clear();
+    if (selected.b && selected.s === secId) multiSel.add(selected.b);
+    if (multiSel.has(blkId)) {
+      multiSel.delete(blkId);
+      const rest = Array.from(multiSel);
+      selected = { s: secId, b: rest.length ? rest[rest.length - 1] : null };
+    } else {
+      multiSel.add(blkId);
+      selected = { s: secId, b: blkId };
+    }
+    if (multiSel.size < 2) multiSel.clear();
+    showWidgetGrid = false;
+  }
+
   function push() {
     if (!blocksData) return;
     try {
@@ -2243,12 +2261,19 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       blk.freeW = d.freeW; markBlocksDirty();
       const wi = inspector.querySelector('[data-role=freew]'); if (wi && document.activeElement !== wi) wi.value = d.freeW;
     } else if (d.type === 'ploy-blocks-multiselect') {
-      // Shift/Ctrl-click on a widget in the canvas toggles it into the
-      // multi-selection (scoped to one section).
-      if (selected.s !== d.sectionId) { multiSel.clear(); }
-      if (selected.b && selected.s === d.sectionId) multiSel.add(selected.b);
-      if (multiSel.has(d.blockId)) multiSel.delete(d.blockId); else multiSel.add(d.blockId);
-      selected = { s: d.sectionId, b: d.blockId };
+      toggleMultiSelect(d.sectionId, d.blockId);
+      if (window.showBlockTab) window.showBlockTab();
+      renderAll(); push();
+    } else if (d.type === 'ploy-blocks-multiselect-set') {
+      // Marquee (rubber-band) selection from the canvas: replace the whole
+      // selection with the widgets the box touched.
+      multiSel.clear();
+      const ids = d.ids || [];
+      ids.forEach((id) => multiSel.add(id));
+      if (!ids.length) selected = { s: d.sectionId, b: null };
+      else selected = { s: d.sectionId, b: ids[ids.length - 1] };
+      if (multiSel.size === 1) multiSel.clear(); // single hit = plain selection
+      if (window.showBlockTab) window.showBlockTab();
       renderAll(); push();
     } else if (d.type === 'ploy-blocks-free-move-batch') {
       const sec = findSec(d.sectionId); if (!sec) return;
@@ -2289,6 +2314,16 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const sec = secs[si];
     if (d.op === 'moveSection') { const ni = si + d.dir; if (ni < 0 || ni >= secs.length) return; secs.splice(ni, 0, secs.splice(si, 1)[0]); }
     else if (d.op === 'deleteSection') { if (!confirm('Delete this section?')) return; secs.splice(si, 1); selected = { s: null, b: null }; }
+    else if (d.op === 'deleteBlocks') {
+      // Delete every widget in a multi-selection (re-locate each id so
+      // indices stay valid as earlier deletes shift the arrays).
+      (d.ids || []).forEach((id) => {
+        const loc = locateBlock(sec, id);
+        if (loc) loc.arr.splice(loc.idx, 1);
+      });
+      multiSel.clear();
+      selected = { s: sec.id, b: null };
+    }
     else if (d.op === 'addBlock') {
       let blk;
       if (d.blockType === 'image') blk = newImageBlock();
@@ -2629,6 +2664,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   function renderBottomCrumb() {
     const el = document.getElementById('selBreadcrumb');
     if (!el) return;
+    if (multiSel.size >= 2) {
+      el.textContent = 'Body  ›  Section  ›  ' + multiSel.size + ' selected';
+      return;
+    }
     const parts = ['Body'];
     const sec = selected.s ? findSec(selected.s) : null;
     if (sec) {
@@ -2809,11 +2848,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           bb.addEventListener('click', (e) => {
             e.stopPropagation();
             if (e.ctrlKey || e.metaKey || e.shiftKey) {
-              // Toggle into the multi-selection (scoped to this section).
-              if (selected.s !== secId) multiSel.clear();
-              if (selected.b && selected.s === secId) multiSel.add(selected.b);
-              if (multiSel.has(blk.id)) multiSel.delete(blk.id); else multiSel.add(blk.id);
-              selected = { s: secId, b: blk.id };
+              toggleMultiSelect(secId, blk.id);
             } else {
               multiSel.clear();
               selected = { s: secId, b: blk.id };
@@ -2930,6 +2965,45 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     }
     if (emptyMsg) emptyMsg.style.display = 'none';
     inspector.style.display = 'block';
+
+    // Multi-selection: the inspector becomes the group toolbox (always
+    // visible even when the layers panel is collapsed).
+    if (multiSel.size >= 2) {
+      const hdr = document.createElement('div'); hdr.className = 'inspector-header';
+      const title = document.createElement('h3'); title.textContent = multiSel.size + ' widgets selected';
+      hdr.append(title); inspector.append(hdr);
+
+      const hint = document.createElement('p'); hint.className = 'hint';
+      hint.textContent = 'Drag any selected widget to move them together. Ctrl-click to add/remove. Click blank canvas to deselect.';
+      inspector.append(hint);
+
+      const alignWrap = document.createElement('div');
+      alignWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0';
+      const mkAlign = (icon, label, mode) => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.innerHTML = '<span style="font-size:14px;line-height:1">' + icon + '</span><span>' + label + '</span>';
+        b.style.cssText = 'display:flex;align-items:center;gap:7px;background:var(--sb-bg-light);color:var(--sb-text);border:1px solid var(--sb-border);border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;cursor:pointer;text-align:left';
+        b.addEventListener('click', () => {
+          try { frame.contentWindow.postMessage({ type: 'ploy-multi-align', sectionId: selected.s, ids: Array.from(multiSel), mode }, ORIGIN); } catch (e) {}
+        });
+        return b;
+      };
+      alignWrap.append(
+        mkAlign('⇤', 'Align left', 'left'),    mkAlign('⤒', 'Align top', 'top'),
+        mkAlign('⇔', 'Center H', 'hcenter'),   mkAlign('↕', 'Center V', 'vcenter'),
+        mkAlign('⇥', 'Align right', 'right'),  mkAlign('⤓', 'Align bottom', 'bottom'),
+        mkAlign('↔', 'Distribute H', 'hdist'), mkAlign('↨', 'Distribute V', 'vdist')
+      );
+      inspector.append(field('Align & distribute', alignWrap));
+
+      const acts = document.createElement('div'); acts.className = 'inspector-actions';
+      acts.append(
+        actionBtn('📦 Group into container', groupSelection),
+        actionBtn('✕ Delete ' + multiSel.size + ' widgets', () => handleOp({ op: 'deleteBlocks', sectionId: selected.s, ids: Array.from(multiSel) }), true),
+      );
+      inspector.append(acts);
+      return;
+    }
 
     const sec = findSec(selected.s);
     if (!sec) { selected.s = null; renderInspector(); return; }
