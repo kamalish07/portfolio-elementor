@@ -530,6 +530,9 @@
 
   // ---------------- edit mode ----------------
   function select(sid, bid, focusText) {
+    // A plain select always dissolves the multi-selection locally too —
+    // otherwise the canvas keeps stale outlines until the next CMS push.
+    state.multi = [];
     state.selected = { s: sid, b: bid };
     focusBlockId = focusText ? bid : null;
     renderSections();
@@ -919,6 +922,9 @@
         return;
       }
       if (state.selected.b === b.id) {
+        // Plain click on a member of a multi-selection collapses the group
+        // to just this widget (Figma behavior) instead of entering edit.
+        if (state.multi && state.multi.length > 1) { select(sec.id, b.id); return; }
         if (textEl && textEl.contentEditable !== 'true') enterTextEdit(wrap, textEl);
         return;
       }

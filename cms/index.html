@@ -2233,11 +2233,14 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     } else if (d.type === 'ploy-blocks-select') {
       // A plain (non-modifier) selection always replaces the multi-selection —
       // clicking blank canvas posts nulls here, which fully deselects.
+      const hadMulti = multiSel.size > 0;
       multiSel.clear();
       selected = { s: d.sectionId, b: d.blockId };
       showWidgetGrid = !!d.openWidgets;
       if (window.showBlockTab) window.showBlockTab();
       renderAll();
+      // Echo the cleared multi-selection back so the canvas drops its outlines.
+      if (hadMulti) push();
     }
     else if (d.type === 'ploy-blocks-text') {
       const blk = findBlk(findSec(d.sectionId), d.blockId); if (!blk) return;
