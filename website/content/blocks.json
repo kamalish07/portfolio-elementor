@@ -22,8 +22,8 @@
           "bg": "#ffffff",
           "paddingY": 40,
           "gap": 24,
-          "maxWidth": 1152,
-          "minHeight": 529,
+          "maxWidth": 1600,
+          "minHeight": 514,
           "align": "start",
           "layout": "free",
           "blocks": [
@@ -39,8 +39,8 @@
               "bold": true,
               "align": "left",
               "width": 100,
-              "x": 624,
-              "y": 192,
+              "x": 30,
+              "y": 32,
               "freeW": 490
             },
             {
@@ -55,9 +55,23 @@
               "bold": false,
               "align": "left",
               "width": 100,
-              "x": 32,
-              "y": 320,
+              "x": 30,
+              "y": 228,
               "freeW": 433
+            },
+            {
+              "id": "b_cxn1jxs",
+              "type": "shape",
+              "shape": "line",
+              "fill": "#6366f1",
+              "height": 120,
+              "thickness": 8,
+              "width": 30,
+              "freeW": 535,
+              "x": 30,
+              "y": 308,
+              "borderWidth": 4,
+              "borderColor": "#ff6b6b"
             }
           ]
         },
@@ -81,6 +95,64 @@
           "type": "default_section",
           "key": "footer",
           "blocks": []
+        },
+        {
+          "id": "s_mn3uix4",
+          "bg": "#ffffff",
+          "paddingY": 40,
+          "gap": 24,
+          "maxWidth": 1600,
+          "minHeight": 514,
+          "align": "start",
+          "layout": "free",
+          "blocks": [
+            {
+              "id": "b_ggyako5",
+              "type": "text",
+              "tag": "p",
+              "text": "GEN-Z in the B2B<div>SaaS industy</div>",
+              "font": "inter",
+              "fontCustom": "Roboto",
+              "size": 56,
+              "color": "",
+              "bold": true,
+              "align": "left",
+              "width": 100,
+              "x": 30,
+              "y": 32,
+              "freeW": 490
+            },
+            {
+              "id": "b_e7p6yp9",
+              "type": "text",
+              "tag": "p",
+              "text": "Gen-Z play a very significant Role in B2B SaaS <div>Industry so we shouldn't just Ignore them</div>",
+              "font": "inter",
+              "fontCustom": "",
+              "size": 0,
+              "color": "",
+              "bold": false,
+              "align": "left",
+              "width": 100,
+              "x": 30,
+              "y": 228,
+              "freeW": 433
+            },
+            {
+              "id": "b_03somfe",
+              "type": "shape",
+              "shape": "line",
+              "fill": "#6366f1",
+              "height": 120,
+              "thickness": 8,
+              "width": 30,
+              "freeW": 535,
+              "x": 30,
+              "y": 308,
+              "borderWidth": 4,
+              "borderColor": "#ff6b6b"
+            }
+          ]
         }
       ],
       "defaultOverrides": {
