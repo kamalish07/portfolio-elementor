@@ -444,6 +444,12 @@
         img.style.width = '100%';
         img.style.display = 'block';
         if (b.radius) img.style.borderRadius = b.radius + 'px';
+        // Crop: a fixed height with object-fit + a movable focal point.
+        if (b.freeH) {
+          img.style.height = b.freeH + 'px';
+          img.style.objectFit = b.fit || 'cover';
+          img.style.objectPosition = (b.focusX != null ? b.focusX : 50) + '% ' + (b.focusY != null ? b.focusY : 50) + '%';
+        }
         if (b.url) {
           // Wrap in a link so images can point to another page/URL. In edit
           // mode the click is suppressed so it doesn't navigate while editing.
@@ -739,7 +745,7 @@
 
   // Height resize for shapes and containers on a free canvas.
   function addFreeHeightHandle(childEl, sec, blk) {
-    if (blk.type !== 'shape' && blk.type !== 'container') return;
+    if (blk.type !== 'shape' && blk.type !== 'container' && blk.type !== 'image') return;
     var handle = document.createElement('div');
     handle.className = 'ploy-handle ploy-handle--bottom';
     handle.title = 'Drag to resize height';
@@ -750,14 +756,24 @@
       if (blk.type === 'shape') {
         if ((blk.shape || 'rectangle') === 'line') blk.thickness = h; else blk.height = h;
         if (childEl.firstElementChild) childEl.firstElementChild.style.height = h + 'px';
+      } else if (blk.type === 'image') {
+        // Dragging the bottom handle crops the image to a fixed height
+        // (object-fit keeps it from distorting).
+        blk.freeH = h;
+        var img = childEl.querySelector('img');
+        if (img) {
+          img.style.height = h + 'px';
+          img.style.objectFit = blk.fit || 'cover';
+        }
       } else {
         blk.minHeight = h;
         childEl.style.minHeight = h + 'px';
       }
     }, function () {
-      var props = blk.type === 'shape'
-        ? ((blk.shape || 'rectangle') === 'line' ? { thickness: blk.thickness } : { height: blk.height })
-        : { minHeight: blk.minHeight };
+      var props;
+      if (blk.type === 'shape') props = (blk.shape || 'rectangle') === 'line' ? { thickness: blk.thickness } : { height: blk.height };
+      else if (blk.type === 'image') props = { freeH: blk.freeH };
+      else props = { minHeight: blk.minHeight };
       post({ type: 'ploy-blocks-prop', sectionId: sec.id, blockId: blk.id, props: props });
     });
     childEl.appendChild(handle);

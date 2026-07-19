@@ -325,6 +325,21 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { ok: true, path: '/assets/images/' + file });
   }
 
+  // ---- Media API: list uploaded images for the media library ----
+  if (pathname === '/api/media' && req.method === 'GET') {
+    let media = [];
+    if (fs.existsSync(UPLOAD_DIR)) {
+      media = fs.readdirSync(UPLOAD_DIR)
+        .filter((f) => ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg'].includes(path.extname(f).toLowerCase()))
+        .map((f) => {
+          const st = fs.statSync(path.join(UPLOAD_DIR, f));
+          return { name: f, path: '/assets/images/' + f, size: st.size, mtime: st.mtimeMs };
+        })
+        .sort((a, b) => b.mtime - a.mtime);
+    }
+    return sendJson(res, 200, { media });
+  }
+
   // ---- Presets API (reusable saved sections) ----
   if (pathname === '/api/presets' && req.method === 'GET') {
     const raw = fs.existsSync(PRESETS_FILE) ? fs.readFileSync(PRESETS_FILE, 'utf8') : '{"presets":[]}';

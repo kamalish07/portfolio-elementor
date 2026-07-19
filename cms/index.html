@@ -905,7 +905,7 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 /* ---- Header ---- */
 .cms-header {
   display: flex; align-items: center; justify-content: space-between;
-  background: #fff; border-bottom: 1px solid var(--sb-border);
+  background: var(--sb-panel-bg); border-bottom: 1px solid var(--sb-border);
   padding: 8px 14px; height: 52px; gap: 12px;
 }
 .cms-header__left { flex: 1; display: flex; align-items: center; min-width: 0; }
@@ -917,7 +917,7 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .pages-crumb__root, .pages-crumb__sep { color: var(--sb-text-muted); }
 .pages-crumb__page { background: none; border: none; font-weight: 600; font-size: 13px; color: var(--sb-text-bright); padding: 5px 8px; border-radius: 7px; }
 .pages-crumb__page:hover { background: var(--sb-bg-hover); }
-.pages-dropdown { position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 210px; background: #fff; border: 1px solid var(--sb-border); border-radius: 10px; box-shadow: 0 14px 36px rgba(15,23,42,.14); padding: 6px; display: none; z-index: 300; }
+.pages-dropdown { position: absolute; top: 100%; left: 0; margin-top: 6px; min-width: 210px; background: var(--sb-panel-bg); border: 1px solid var(--sb-border); border-radius: 10px; box-shadow: 0 14px 36px rgba(15,23,42,.14); padding: 6px; display: none; z-index: 300; }
 .pages-dropdown.open { display: block; }
 .pages-dropdown .cms-header__pages { display: flex; flex-direction: column; gap: 2px; }
 .page-pill { text-align: left; background: none; border: none; border-radius: 7px; padding: 8px 10px; font-size: 12.5px; color: var(--sb-text); }
@@ -934,7 +934,7 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .cms-header__responsive { display: flex; background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: 9px; padding: 2px; }
 .cms-header__responsive button { border: none; background: none; padding: 5px 11px; border-radius: 7px; color: var(--sb-text-muted); display: inline-flex; align-items: center; }
 .cms-header__responsive button svg { width: 15px; height: 15px; }
-.cms-header__responsive button.active { background: #fff; color: var(--sb-accent); box-shadow: 0 1px 3px rgba(15,23,42,.14); }
+.cms-header__responsive button.active { background: var(--sb-panel-bg); color: var(--sb-accent); box-shadow: 0 1px 3px rgba(15,23,42,.14); }
 
 .preview-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; border-radius: 7px; padding: 6px 11px; font-size: 12.5px; font-weight: 500; color: var(--sb-text); }
 .preview-btn svg { width: 15px; height: 15px; }
@@ -946,7 +946,7 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 
 /* ---- 3-column body ---- */
 .cms-body { display: flex; flex: 1; min-height: 0; }
-.panel-left { width: 242px; min-width: 242px; background: #fff; border-right: 1px solid var(--sb-border); display: flex; flex-direction: column; position: relative; }
+.panel-left { width: 242px; min-width: 242px; background: var(--sb-panel-bg); border-right: 1px solid var(--sb-border); display: flex; flex-direction: column; position: relative; }
 .panel-left__editing { padding: 11px 14px; border-bottom: 1px solid var(--sb-border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--sb-text-muted); }
 .panel-left__editing b { color: var(--sb-text-bright); font-weight: 600; }
 .panel-left__content-hd { padding: 12px 14px 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--sb-text-bright); }
@@ -955,11 +955,11 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .nav-add-section { margin: 10px; padding: 9px; background: none; border: 1px dashed var(--inp-border); border-radius: 8px; color: var(--sb-text-muted); font-size: 12px; }
 .nav-add-section:hover { border-color: var(--sb-accent); color: var(--sb-accent); background: var(--sb-accent-bg); }
 
-.widget-popover { display: none; position: absolute; top: 78px; left: 10px; right: 10px; z-index: 250; background: #fff; border: 1px solid var(--sb-border); border-radius: 12px; box-shadow: 0 18px 44px rgba(15,23,42,.18); padding: 12px; }
+.widget-popover { display: none; position: absolute; top: 78px; left: 10px; right: 10px; z-index: 250; background: var(--sb-panel-bg); border: 1px solid var(--sb-border); border-radius: 12px; box-shadow: 0 18px 44px rgba(15,23,42,.18); padding: 12px; }
 .widget-popover.open { display: block; }
 .widget-popover .widget-grid { grid-template-columns: 1fr 1fr 1fr; }
 
-.panel-right { width: 282px; min-width: 282px; background: #fff; border-left: 1px solid var(--sb-border); display: flex; flex-direction: column; min-height: 0; }
+.panel-right { width: 282px; min-width: 282px; background: var(--sb-panel-bg); border-left: 1px solid var(--sb-border); display: flex; flex-direction: column; min-height: 0; }
 .rtabs { display: flex; border-bottom: 1px solid var(--sb-border); }
 .rtabs button { flex: 1; padding: 11px; background: none; border: none; border-bottom: 2px solid transparent; font-size: 12.5px; font-weight: 600; color: var(--sb-text-muted); }
 .rtabs button:hover { color: var(--sb-text); }
@@ -969,15 +969,15 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .rpane-empty { padding: 16px; }
 #tab-settings { padding: 14px; }
 .props-tabs { margin: -14px -14px 14px; background: var(--sb-bg-light); }
-.props-tabs button.active { background: #fff; }
+.props-tabs button.active { background: var(--sb-panel-bg); }
 
 /* ---- Canvas ---- */
 .cms-preview { flex: 1; background: var(--preview-bg); min-width: 0; display: flex; }
 .cms-preview__frame-wrap { flex: 1; padding: 18px; height: auto; }
-.cms-preview__frame { width: 100%; height: 100%; background: #fff; border: 1px solid var(--sb-border); border-radius: 10px; box-shadow: 0 8px 28px rgba(15,23,42,.08); }
+.cms-preview__frame { width: 100%; height: 100%; background: var(--sb-panel-bg); border: 1px solid var(--sb-border); border-radius: 10px; box-shadow: 0 8px 28px rgba(15,23,42,.08); }
 
 /* ---- Bottom bar ---- */
-.cms-bottom { display: flex; justify-content: space-between; align-items: center; background: #fff; border-top: 1px solid var(--sb-border); padding: 7px 14px; font-size: 12px; }
+.cms-bottom { display: flex; justify-content: space-between; align-items: center; background: var(--sb-panel-bg); border-top: 1px solid var(--sb-border); padding: 7px 14px; font-size: 12px; }
 .cms-bottom__crumb { color: var(--sb-text-muted); }
 .cms-bottom__status.saved { color: var(--green); }
 .cms-bottom__status.dirty { color: var(--amber); }
@@ -987,11 +987,11 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .widget-card { background: var(--sb-bg-light); border: 1px solid var(--sb-border); color: var(--sb-text); }
 .widget-card:hover { border-color: var(--sb-accent); color: var(--sb-accent); background: var(--sb-accent-bg); }
 .nav-tree-item { color: var(--sb-text); }
-.modal { background: #fff; color: var(--sb-text-bright); border: 1px solid var(--sb-border); }
+.modal { background: var(--sb-panel-bg); color: var(--sb-text-bright); border: 1px solid var(--sb-border); }
 .modal p, .modal label { color: var(--sb-text); }
 .settings-group h4 { color: var(--sb-text-bright); }
 .sidebar-panel, #blocksInspector, #secList, .page-data-panel, .rpane { scrollbar-color: #c9cdd8 transparent; }
-.sidebar-panel::-webkit-scrollbar-thumb, #blocksInspector::-webkit-scrollbar-thumb, #secList::-webkit-scrollbar-thumb, .rpane::-webkit-scrollbar-thumb { background: #c9cdd8; border: 2px solid #fff; }
+.sidebar-panel::-webkit-scrollbar-thumb, #blocksInspector::-webkit-scrollbar-thumb, #secList::-webkit-scrollbar-thumb, .rpane::-webkit-scrollbar-thumb { background: #c9cdd8; border: 2px solid var(--sb-panel-bg); }
 .rpane::-webkit-scrollbar { width: 9px; }
 
 /* ---- Layout fixes: tabs were clipped by stale -16px margins ---- */
@@ -1018,6 +1018,46 @@ body { font-size: 13.5px; }
 /* Collapsible side panels → full-screen canvas */
 .panel-left.collapsed, .panel-right.collapsed { display: none; }
 .icon-btn.active { background: var(--sb-accent-bg); color: var(--sb-accent); }
+
+/* Panel surface token (dark mode overrides it) */
+:root { --sb-panel-bg: #ffffff; }
+
+/* ---- Add-widget popover, rebuilt ---- */
+.widget-popover { top: 70px; left: 8px; right: 8px; padding: 0; border-radius: 14px; overflow: hidden; z-index: 260; box-shadow: 0 20px 50px rgba(15,23,42,.22); }
+.widget-popover__hd { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 6px 14px; border-bottom: 1px solid var(--sb-border); background: var(--sb-bg-light); font-size: 13px; font-weight: 600; color: var(--sb-text-bright); }
+.widget-popover #defaultWidgets { padding: 12px; max-height: min(460px, calc(100vh - 220px)); overflow-y: auto; }
+.widget-popover .widget-search { margin-bottom: 10px; }
+.widget-popover .widget-card { padding: 10px 4px; }
+.widget-popover .hint { margin-top: 10px; }
+#presetList { border-top: 1px solid var(--sb-border); margin-top: 10px; padding-top: 4px; }
+
+/* ---- "+ Add Section" chooser ---- */
+.section-chooser { position: absolute; bottom: 54px; left: 8px; right: 8px; z-index: 260; background: var(--sb-panel-bg); border: 1px solid var(--sb-border); border-radius: 12px; box-shadow: 0 16px 40px rgba(15,23,42,.2); padding: 8px; }
+.section-chooser__title { font-size: 12px; font-weight: 600; color: var(--sb-text-muted); padding: 4px 6px 8px; }
+.section-chooser button { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 7px; padding: 8px 10px; font-size: 13px; color: var(--sb-text); cursor: pointer; }
+.section-chooser button:hover { background: var(--sb-accent-bg); color: var(--sb-accent); }
+
+/* ---- Media library ---- */
+.media-modal { width: 580px; max-width: 94vw; }
+.media-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 320px; overflow-y: auto; margin-top: 12px; }
+.media-cell { background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: 8px; padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
+.media-cell img { width: 100%; height: 70px; object-fit: cover; border-radius: 5px; background: #e8eaf0; }
+.media-cell span { font-size: 10.5px; color: var(--sb-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-cell:hover { border-color: var(--sb-accent); }
+
+/* ---- Editor dark mode (UI chrome only — the page canvas stays as designed) ---- */
+html[data-cms-theme="dark"] {
+  --sb-bg: #12141a; --sb-bg-light: #191d25; --sb-bg-hover: #232834; --sb-bg-active: #2b313f;
+  --sb-border: #2a2f3b; --sb-text: #b8bfcc; --sb-text-bright: #f2f4f8; --sb-text-muted: #7e8698;
+  --sb-accent: #818cf8; --sb-accent-bg: rgba(129,140,248,.15);
+  --hdr-bg: #161a21; --hdr-border: #2a2f3b;
+  --preview-bg: #0d0f14;
+  --inp-bg: #191d25; --inp-border: #343b4a; --inp-text: #e9ecf2; --inp-focus: #818cf8;
+  --sb-panel-bg: #161a21;
+}
+html[data-cms-theme="dark"] .cms-preview__frame { border-color: #2a2f3b; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+html[data-cms-theme="dark"] .cms-header__responsive button.active { box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+html[data-cms-theme="dark"] .media-cell img { background: #232834; }
 </style>
 </head>
 <body>
@@ -1061,6 +1101,10 @@ body { font-size: 13.5px; }
     </div>
 
     <div class="cms-header__actions">
+      <button class="icon-btn" id="mediaBtn" type="button" title="Media library (uploads)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="icon-btn" id="themeToggleBtn" type="button" title="Toggle editor dark mode">🌙</button>
       <button class="icon-btn" id="toggleRightBtn" type="button" title="Toggle inspector panel">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
       </button>
@@ -1089,6 +1133,10 @@ body { font-size: 13.5px; }
 
       <!-- Widget popover (opens from ＋ or "+ Add Widget" in the canvas) -->
       <div class="widget-popover" id="widgetPopover">
+        <div class="widget-popover__hd">
+          <span>Add to page</span>
+          <button class="icon-btn" id="widgetPopoverClose" type="button" title="Close">✕</button>
+        </div>
         <div id="defaultWidgets">
           <input type="text" class="widget-search" id="widgetSearch" placeholder="Search widgets...">
           <div class="widget-grid" id="widgetGrid">
@@ -1244,6 +1292,31 @@ body { font-size: 13.5px; }
     leftPanel.classList.toggle('collapsed', !both);
     rightPanel.classList.toggle('collapsed', !both);
     syncPanelButtons();
+  });
+
+  // Editor dark mode (persisted per browser; only themes the editor chrome)
+  const themeBtn = document.getElementById('themeToggleBtn');
+  function applyCmsTheme(t) {
+    document.documentElement.dataset.cmsTheme = t;
+    try { localStorage.setItem('cmsTheme', t); } catch (e) {}
+    themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+    themeBtn.title = t === 'dark' ? 'Switch editor to light mode' : 'Switch editor to dark mode';
+  }
+  let savedTheme = 'light';
+  try { savedTheme = localStorage.getItem('cmsTheme') || 'light'; } catch (e) {}
+  applyCmsTheme(savedTheme);
+  themeBtn.addEventListener('click', () => {
+    applyCmsTheme(document.documentElement.dataset.cmsTheme === 'dark' ? 'light' : 'dark');
+  });
+
+  // Media library from the header: picking an image applies it to the
+  // selected image widget, otherwise the path is copied for pasting.
+  document.getElementById('mediaBtn').addEventListener('click', () => {
+    if (!window.openMediaLibrary) return;
+    window.openMediaLibrary((p) => {
+      if (window.cmsApplyMediaPick && window.cmsApplyMediaPick(p)) return;
+      try { navigator.clipboard.writeText(p); } catch (e) {}
+    });
   });
 })();
 </script>
@@ -1504,6 +1577,52 @@ function fieldWrap(labelText, control, styleKey) {
   return w;
 }
 
+// ---- Media library: browse every uploaded image, upload new ones, pick one ----
+window.openMediaLibrary = function (onPick) {
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  const modal = document.createElement('div'); modal.className = 'modal media-modal';
+  modal.innerHTML = '<h3>🖼 Media library</h3><p>Upload images once, reuse them anywhere on the site.</p>';
+  const bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+  const file = document.createElement('input'); file.type = 'file'; file.accept = '.webp,.png,.jpg,.jpeg,.gif,.svg'; file.style.display = 'none';
+  const upBtn = document.createElement('button'); upBtn.type = 'button'; upBtn.className = 'modal-confirm'; upBtn.textContent = '⬆ Upload image';
+  upBtn.addEventListener('click', () => file.click());
+  const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'modal-cancel'; closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', () => overlay.remove());
+  bar.append(upBtn, closeBtn);
+  const grid = document.createElement('div'); grid.className = 'media-grid';
+  modal.append(bar, grid, file);
+  overlay.append(modal); document.body.append(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  async function refresh() {
+    grid.innerHTML = '<p class="hint">Loading…</p>';
+    try {
+      const r = await fetch('/api/media', { cache: 'no-store' });
+      const data = await r.json();
+      grid.innerHTML = '';
+      (data.media || []).forEach((m) => {
+        const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'media-cell'; cell.title = m.name;
+        const im = document.createElement('img'); im.src = m.path; im.loading = 'lazy';
+        const cap = document.createElement('span'); cap.textContent = m.name;
+        cell.append(im, cap);
+        cell.addEventListener('click', () => { overlay.remove(); if (onPick) onPick(m.path); });
+        grid.append(cell);
+      });
+      if (!grid.children.length) grid.innerHTML = '<p class="hint">No uploads yet — add your first image.</p>';
+    } catch (e) { grid.innerHTML = '<p class="hint">Could not load the media list.</p>'; }
+  }
+  file.addEventListener('change', async () => {
+    const f = file.files[0]; if (!f) return;
+    upBtn.disabled = true; upBtn.textContent = '⏳ Uploading…';
+    try {
+      const dataBase64 = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result).split(',')[1]); rd.onerror = rej; rd.readAsDataURL(f); });
+      await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name, dataBase64 }) });
+    } catch (e) {}
+    upBtn.disabled = false; upBtn.textContent = '⬆ Upload image'; file.value = '';
+    refresh();
+  });
+  refresh();
+};
+
 function imageControl(value, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'img-control';
@@ -1531,7 +1650,10 @@ function imageControl(value, onChange) {
     } catch (e) { toast('Upload failed: ' + e.message, true); }
     btn.textContent = '📁 Upload…'; file.value = '';
   });
-  body.append(input, btn, file);
+  const browse = document.createElement('button'); browse.className = 'img-control__upload'; browse.textContent = '🖼 Media…';
+  browse.title = 'Pick from previously uploaded images';
+  browse.addEventListener('click', () => window.openMediaLibrary((p) => { input.value = p; img.src = p; onChange(p); }));
+  body.append(input, btn, browse, file);
   wrap.append(img, body);
   return wrap;
 }
@@ -2072,6 +2194,21 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     });
   }
 
+  // Header media-library picks: apply to the selected image widget when
+  // one is selected; otherwise the caller copies the path instead.
+  window.cmsApplyMediaPick = function (path) {
+    const sec = findSec(selected.s);
+    const blk = findBlk(sec, selected.b);
+    if (blk && blk.type === 'image') {
+      blk.src = path;
+      markBlocksDirty(); renderAll(); push();
+      toast('Image applied to the selected widget.');
+      return true;
+    }
+    toast('Path copied — paste it into any image field.');
+    return false;
+  };
+
   // ---- EDIT MODE / PREVIEW TOGGLE ----
   // Editing is always on in the new 3-column layout; the Preview button
   // temporarily hides all editing chrome in the canvas.
@@ -2092,6 +2229,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     e.stopPropagation();
     showWidgetGrid = !showWidgetGrid;
     updateWidgetPopover();
+  });
+  document.getElementById('widgetPopoverClose').addEventListener('click', () => {
+    showWidgetGrid = false; updateWidgetPopover();
   });
   document.addEventListener('click', (e) => {
     if (showWidgetGrid && !widgetPopover.contains(e.target) && e.target.id !== 'addContentBtn') {
@@ -2494,13 +2634,40 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     });
   });
 
-  // Navigator "Add Section" button
-  document.getElementById('navAddSection').addEventListener('click', () => {
-    if (!blocksData) return;
+  // "+ Add Section" opens a chooser: start blank, or create from a preset.
+  function addBlankSection() {
     const s = newSection();
     cur().sections.push(s);
     selected = { s: s.id, b: s.blocks[0].id };
     markBlocksDirty(); renderAll(); push();
+  }
+  document.getElementById('navAddSection').addEventListener('click', (e) => {
+    if (!blocksData) return;
+    e.stopPropagation();
+    const existing = document.getElementById('sectionChooser');
+    if (existing) { existing.remove(); return; }
+    const menu = document.createElement('div');
+    menu.id = 'sectionChooser'; menu.className = 'section-chooser';
+    const title = document.createElement('div'); title.className = 'section-chooser__title'; title.textContent = 'New section';
+    menu.append(title);
+    const mk = (label, fn) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      b.addEventListener('click', () => { menu.remove(); fn(); });
+      return b;
+    };
+    menu.append(mk('⬜ Blank section', addBlankSection));
+    presetsData.presets.forEach((p) => menu.append(mk('▦ ' + p.name, () => insertPreset(p))));
+    if (!presetsData.presets.length) {
+      const hint = document.createElement('p'); hint.className = 'hint'; hint.style.padding = '2px 6px 4px';
+      hint.textContent = 'Tip: select any section and use "💾 Save preset" to reuse it here.';
+      menu.append(hint);
+    }
+    document.getElementById('sidebar').appendChild(menu);
+    setTimeout(() => {
+      document.addEventListener('click', function close(ev2) {
+        if (!menu.contains(ev2.target)) { menu.remove(); document.removeEventListener('click', close); }
+      });
+    }, 0);
   });
 
   // ---- INSPECTOR HELPERS ----
@@ -3160,6 +3327,14 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     } else {
       if (blk.type === 'image') {
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
+        panelS.append(field('Crop height (px, 0 = natural)', numInput(blk.freeH || 0, (v) => { blk.freeH = v || 0; upd(); renderInspector(); }, 0, 1600)));
+        if (blk.freeH) {
+          panelS.append(field('Crop mode', selInput([
+            { v: 'cover', l: 'Cover — crop to fill' }, { v: 'contain', l: 'Contain — fit inside' }, { v: 'fill', l: 'Stretch' },
+          ], blk.fit || 'cover', (v) => { blk.fit = v; upd(); })));
+          panelS.append(field('Focal point X (%)', numInput(blk.focusX != null ? blk.focusX : 50, (v) => { blk.focusX = v; upd(); }, 0, 100)));
+          panelS.append(field('Focal point Y (%)', numInput(blk.focusY != null ? blk.focusY : 50, (v) => { blk.focusY = v; upd(); }, 0, 100)));
+        }
       } else if (blk.type === 'text') {
         panelS.append(field('Typography', selInput(TAG_OPTIONS, blk.tag || 'p', (v) => { blk.tag = v; upd(); })));
         panelS.append(field('Font Family', fontInputs(blk, upd)));
