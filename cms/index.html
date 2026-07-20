@@ -1090,6 +1090,32 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
 .canvas-dropcatch.armed { display: block; }
 .canvas-dropcatch.dragover { border-color: var(--sb-accent); background: var(--sb-accent-bg); }
 
+/* ---- Panels reflow (never crop) when resized ---- */
+.panel-left, .panel-right { overflow: hidden; }
+#leftContent, #leftMedia, #secList, .rpane, #blocksInspector, #tab-settings { overflow-x: hidden; min-width: 0; }
+.nav-tree, .nav-tree-item, .nav-tree-blocks, .widget-grid, .media-grid, .align-grid, .multi-panel { min-width: 0; max-width: 100%; }
+.nav-tree-item__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-cell span { max-width: 100%; }
+.media-grid--panel { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.widget-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+
+/* ---- Multi-select panel (right Block tab) ---- */
+.multi-panel { padding: 2px 0; }
+.multi-panel__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.multi-panel__head b { font-size: 14px; color: var(--sb-text-bright); font-weight: 600; }
+.multi-panel__count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; background: var(--sb-accent); color: #fff; border-radius: 11px; font-size: 12px; font-weight: 700; }
+.multi-panel__clear { margin-left: auto; background: none; border: none; color: var(--sb-text-muted); font-size: 14px; cursor: pointer; border-radius: 6px; width: 26px; height: 26px; }
+.multi-panel__clear:hover { background: var(--sb-bg-hover); color: var(--sb-text-bright); }
+.multi-panel__label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--sb-text-muted); margin: 14px 0 8px; }
+.align-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.align-btn { display: flex; align-items: center; gap: 8px; background: var(--sb-bg-light); color: var(--sb-text); border: 1px solid var(--sb-border); border-radius: 8px; padding: 9px 10px; font-size: 12.5px; font-weight: 500; cursor: pointer; text-align: left; transition: border-color .12s, background .12s; }
+.align-btn:hover { border-color: var(--sb-accent); background: var(--sb-accent-bg); color: var(--sb-accent); }
+.align-btn__icon { font-size: 15px; line-height: 1; }
+.multi-panel__group { width: 100%; background: var(--sb-accent); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
+.multi-panel__group:hover { filter: brightness(1.08); }
+.multi-panel__del { width: 100%; background: none; color: var(--sb-danger); border: 1px solid var(--sb-border); border-radius: 8px; padding: 9px; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.multi-panel__del:hover { border-color: var(--sb-danger); background: rgba(239,68,68,.08); }
+
 /* ---- Resizable side panels ---- */
 .panel-right { position: relative; }
 .panel-resize { position: absolute; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 50; }
@@ -2144,6 +2170,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     { id: 'undo', label: 'Undo', def: 'ctrl+z' },
     { id: 'redo', label: 'Redo', def: 'ctrl+shift+z' },
     { id: 'redo2', label: 'Redo (alt)', def: 'ctrl+y' },
+    { id: 'copy', label: 'Copy widget', def: 'ctrl+c' },
+    { id: 'paste', label: 'Paste widget', def: 'ctrl+v' },
     { id: 'publish', label: 'Publish', def: 'ctrl+s' },
     { id: 'duplicate', label: 'Duplicate widget', def: 'ctrl+d' },
     { id: 'group', label: 'Group selection', def: 'ctrl+g' },
@@ -2152,6 +2180,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     { id: 'mediaTab', label: 'Open Media panel', def: 'ctrl+m' },
     { id: 'contentTab', label: 'Open Content panel', def: 'ctrl+e' },
     { id: 'preview', label: 'Toggle preview', def: 'ctrl+p' },
+    // Image resize modes (Figma-style single keys, act on the selected image)
+    { id: 'imgNormal', label: 'Image: resize mode', def: 'r' },
+    { id: 'imgScale', label: 'Image: scale mode', def: 'k' },
+    { id: 'imgCrop', label: 'Image: crop mode', def: 'c' },
   ];
   let shortcuts = {};
   SHORTCUT_ACTIONS.forEach((a) => { shortcuts[a.id] = a.def; });
@@ -2175,6 +2207,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     switch (id) {
       case 'undo': restoreHistory(histIdx - 1); break;
       case 'redo': case 'redo2': restoreHistory(histIdx + 1); break;
+      case 'copy': copySelection(); break;
+      case 'paste': pasteWidgetClipboard(); break;
       case 'publish': document.getElementById('publishBtn').click(); break;
       case 'duplicate': duplicateSelection(); break;
       case 'group': if (multiSel.size >= 2) groupSelection(); break;
@@ -2183,7 +2217,42 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       case 'mediaTab': if (window.setLeftTab) window.setLeftTab('media'); break;
       case 'contentTab': if (window.setLeftTab) window.setLeftTab('content'); break;
       case 'preview': document.getElementById('previewToggleBtn').click(); break;
+      case 'imgNormal': setImageMode('normal'); break;
+      case 'imgScale': setImageMode('scale'); break;
+      case 'imgCrop': setImageMode('crop'); break;
     }
+  }
+
+  // ---- Widget clipboard (copy/paste) ----
+  let widgetClipboard = null;
+  function copySelection() {
+    const sec = findSec(selected.s); if (!sec) return;
+    const blk = findBlk(sec, selected.b); if (!blk) return;
+    widgetClipboard = JSON.parse(JSON.stringify(blk));
+    toast('Copied "' + blk.type + '" widget — Ctrl+V to paste.');
+  }
+  function pasteWidgetClipboard() {
+    if (!widgetClipboard) return false;
+    const sec = findSec(selected.s); if (!sec) { toast('Select a section to paste into.', true); return true; }
+    const copy = regenIds(widgetClipboard); copy.id = uid('b');
+    if (typeof copy.x === 'number') { copy.x = (copy.x || 0) + 24; copy.y = (copy.y || 0) + 24; }
+    else if (sec.layout === 'free' || sec.type === 'default_section') placeFree(copy, sec.blocks || []);
+    const blk = findBlk(sec, selected.b);
+    const loc = blk && locateBlock(sec, blk.id);
+    if (loc) loc.arr.splice(loc.idx + 1, 0, copy); else (sec.blocks = sec.blocks || []).push(copy);
+    selected = { s: sec.id, b: copy.id };
+    markBlocksDirty(); renderAll(); push();
+    toast('Pasted widget.');
+    return true;
+  }
+
+  // ---- Image resize mode (Scale / Normal / Crop), synced to the canvas ----
+  function setImageMode(mode) {
+    const sec = findSec(selected.s); const blk = findBlk(sec, selected.b);
+    if (!blk || blk.type !== 'image') return;
+    blk.resizeMode = mode;
+    markBlocksDirty(); push();
+    toast('Image mode: ' + mode);
   }
   function handleShortcut(e, fromIframe) {
     if (!fromIframe) {
@@ -2192,7 +2261,12 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     }
     const combo = comboString(e);
     const match = SHORTCUT_ACTIONS.find((a) => shortcuts[a.id] === combo);
-    if (match) { if (e.preventDefault) e.preventDefault(); runShortcut(match.id); }
+    if (match) {
+      // Don't preventDefault on paste — the native 'paste' event must still
+      // fire so clipboard images upload. Widget-paste is a no-op without one.
+      if (e.preventDefault && match.id !== 'paste') e.preventDefault();
+      runShortcut(match.id);
+    }
   }
   document.addEventListener('keydown', (e) => handleShortcut(e, false));
   window.__runComboFromIframe = (combo) => {
@@ -3224,44 +3298,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     listEl.innerHTML = '';
     if (!blocksData) return;
 
-    // Group + align action bar — shown when 2+ widgets are multi-selected.
-    if (multiSel.size >= 2) {
-      const box = document.createElement('div');
-      box.style.cssText = 'padding:8px;margin-bottom:6px;background:var(--sb-accent);border-radius:6px;display:flex;flex-direction:column;gap:6px';
-      const topRow = document.createElement('div');
-      topRow.style.cssText = 'display:flex;gap:6px;align-items:center';
-      const lbl = document.createElement('span');
-      lbl.textContent = multiSel.size + ' selected'; lbl.style.cssText = 'font-size:11px;color:#fff;font-weight:600;flex:1';
-      const gBtn = document.createElement('button'); gBtn.type = 'button'; gBtn.textContent = '📦 Group';
-      gBtn.style.cssText = 'background:#fff;color:#111;border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer';
-      gBtn.addEventListener('click', groupSelection);
-      const xBtn = document.createElement('button'); xBtn.type = 'button'; xBtn.textContent = '✕';
-      xBtn.style.cssText = 'background:transparent;color:#fff;border:none;cursor:pointer;font-size:12px';
-      xBtn.addEventListener('click', () => { multiSel.clear(); renderAll(); push(); });
-      topRow.append(lbl, gBtn, xBtn);
-      // Alignment grid — 2 columns with named actions so every option is
-      // readable (posts to the preview, which measures + repositions).
-      const alignRow = document.createElement('div');
-      alignRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:5px';
-      const secId = selected.s;
-      const aBtn = (icon, label, mode) => {
-        const b = document.createElement('button'); b.type = 'button';
-        b.innerHTML = '<span style="font-size:14px;line-height:1">' + icon + '</span><span>' + label + '</span>';
-        b.style.cssText = 'display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.94);color:#1f2430;border:none;border-radius:6px;padding:7px 9px;font-size:12px;font-weight:500;cursor:pointer;text-align:left';
-        b.addEventListener('click', () => {
-          try { frame.contentWindow.postMessage({ type: 'ploy-multi-align', sectionId: secId, ids: Array.from(multiSel), mode }, ORIGIN); } catch (e) {}
-        });
-        return b;
-      };
-      alignRow.append(
-        aBtn('⇤', 'Align left', 'left'),      aBtn('⤒', 'Align top', 'top'),
-        aBtn('⇔', 'Center H', 'hcenter'),     aBtn('↕', 'Center V', 'vcenter'),
-        aBtn('⇥', 'Align right', 'right'),    aBtn('⤓', 'Align bottom', 'bottom'),
-        aBtn('↔', 'Distribute H', 'hdist'),   aBtn('↨', 'Distribute V', 'vdist')
-      );
-      box.append(topRow, alignRow);
-      listEl.append(box);
-    }
+    // Multi-select tools live in the right-hand Block panel — the Navigator
+    // just shows the layer highlights (no duplicate align bar here).
 
     const activeSecs = cur().sections;
     const allSecs = [...activeSecs];
@@ -3497,26 +3535,28 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     if (emptyMsg) emptyMsg.style.display = 'none';
     inspector.style.display = 'block';
 
-    // Multi-selection: the inspector becomes the group toolbox (always
-    // visible even when the layers panel is collapsed).
+    // Multi-selection: the Block panel becomes the group toolbox (the only
+    // place these tools live — the Navigator no longer duplicates them).
     if (multiSel.size >= 2) {
-      const hdr = document.createElement('div'); hdr.className = 'inspector-header';
-      const title = document.createElement('h3'); title.textContent = multiSel.size + ' widgets selected';
-      hdr.append(title); inspector.append(hdr);
+      const box = document.createElement('div'); box.className = 'multi-panel';
+      const head = document.createElement('div'); head.className = 'multi-panel__head';
+      head.innerHTML = '<span class="multi-panel__count">' + multiSel.size + '</span><b>widgets selected</b>';
+      const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'multi-panel__clear'; clear.textContent = '✕'; clear.title = 'Deselect';
+      clear.addEventListener('click', () => { multiSel.clear(); renderAll(); push(); });
+      head.append(clear);
+      box.append(head);
 
-      const hint = document.createElement('p'); hint.className = 'hint';
-      hint.textContent = 'Drag any selected widget to move them together. Ctrl-click to add/remove. Click blank canvas to deselect.';
-      inspector.append(hint);
+      const hint = document.createElement('p'); hint.className = 'hint'; hint.style.margin = '4px 0 12px';
+      hint.textContent = 'Drag any selected widget to move them together · Ctrl-click to add/remove · click blank canvas to deselect.';
+      box.append(hint);
 
-      const alignWrap = document.createElement('div');
-      alignWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0';
+      const secLabel = document.createElement('div'); secLabel.className = 'multi-panel__label'; secLabel.textContent = 'Align & distribute';
+      box.append(secLabel);
+      const alignWrap = document.createElement('div'); alignWrap.className = 'align-grid';
       const mkAlign = (icon, label, mode) => {
-        const b = document.createElement('button'); b.type = 'button';
-        b.innerHTML = '<span style="font-size:14px;line-height:1">' + icon + '</span><span>' + label + '</span>';
-        b.style.cssText = 'display:flex;align-items:center;gap:7px;background:var(--sb-bg-light);color:var(--sb-text);border:1px solid var(--sb-border);border-radius:6px;padding:8px 10px;font-size:12px;font-weight:500;cursor:pointer;text-align:left';
-        b.addEventListener('click', () => {
-          try { frame.contentWindow.postMessage({ type: 'ploy-multi-align', sectionId: selected.s, ids: Array.from(multiSel), mode }, ORIGIN); } catch (e) {}
-        });
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'align-btn'; b.title = label;
+        b.innerHTML = '<span class="align-btn__icon">' + icon + '</span><span>' + label + '</span>';
+        b.addEventListener('click', () => { try { frame.contentWindow.postMessage({ type: 'ploy-multi-align', sectionId: selected.s, ids: Array.from(multiSel), mode }, ORIGIN); } catch (e) {} });
         return b;
       };
       alignWrap.append(
@@ -3525,14 +3565,17 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         mkAlign('⇥', 'Align right', 'right'),  mkAlign('⤓', 'Align bottom', 'bottom'),
         mkAlign('↔', 'Distribute H', 'hdist'), mkAlign('↨', 'Distribute V', 'vdist')
       );
-      inspector.append(field('Align & distribute', alignWrap));
+      box.append(alignWrap);
 
-      const acts = document.createElement('div'); acts.className = 'inspector-actions';
-      acts.append(
-        actionBtn('📦 Group into container', groupSelection),
-        actionBtn('✕ Delete ' + multiSel.size + ' widgets', () => handleOp({ op: 'deleteBlocks', sectionId: selected.s, ids: Array.from(multiSel) }), true),
-      );
-      inspector.append(acts);
+      const actLabel = document.createElement('div'); actLabel.className = 'multi-panel__label'; actLabel.textContent = 'Arrange';
+      box.append(actLabel);
+      const gBtn = document.createElement('button'); gBtn.type = 'button'; gBtn.className = 'multi-panel__group';
+      gBtn.innerHTML = '📦 Group into container'; gBtn.addEventListener('click', groupSelection);
+      const dBtn = document.createElement('button'); dBtn.type = 'button'; dBtn.className = 'multi-panel__del';
+      dBtn.textContent = '🗑 Delete ' + multiSel.size + ' widgets';
+      dBtn.addEventListener('click', () => handleOp({ op: 'deleteBlocks', sectionId: selected.s, ids: Array.from(multiSel) }));
+      box.append(gBtn, dBtn);
+      inspector.append(box);
       return;
     }
 

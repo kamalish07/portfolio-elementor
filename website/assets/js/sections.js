@@ -97,6 +97,11 @@
     '.ploy-handle--bottom{left:50%;bottom:-7px;transform:translateX(-50%);cursor:ns-resize}',
     '.ploy-handle--move{width:20px;height:20px;background:#6366f1;border:2px solid #fff;left:-10px;top:-10px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}',
     '.ploy-handle--corner{right:-7px;bottom:-7px;background:#6366f1;cursor:nwse-resize}',
+    '.ploy-modebar{position:absolute;left:50%;bottom:-46px;transform:translateX(-50%);z-index:72;display:flex;gap:2px;background:#1f2430;padding:3px;border-radius:9px;box-shadow:0 6px 20px rgba(15,23,42,.3);font-family:system-ui,sans-serif}',
+    '.ploy-modebar button{background:none;border:0;color:#c7cbd6;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.25;gap:1px}',
+    '.ploy-modebar button small{font-size:9px;opacity:.65;font-weight:400}',
+    '.ploy-modebar button:hover{background:rgba(255,255,255,.08);color:#fff}',
+    '.ploy-modebar button.active{background:#6366f1;color:#fff}',
     /* Smart alignment guides shown while dragging (Figma-style) */
     '.ploy-guide{position:absolute;z-index:65;pointer-events:none;background:#ec4899}',
     '.ploy-guide--v{top:0;bottom:0;width:1px}',
@@ -283,6 +288,7 @@
                 addFreeResizeHandle(childEl, sec, b);
                 addFreeHeightHandle(childEl, sec, b);
                 addImageCornerHandle(childEl, sec, b);
+                addImageModeBar(childEl, sec, b);
               }
               extraZone.appendChild(childEl);
             });
@@ -329,6 +335,7 @@
             addFreeResizeHandle(childEl, sec, b);
             addFreeHeightHandle(childEl, sec, b);
                 addImageCornerHandle(childEl, sec, b);
+                addImageModeBar(childEl, sec, b);
           }
           canvas.appendChild(childEl);
         });
@@ -421,6 +428,7 @@
             addFreeResizeHandle(childEl, sec, child);
             addFreeHeightHandle(childEl, sec, child);
             addImageCornerHandle(childEl, sec, child);
+            addImageModeBar(childEl, sec, child);
           }
         }
         wrap.appendChild(childEl);
@@ -1045,9 +1053,14 @@
       }
       function move(e) {
         var dx = e.clientX - startX, dy = e.clientY - startY;
-        if (e.ctrlKey || e.metaKey) {
+        // Effective mode: the widget's chosen mode, with live modifier
+        // overrides (Ctrl = crop, Shift = scale) like Figma.
+        var mode = blk.resizeMode || 'normal';
+        if (e.ctrlKey || e.metaKey) mode = 'crop';
+        else if (e.shiftKey) mode = 'scale';
+        if (mode === 'crop') {
           apply(null, Math.max(20, Math.round(startH + dy)));          // crop height
-        } else if (e.shiftKey) {
+        } else if (mode === 'scale') {
           var w = Math.max(40, Math.round(startW + dx));
           apply(w, Math.round(w / aspect));                            // proportional scale
         } else {
@@ -1063,6 +1076,30 @@
       handle.addEventListener('pointerup', up);
     });
     childEl.appendChild(handle);
+  }
+
+  // Floating bar under a selected image: pick the resize mode (Scale / Resize
+  // / Crop). The chosen mode drives the corner handle; Ctrl/Shift still
+  // override it live. Figma-style single-key shortcuts shown as hints.
+  function addImageModeBar(childEl, sec, blk) {
+    if (blk.type !== 'image') return;
+    var bar = document.createElement('div');
+    bar.className = 'ploy-modebar';
+    var mode = blk.resizeMode || 'normal';
+    [['normal', 'Resize', 'R'], ['scale', 'Scale', 'K'], ['crop', 'Crop', 'C']].forEach(function (m) {
+      var b = document.createElement('button');
+      b.innerHTML = m[1] + '<small>' + m[2] + '</small>';
+      if (mode === m[0]) b.className = 'active';
+      b.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        blk.resizeMode = m[0];
+        post({ type: 'ploy-blocks-prop', sectionId: sec.id, blockId: blk.id, props: { resizeMode: m[0] } });
+        renderSections();
+      });
+      bar.appendChild(b);
+    });
+    childEl.appendChild(bar);
   }
 
   // Resize handle for a free-form widget: drags set an explicit pixel width.
@@ -1129,6 +1166,12 @@
     if (!sec) return;
     var blk = findBlockInSection(sec, state.selected.b);
     if (!blk) return;
+    // With an image selected, forward plain single keys (e.g. Figma-style
+    // R/K/C) so the parent can switch its resize mode via custom bindings.
+    if (blk.type === 'image' && !ev.ctrlKey && !ev.metaKey && !ev.altKey && (ev.key || '').length === 1) {
+      post({ type: 'ploy-shortcut', combo: comboFromEvent(ev) });
+      return;
+    }
     if (ev.key === 'Escape') { select(sec.id, null); return; }
     // Delete and arrow keys act on the WHOLE selection, not just the primary.
     var actIds = (state.multi && state.multi.length > 1 && state.multi.indexOf(blk.id) !== -1) ? state.multi.slice() : [blk.id];
