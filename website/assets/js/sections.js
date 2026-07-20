@@ -96,6 +96,7 @@
     '.ploy-handle--right{right:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}',
     '.ploy-handle--bottom{left:50%;bottom:-7px;transform:translateX(-50%);cursor:ns-resize}',
     '.ploy-handle--move{width:20px;height:20px;background:#6366f1;border:2px solid #fff;left:-10px;top:-10px;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}',
+    '.ploy-handle--corner{right:-7px;bottom:-7px;background:#6366f1;cursor:nwse-resize}',
     /* Smart alignment guides shown while dragging (Figma-style) */
     '.ploy-guide{position:absolute;z-index:65;pointer-events:none;background:#ec4899}',
     '.ploy-guide--v{top:0;bottom:0;width:1px}',
@@ -281,6 +282,7 @@
                 addFreeMoveHandle(childEl, sec, b, el);
                 addFreeResizeHandle(childEl, sec, b);
                 addFreeHeightHandle(childEl, sec, b);
+                addImageCornerHandle(childEl, sec, b);
               }
               extraZone.appendChild(childEl);
             });
@@ -326,6 +328,7 @@
             addFreeMoveHandle(childEl, sec, b, canvas);
             addFreeResizeHandle(childEl, sec, b);
             addFreeHeightHandle(childEl, sec, b);
+                addImageCornerHandle(childEl, sec, b);
           }
           canvas.appendChild(childEl);
         });
@@ -417,6 +420,7 @@
             addFreeMoveHandle(childEl, sec, child, wrap);
             addFreeResizeHandle(childEl, sec, child);
             addFreeHeightHandle(childEl, sec, child);
+            addImageCornerHandle(childEl, sec, child);
           }
         }
         wrap.appendChild(childEl);
@@ -1018,6 +1022,49 @@
     }
   }
 
+  // Corner handle for image widgets with modifier behaviors:
+  //   plain drag  → free resize the box (crops via object-fit: cover)
+  //   Shift+drag  → scale proportionally (keep the image's aspect ratio)
+  //   Ctrl+drag   → crop height only (the visible window), width unchanged
+  function addImageCornerHandle(childEl, sec, blk) {
+    if (blk.type !== 'image') return;
+    var handle = document.createElement('div');
+    handle.className = 'ploy-handle ploy-handle--corner';
+    handle.title = 'Drag: resize · Shift: scale (keep ratio) · Ctrl: crop';
+    handle.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      var img = childEl.querySelector('img');
+      var startX = ev.clientX, startY = ev.clientY;
+      var startW = childEl.offsetWidth;
+      var startH = img ? img.offsetHeight : childEl.offsetHeight;
+      var aspect = startW / Math.max(1, startH);
+      try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
+      function apply(w, h) {
+        if (w != null) { blk.freeW = w; childEl.style.width = w + 'px'; }
+        if (h != null) { blk.freeH = h; blk.fit = blk.fit || 'cover'; if (img) { img.style.height = h + 'px'; img.style.objectFit = blk.fit; } }
+      }
+      function move(e) {
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        if (e.ctrlKey || e.metaKey) {
+          apply(null, Math.max(20, Math.round(startH + dy)));          // crop height
+        } else if (e.shiftKey) {
+          var w = Math.max(40, Math.round(startW + dx));
+          apply(w, Math.round(w / aspect));                            // proportional scale
+        } else {
+          apply(Math.max(40, Math.round(startW + dx)), Math.max(20, Math.round(startH + dy))); // free
+        }
+      }
+      function up() {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        post({ type: 'ploy-blocks-prop', sectionId: sec.id, blockId: blk.id, props: { freeW: blk.freeW, freeH: blk.freeH, fit: blk.fit } });
+      }
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    });
+    childEl.appendChild(handle);
+  }
+
   // Resize handle for a free-form widget: drags set an explicit pixel width.
   function addFreeResizeHandle(childEl, sec, blk) {
     var handle = document.createElement('div');
@@ -1047,10 +1094,30 @@
   // Keyboard: arrows nudge the selected free-form widget (Shift = 10px),
   // Delete removes it, Escape steps the selection up / clears it. Ignored
   // while typing in text fields.
+  // Forward app-level shortcut combos (Ctrl/Cmd based) to the CMS parent, so
+  // undo/redo/publish/etc. work even when the canvas iframe holds focus.
+  function comboFromEvent(e) {
+    var parts = [];
+    if (e.ctrlKey || e.metaKey) parts.push('ctrl');
+    if (e.shiftKey) parts.push('shift');
+    if (e.altKey) parts.push('alt');
+    var k = (e.key || '').toLowerCase();
+    var NAMED = { ' ': 'space', 'escape': 'escape', 'delete': 'delete', 'backspace': 'delete', 'arrowup': 'up', 'arrowdown': 'down', 'arrowleft': 'left', 'arrowright': 'right' };
+    k = NAMED[k] || k;
+    if (['ctrl', 'shift', 'alt', 'meta', 'control'].indexOf(k) === -1) parts.push(k);
+    return parts.join('+');
+  }
+
   document.addEventListener('keydown', function (ev) {
     if (!state.editMode) return;
     var ae = document.activeElement;
     if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return;
+    // Forward Ctrl/Cmd combos to the parent's customizable shortcut system.
+    if ((ev.ctrlKey || ev.metaKey) && ['control', 'shift', 'alt', 'meta'].indexOf((ev.key || '').toLowerCase()) === -1) {
+      ev.preventDefault();
+      post({ type: 'ploy-shortcut', combo: comboFromEvent(ev) });
+      return;
+    }
     if (!state.selected.b) {
       if (ev.key === 'Escape' && state.selected.s) select(null, null);
       return;

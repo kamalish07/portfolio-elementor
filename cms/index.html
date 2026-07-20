@@ -1000,20 +1000,25 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 .props-tabs button { font-size: 12px; letter-spacing: .3px; padding: 10px 4px; white-space: nowrap; }
 
 /* ---- Readability: bump the small text sizes across the editor ---- */
-body { font-size: 13.5px; }
-.ctl-field > label { font-size: 12px; letter-spacing: .3px; }
-.ctl-input, .ctl-textarea, .ctl-select { font-size: 13px; padding: 9px 11px; }
-.hint, .rpane-empty { font-size: 12px; }
-.nav-tree-item, .nav-tree-item__label { font-size: 13px; }
-.nav-tree-item__badge { font-size: 10.5px; }
-.widget-card { font-size: 12.5px; }
-.inspector-header h3 { font-size: 14px; }
-.settings-group h4 { font-size: 13.5px; }
-.page-data-panel h4 { font-size: 13px; }
-.colorfield label { font-size: 12px; }
-.cms-bottom { font-size: 12.5px; }
-.panel-left__editing { font-size: 12.5px; }
-.panel-left__content-hd { font-size: 13px; }
+body { font-size: 14.5px; }
+.ctl-field > label { font-size: 13px; letter-spacing: .3px; }
+.ctl-input, .ctl-textarea, .ctl-select { font-size: 14px; padding: 10px 12px; }
+.hint, .rpane-empty { font-size: 13px; }
+.nav-tree-item, .nav-tree-item__label { font-size: 14px; }
+.nav-tree-item__badge { font-size: 11.5px; }
+.widget-card { font-size: 13.5px; }
+.inspector-header h3 { font-size: 15px; }
+.settings-group h4 { font-size: 14.5px; }
+.page-data-panel h4 { font-size: 14px; }
+.colorfield label { font-size: 13px; }
+.cms-bottom { font-size: 13.5px; }
+.panel-left__editing { font-size: 13.5px; }
+.panel-left__content-hd { font-size: 14px; }
+.ltabs button { font-size: 13.5px; }
+.rtabs button { font-size: 13.5px; }
+.props-tabs button { font-size: 13px; }
+.pages-crumb, .pages-crumb__page { font-size: 14px; }
+.preview-btn, .page-pill { font-size: 13.5px; }
 
 /* Collapsible side panels → full-screen canvas */
 .panel-left.collapsed, .panel-right.collapsed { display: none; }
@@ -1041,8 +1046,8 @@ body { font-size: 13.5px; }
 .media-modal { width: 580px; max-width: 94vw; }
 .media-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 320px; overflow-y: auto; margin-top: 12px; }
 .media-cell { background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: 8px; padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
-.media-cell img { width: 100%; height: 70px; object-fit: cover; border-radius: 5px; background: #e8eaf0; }
-.media-cell span { font-size: 10.5px; color: var(--sb-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-cell img { width: 100%; height: 84px; object-fit: contain; border-radius: 5px; background: repeating-conic-gradient(#eceef3 0% 25%, #f6f7fa 0% 50%) 50% / 16px 16px; }
+.media-cell span { font-size: 11.5px; color: var(--sb-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .media-cell:hover { border-color: var(--sb-accent); }
 
 /* ---- Editor dark mode (UI chrome only — the page canvas stays as designed) ---- */
@@ -1157,7 +1162,9 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
     <aside class="panel-left" id="sidebar">
       <div class="panel-left__editing">
         <span>Editing: <b id="editingLabel">Home</b></span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <button class="icon-btn" id="settingsGearBtn" type="button" title="Editor settings &amp; keyboard shortcuts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
       </div>
 
       <div class="ltabs">
@@ -2131,11 +2138,135 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   }
   document.getElementById('undoBtn').addEventListener('click', () => restoreHistory(histIdx - 1));
   document.getElementById('redoBtn').addEventListener('click', () => restoreHistory(histIdx + 1));
-  document.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); restoreHistory(histIdx - 1); }
-    else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); restoreHistory(histIdx + 1); }
-  });
+
+  // ---- CUSTOMIZABLE KEYBOARD SHORTCUTS ----
+  const SHORTCUT_ACTIONS = [
+    { id: 'undo', label: 'Undo', def: 'ctrl+z' },
+    { id: 'redo', label: 'Redo', def: 'ctrl+shift+z' },
+    { id: 'redo2', label: 'Redo (alt)', def: 'ctrl+y' },
+    { id: 'publish', label: 'Publish', def: 'ctrl+s' },
+    { id: 'duplicate', label: 'Duplicate widget', def: 'ctrl+d' },
+    { id: 'group', label: 'Group selection', def: 'ctrl+g' },
+    { id: 'delete', label: 'Delete selection', def: 'delete' },
+    { id: 'deselect', label: 'Deselect', def: 'escape' },
+    { id: 'mediaTab', label: 'Open Media panel', def: 'ctrl+m' },
+    { id: 'contentTab', label: 'Open Content panel', def: 'ctrl+e' },
+    { id: 'preview', label: 'Toggle preview', def: 'ctrl+p' },
+  ];
+  let shortcuts = {};
+  SHORTCUT_ACTIONS.forEach((a) => { shortcuts[a.id] = a.def; });
+  try { const saved = JSON.parse(localStorage.getItem('cmsShortcuts') || '{}'); Object.assign(shortcuts, saved); } catch (e) {}
+  window.cmsShortcuts = { actions: SHORTCUT_ACTIONS, map: shortcuts,
+    save() { try { localStorage.setItem('cmsShortcuts', JSON.stringify(shortcuts)); } catch (e) {} },
+    reset() { SHORTCUT_ACTIONS.forEach((a) => { shortcuts[a.id] = a.def; }); this.save(); } };
+
+  function comboString(e) {
+    const parts = [];
+    if (e.ctrlKey || e.metaKey) parts.push('ctrl');
+    if (e.shiftKey) parts.push('shift');
+    if (e.altKey) parts.push('alt');
+    let k = (e.key || '').toLowerCase();
+    const NAMED = { ' ': 'space', 'escape': 'escape', 'delete': 'delete', 'backspace': 'delete', 'arrowup': 'up', 'arrowdown': 'down', 'arrowleft': 'left', 'arrowright': 'right' };
+    k = NAMED[k] || k;
+    if (!['ctrl', 'shift', 'alt', 'meta', 'control'].includes(k)) parts.push(k);
+    return parts.join('+');
+  }
+  function runShortcut(id) {
+    switch (id) {
+      case 'undo': restoreHistory(histIdx - 1); break;
+      case 'redo': case 'redo2': restoreHistory(histIdx + 1); break;
+      case 'publish': document.getElementById('publishBtn').click(); break;
+      case 'duplicate': duplicateSelection(); break;
+      case 'group': if (multiSel.size >= 2) groupSelection(); break;
+      case 'delete': deleteSelection(); break;
+      case 'deselect': if (selected.s || selected.b || multiSel.size) { multiSel.clear(); selected = { s: null, b: null }; renderAll(); push(); } break;
+      case 'mediaTab': if (window.setLeftTab) window.setLeftTab('media'); break;
+      case 'contentTab': if (window.setLeftTab) window.setLeftTab('content'); break;
+      case 'preview': document.getElementById('previewToggleBtn').click(); break;
+    }
+  }
+  function handleShortcut(e, fromIframe) {
+    if (!fromIframe) {
+      const ae = document.activeElement;
+      if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return;
+    }
+    const combo = comboString(e);
+    const match = SHORTCUT_ACTIONS.find((a) => shortcuts[a.id] === combo);
+    if (match) { if (e.preventDefault) e.preventDefault(); runShortcut(match.id); }
+  }
+  document.addEventListener('keydown', (e) => handleShortcut(e, false));
+  window.__runComboFromIframe = (combo) => {
+    const match = SHORTCUT_ACTIONS.find((a) => shortcuts[a.id] === combo);
+    if (match) runShortcut(match.id);
+  };
+
+  function duplicateSelection() {
+    const sec = findSec(selected.s); if (!sec) return;
+    const blk = findBlk(sec, selected.b);
+    if (blk) {
+      const copy = regenIds(blk); copy.id = uid('b');
+      if (typeof copy.x === 'number') { copy.x = (copy.x || 0) + 24; copy.y = (copy.y || 0) + 24; }
+      const loc = locateBlock(sec, blk.id);
+      if (loc) loc.arr.splice(loc.idx + 1, 0, copy); else (sec.blocks = sec.blocks || []).push(copy);
+      selected = { s: sec.id, b: copy.id };
+      markBlocksDirty(); renderAll(); push(); toast('Widget duplicated.');
+    }
+  }
+  function deleteSelection() {
+    if (multiSel.size) {
+      const sec = findSec(selected.s);
+      Array.from(multiSel).forEach((id) => { const l = sec && locateBlock(sec, id); if (l) l.arr.splice(l.idx, 1); });
+      multiSel.clear(); selected = { s: selected.s, b: null };
+      markBlocksDirty(); renderAll(); push();
+    } else if (selected.b) {
+      handleOp({ op: 'deleteBlock', sectionId: selected.s, blockId: selected.b });
+    }
+  }
+
+  // ---- Settings modal: rebind & add keyboard shortcuts ----
+  function prettyCombo(c) { return (c || '—').split('+').map((p) => p === 'ctrl' ? '⌃/⌘' : p.charAt(0).toUpperCase() + p.slice(1)).join(' + '); }
+  function openShortcutsModal() {
+    const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+    const modal = document.createElement('div'); modal.className = 'modal'; modal.style.width = '460px'; modal.style.maxWidth = '94vw';
+    modal.innerHTML = '<h3>⌨ Keyboard shortcuts</h3><p>Click a shortcut, then press the keys you want. These are saved in this browser.</p>';
+    const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:52vh;overflow-y:auto';
+    let capturing = null;
+    function draw() {
+      list.innerHTML = '';
+      SHORTCUT_ACTIONS.forEach((a) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--sb-border)';
+        const lab = document.createElement('span'); lab.textContent = a.label; lab.style.cssText = 'flex:1;font-size:13.5px;color:var(--sb-text)';
+        const key = document.createElement('button'); key.type = 'button';
+        key.textContent = capturing === a.id ? 'Press keys…' : prettyCombo(shortcuts[a.id]);
+        key.style.cssText = 'min-width:130px;padding:6px 10px;border:1px solid ' + (capturing === a.id ? 'var(--sb-accent)' : 'var(--inp-border)') + ';border-radius:6px;background:var(--inp-bg);color:var(--inp-text);font-size:12.5px;cursor:pointer';
+        key.addEventListener('click', () => { capturing = capturing === a.id ? null : a.id; draw(); });
+        row.append(lab, key); list.append(row);
+      });
+    }
+    draw();
+    modal.addEventListener('keydown', (e) => {
+      if (!capturing) return;
+      e.preventDefault(); e.stopPropagation();
+      const k = (e.key || '').toLowerCase();
+      if (['control', 'shift', 'alt', 'meta'].includes(k)) return; // wait for the real key
+      shortcuts[capturing] = comboString(e);
+      window.cmsShortcuts.save();
+      capturing = null; draw();
+    });
+    const acts = document.createElement('div'); acts.className = 'modal-actions';
+    const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'modal-cancel'; reset.textContent = 'Reset to defaults';
+    reset.addEventListener('click', () => { window.cmsShortcuts.reset(); draw(); });
+    const done = document.createElement('button'); done.type = 'button'; done.className = 'modal-confirm'; done.textContent = 'Done';
+    done.addEventListener('click', () => overlay.remove());
+    acts.append(reset, done);
+    modal.append(list, acts);
+    overlay.append(modal); document.body.append(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+  window.openShortcutsModal = openShortcutsModal;
+  const gear = document.getElementById('settingsGearBtn');
+  if (gear) gear.addEventListener('click', openShortcutsModal);
 
   // ---- PUBLISH (one button orchestrates every pending save) ----
   let lastSavedAt = null;
@@ -2426,7 +2557,9 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         try {
           const path = await uploadMediaFile(file);
           if (window.refreshMediaPanel) window.refreshMediaPanel();
-          window.cmsApplyMediaPick(path);
+          // Paste lands in the section you're in (or the last selected one):
+          // replaces a selected image, else adds an image widget to it.
+          dropMediaOntoCanvas(path);
         } catch (err) { toast('Paste upload failed: ' + err.message, true); }
         return;
       }
@@ -2594,6 +2727,10 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         // Send back an update to immediately refresh the image in the iframe
         try { frame.contentWindow.postMessage({ type: 'ploy-image-updated', path: d.path, value: tempVal }, ORIGIN); } catch (e) {}
       };
+    } else if (d.type === 'ploy-shortcut') {
+      // App-level shortcut forwarded from the canvas iframe (which had focus).
+      if (window.__runComboFromIframe) window.__runComboFromIframe(d.combo);
+      return;
     } else if (d.type === 'ploy-blocks-select') {
       // A plain (non-modifier) selection always replaces the multi-selection —
       // clicking blank canvas posts nulls here, which fully deselects.
