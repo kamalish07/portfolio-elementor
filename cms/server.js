@@ -340,6 +340,20 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { media });
   }
 
+  if (pathname === '/api/media' && req.method === 'DELETE') {
+    const body = await readBody(req);
+    let payload;
+    try { payload = JSON.parse(body.toString('utf8')); } catch (e) { return sendJson(res, 400, { error: 'Invalid JSON' }); }
+    const name = safeName(payload && payload.name);
+    const target = path.join(UPLOAD_DIR, name);
+    if (!target.startsWith(UPLOAD_DIR) || !fs.existsSync(target)) {
+      return sendJson(res, 404, { error: 'File not found' });
+    }
+    fs.unlinkSync(target);
+    gitCommitAndPush();
+    return sendJson(res, 200, { ok: true });
+  }
+
   // ---- Presets API (reusable saved sections) ----
   if (pathname === '/api/presets' && req.method === 'GET') {
     const raw = fs.existsSync(PRESETS_FILE) ? fs.readFileSync(PRESETS_FILE, 'utf8') : '{"presets":[]}';

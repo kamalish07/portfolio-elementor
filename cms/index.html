@@ -973,7 +973,7 @@ body { background: var(--preview-bg); color: var(--sb-text); }
 
 /* ---- Canvas ---- */
 .cms-preview { flex: 1; background: var(--preview-bg); min-width: 0; display: flex; }
-.cms-preview__frame-wrap { flex: 1; padding: 18px; height: auto; }
+.cms-preview__frame-wrap { flex: 1; padding: 18px; height: auto; position: relative; }
 .cms-preview__frame { width: 100%; height: 100%; background: var(--sb-panel-bg); border: 1px solid var(--sb-border); border-radius: 10px; box-shadow: 0 8px 28px rgba(15,23,42,.08); }
 
 /* ---- Bottom bar ---- */
@@ -1058,6 +1058,39 @@ html[data-cms-theme="dark"] {
 html[data-cms-theme="dark"] .cms-preview__frame { border-color: #2a2f3b; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
 html[data-cms-theme="dark"] .cms-header__responsive button.active { box-shadow: 0 1px 3px rgba(0,0,0,.4); }
 html[data-cms-theme="dark"] .media-cell img { background: #232834; }
+
+/* ---- Left panel tabs (Content | Media) ---- */
+.panel-left { position: relative; }
+.ltabs { display: flex; padding: 0 10px; border-bottom: 1px solid var(--sb-border); gap: 4px; }
+.ltabs button { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; padding: 9px 4px; font-size: 12.5px; font-weight: 600; color: var(--sb-text-muted); }
+.ltabs button:hover { color: var(--sb-text); }
+.ltabs button.active { color: var(--sb-text-bright); border-bottom-color: var(--sb-accent); }
+.left-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#leftContent { flex: 1; min-height: 0; }
+#leftMedia { overflow-y: auto; }
+
+/* ---- Media panel (inside left) ---- */
+.media-drop { margin: 12px; padding: 18px 12px; border: 2px dashed var(--inp-border); border-radius: 10px; text-align: center; color: var(--sb-text-muted); cursor: pointer; transition: border-color .12s, background .12s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.media-drop b { color: var(--sb-text-bright); font-size: 13px; }
+.media-drop__sub { font-size: 11px; }
+.media-drop:hover, .media-drop.dragover { border-color: var(--sb-accent); background: var(--sb-accent-bg); color: var(--sb-accent); }
+.media-grid--panel { grid-template-columns: 1fr 1fr; padding: 0 12px 14px; max-height: none; }
+.media-cell { position: relative; }
+.media-cell__del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border: none; border-radius: 50%; background: rgba(15,23,42,.72); color: #fff; font-size: 12px; line-height: 1; display: none; align-items: center; justify-content: center; cursor: pointer; }
+.media-cell:hover .media-cell__del { display: flex; }
+.media-cell[draggable="true"] { cursor: grab; }
+
+/* ---- Canvas drop-catch (shown only while dragging a media thumbnail) ---- */
+.canvas-dropcatch { position: absolute; inset: 18px; border-radius: 10px; display: none; z-index: 40; border: 2px dashed transparent; }
+.canvas-dropcatch.armed { display: block; }
+.canvas-dropcatch.dragover { border-color: var(--sb-accent); background: var(--sb-accent-bg); }
+
+/* ---- Resizable side panels ---- */
+.panel-right { position: relative; }
+.panel-resize { position: absolute; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 50; }
+.panel-resize:hover, .panel-resize.dragging { background: var(--sb-accent-bg); }
+.panel-resize--left { right: -3px; }
+.panel-resize--right { left: -3px; }
 </style>
 </head>
 <body>
@@ -1126,6 +1159,26 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
         <span>Editing: <b id="editingLabel">Home</b></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       </div>
+
+      <div class="ltabs">
+        <button id="ltabContentBtn" class="active" type="button">Content</button>
+        <button id="ltabMediaBtn" type="button">Media</button>
+      </div>
+
+      <!-- LEFT: MEDIA panel -->
+      <div id="leftMedia" class="left-pane" style="display:none">
+        <div class="media-drop" id="mediaDrop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div><b>Upload files</b></div>
+          <div class="media-drop__sub">Drag &amp; drop here, click to browse, or paste (Ctrl+V)</div>
+        </div>
+        <input type="file" id="mediaFileInput" accept=".webp,.png,.jpg,.jpeg,.gif,.svg" multiple style="display:none">
+        <p class="hint" style="padding:0 12px">Drag a thumbnail onto the canvas or an image field to use it.</p>
+        <div id="mediaPanelGrid" class="media-grid media-grid--panel"></div>
+      </div>
+
+      <!-- LEFT: CONTENT panel -->
+      <div id="leftContent" class="left-pane">
       <div class="panel-left__content-hd">
         <span>Content</span>
         <button class="icon-btn" id="addContentBtn" type="button" title="Add a widget or section">＋</button>
@@ -1180,17 +1233,21 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
 
       <div id="secList" class="nav-tree"></div>
       <button class="nav-add-section" id="navAddSection" type="button">+ Add Section</button>
+      </div><!-- /#leftContent -->
+      <div class="panel-resize panel-resize--left" id="resizeLeft" title="Drag to resize"></div>
     </aside>
 
     <!-- CENTER: canvas -->
     <main class="cms-preview">
       <div class="cms-preview__frame-wrap" id="previewWrap">
         <iframe id="themeFrame" class="cms-preview__frame" title="Live preview"></iframe>
+        <div class="canvas-dropcatch" id="canvasDropcatch"></div>
       </div>
     </main>
 
     <!-- RIGHT: inspector -->
     <aside class="panel-right">
+      <div class="panel-resize panel-resize--right" id="resizeRight" title="Drag to resize"></div>
       <div class="rtabs">
         <button id="rtabBlockBtn" class="active" type="button">Block</button>
         <button id="rtabPageBtn" type="button">Page</button>
@@ -1309,15 +1366,52 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
     applyCmsTheme(document.documentElement.dataset.cmsTheme === 'dark' ? 'light' : 'dark');
   });
 
-  // Media library from the header: picking an image applies it to the
-  // selected image widget, otherwise the path is copied for pasting.
-  document.getElementById('mediaBtn').addEventListener('click', () => {
-    if (!window.openMediaLibrary) return;
-    window.openMediaLibrary((p) => {
-      if (window.cmsApplyMediaPick && window.cmsApplyMediaPick(p)) return;
-      try { navigator.clipboard.writeText(p); } catch (e) {}
+  // Media button in the header simply switches the left panel to Media tab.
+  document.getElementById('mediaBtn').addEventListener('click', () => setLeftTab('media'));
+
+  // Left panel tabs: Content | Media
+  const lcBtn = document.getElementById('ltabContentBtn');
+  const lmBtn = document.getElementById('ltabMediaBtn');
+  const lContent = document.getElementById('leftContent');
+  const lMedia = document.getElementById('leftMedia');
+  function setLeftTab(which) {
+    lcBtn.classList.toggle('active', which === 'content');
+    lmBtn.classList.toggle('active', which === 'media');
+    lContent.style.display = which === 'content' ? '' : 'none';
+    lMedia.style.display = which === 'media' ? '' : 'none';
+    if (which === 'media' && window.refreshMediaPanel) window.refreshMediaPanel();
+    if (which === 'media') leftPanel.classList.remove('collapsed'), syncPanelButtons();
+  }
+  lcBtn.addEventListener('click', () => setLeftTab('content'));
+  lmBtn.addEventListener('click', () => setLeftTab('media'));
+  window.setLeftTab = setLeftTab;
+
+  // Resizable side panels (drag the inner edge; widths persist per browser).
+  function makeResizable(handle, panel, side) {
+    const KEY = 'cmsPanelW_' + side;
+    try { const w = parseInt(localStorage.getItem(KEY), 10); if (w) panel.style.width = w + 'px'; } catch (e) {}
+    handle.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault();
+      handle.classList.add('dragging');
+      const startX = ev.clientX, startW = panel.getBoundingClientRect().width;
+      try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
+      function move(e) {
+        const delta = side === 'left' ? (e.clientX - startX) : (startX - e.clientX);
+        const w = Math.max(200, Math.min(560, Math.round(startW + delta)));
+        panel.style.width = w + 'px'; panel.style.minWidth = w + 'px';
+      }
+      function up() {
+        handle.classList.remove('dragging');
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        try { localStorage.setItem(KEY, parseInt(panel.style.width, 10)); } catch (e) {}
+      }
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
     });
-  });
+  }
+  makeResizable(document.getElementById('resizeLeft'), leftPanel, 'left');
+  makeResizable(document.getElementById('resizeRight'), rightPanel, 'right');
 })();
 </script>
 
@@ -1655,6 +1749,14 @@ function imageControl(value, onChange) {
   browse.addEventListener('click', () => window.openMediaLibrary((p) => { input.value = p; img.src = p; onChange(p); }));
   body.append(input, btn, browse, file);
   wrap.append(img, body);
+  // Accept a media thumbnail dragged from the Media panel.
+  wrap.addEventListener('dragover', (e) => { if (window.PloyDragMedia && window.PloyDragMedia.path) { e.preventDefault(); wrap.style.outline = '2px dashed var(--sb-accent)'; } });
+  wrap.addEventListener('dragleave', () => { wrap.style.outline = ''; });
+  wrap.addEventListener('drop', (e) => {
+    const p = (window.PloyDragMedia && window.PloyDragMedia.path) || e.dataTransfer.getData('text/plain');
+    wrap.style.outline = '';
+    if (p) { e.preventDefault(); input.value = p; img.src = p; onChange(p); }
+  });
   return wrap;
 }
 
@@ -2208,6 +2310,128 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     toast('Path copied — paste it into any image field.');
     return false;
   };
+
+  // ---- MEDIA: shared upload, panel grid, drag/paste, canvas drop ----
+  async function uploadMediaFile(file) {
+    const dataBase64 = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res(String(rd.result).split(',')[1]); rd.onerror = rej; rd.readAsDataURL(file); });
+    const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: file.name || ('paste-' + Date.now() + '.png'), dataBase64 }) });
+    const out = await resp.json();
+    if (!resp.ok) throw new Error(out.error || 'Upload failed');
+    return out.path;
+  }
+  window.PloyDragMedia = { path: null };
+
+  window.refreshMediaPanel = async function () {
+    const grid = document.getElementById('mediaPanelGrid');
+    if (!grid) return;
+    grid.innerHTML = '<p class="hint" style="grid-column:1/-1">Loading…</p>';
+    try {
+      const r = await fetch('/api/media', { cache: 'no-store' });
+      const data = await r.json();
+      grid.innerHTML = '';
+      (data.media || []).forEach((m) => {
+        const cell = document.createElement('div'); cell.className = 'media-cell'; cell.title = m.name; cell.draggable = true;
+        const im = document.createElement('img'); im.src = m.path; im.loading = 'lazy';
+        const cap = document.createElement('span'); cap.textContent = m.name;
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'media-cell__del'; del.textContent = '✕'; del.title = 'Delete this file';
+        del.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm('Delete "' + m.name + '"? This removes the file permanently.')) return;
+          try { await fetch('/api/media', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: m.name }) }); } catch (err) {}
+          window.refreshMediaPanel();
+        });
+        cell.addEventListener('click', () => { if (!window.cmsApplyMediaPick(m.path)) { try { navigator.clipboard.writeText(m.path); } catch (e) {} } });
+        cell.addEventListener('dragstart', (e) => {
+          window.PloyDragMedia.path = m.path;
+          e.dataTransfer.setData('text/plain', m.path);
+          e.dataTransfer.effectAllowed = 'copy';
+          document.getElementById('canvasDropcatch').classList.add('armed');
+        });
+        cell.addEventListener('dragend', () => {
+          window.PloyDragMedia.path = null;
+          const c = document.getElementById('canvasDropcatch'); c.classList.remove('armed', 'dragover');
+        });
+        cell.append(im, cap, del);
+        grid.append(cell);
+      });
+      if (!grid.children.length) grid.innerHTML = '<p class="hint" style="grid-column:1/-1">No uploads yet — drop files above.</p>';
+    } catch (e) { grid.innerHTML = '<p class="hint" style="grid-column:1/-1">Could not load media.</p>'; }
+  };
+
+  // Drop a media path onto the canvas: apply to a selected image widget, or
+  // add a new image widget to the selected section.
+  function dropMediaOntoCanvas(path) {
+    const sec = findSec(selected.s);
+    const blk = findBlk(sec, selected.b);
+    if (blk && blk.type === 'image') { blk.src = path; markBlocksDirty(); renderAll(); push(); toast('Image applied to the selected widget.'); return; }
+    if (sec) {
+      const nb = newImageBlock(); nb.src = path;
+      sec.blocks = sec.blocks || [];
+      if (sec.layout === 'free' || sec.type === 'default_section') placeFree(nb, sec.blocks);
+      sec.blocks.push(nb);
+      selected = { s: sec.id, b: nb.id };
+      markBlocksDirty(); renderAll(); push();
+      toast('Image added to the section — drag to position it.');
+      return;
+    }
+    toast('Select a section first, then drop the image onto it.', true);
+  }
+
+  // Media upload drop-zone + click + file input (left Media tab).
+  (function wireMediaDrop() {
+    const drop = document.getElementById('mediaDrop');
+    const input = document.getElementById('mediaFileInput');
+    if (!drop || !input) return;
+    async function handleFiles(files) {
+      const imgs = Array.prototype.filter.call(files, (f) => /^image\//.test(f.type) || /\.(webp|png|jpe?g|gif|svg)$/i.test(f.name));
+      if (!imgs.length) return;
+      drop.classList.remove('dragover');
+      const old = drop.innerHTML; drop.innerHTML = '<b>⏳ Uploading ' + imgs.length + ' file(s)…</b>';
+      for (const f of imgs) { try { await uploadMediaFile(f); } catch (e) { toast('Upload failed: ' + e.message, true); } }
+      drop.innerHTML = old;
+      window.refreshMediaPanel();
+      toast('Uploaded — drag a thumbnail onto the canvas to use it.');
+    }
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => { handleFiles(input.files); input.value = ''; });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); if (e.dataTransfer.files && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+  })();
+
+  // Canvas drop-catch (armed only while dragging a media thumbnail).
+  (function wireCanvasDrop() {
+    const catcher = document.getElementById('canvasDropcatch');
+    if (!catcher) return;
+    catcher.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; catcher.classList.add('dragover'); });
+    catcher.addEventListener('dragleave', () => catcher.classList.remove('dragover'));
+    catcher.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const path = window.PloyDragMedia.path || e.dataTransfer.getData('text/plain');
+      catcher.classList.remove('armed', 'dragover');
+      if (path) dropMediaOntoCanvas(path);
+    });
+  })();
+
+  // Paste an image from the clipboard anywhere in the editor → upload + apply.
+  document.addEventListener('paste', async (e) => {
+    const ae = document.activeElement;
+    if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
+    const items = (e.clipboardData && e.clipboardData.items) || [];
+    for (const it of items) {
+      if (it.type && it.type.indexOf('image') === 0) {
+        e.preventDefault();
+        const file = it.getAsFile(); if (!file) continue;
+        toast('Uploading pasted image…');
+        try {
+          const path = await uploadMediaFile(file);
+          if (window.refreshMediaPanel) window.refreshMediaPanel();
+          window.cmsApplyMediaPick(path);
+        } catch (err) { toast('Paste upload failed: ' + err.message, true); }
+        return;
+      }
+    }
+  });
 
   // ---- EDIT MODE / PREVIEW TOGGLE ----
   // Editing is always on in the new 3-column layout; the Preview button
