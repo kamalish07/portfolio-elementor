@@ -13,8 +13,8 @@
           "type": "default_section",
           "key": "hero",
           "blocks": [],
-          "animation": "slide-up",
-          "animDuration": 1.1,
+          "animation": "",
+          "animDuration": 0,
           "hoverEffect": ""
         },
         {
@@ -68,10 +68,64 @@
               "thickness": 8,
               "width": 30,
               "freeW": 535,
-              "x": 30,
-              "y": 308,
+              "x": 0,
+              "y": 322,
               "borderWidth": 4,
               "borderColor": "#ff6b6b"
+            },
+            {
+              "id": "b_2g25kzp",
+              "type": "container",
+              "width": 100,
+              "flexDirection": "row",
+              "gap": 57,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "padding": 0,
+              "bg": "",
+              "radius": 0,
+              "blocks": [
+                {
+                  "id": "b_8tvc8l9",
+                  "type": "image",
+                  "src": "",
+                  "alt": "",
+                  "width": 48,
+                  "radius": 0,
+                  "x": 626,
+                  "y": 241
+                },
+                {
+                  "id": "b_mv3l7fn",
+                  "type": "text",
+                  "tag": "p",
+                  "text": "New text — click to edit.",
+                  "font": "",
+                  "fontCustom": "",
+                  "size": 0,
+                  "color": "",
+                  "bold": false,
+                  "align": "left",
+                  "width": 33.33
+                },
+                {
+                  "id": "b_tjaxx24",
+                  "type": "divider",
+                  "color": "#e5e7eb",
+                  "height": 1,
+                  "width": 25,
+                  "lineStyle": "solid",
+                  "x": 606,
+                  "y": 411,
+                  "freeW": 282
+                }
+              ],
+              "x": 635,
+              "y": 71,
+              "minHeight": 296,
+              "freeW": 578,
+              "layout": "auto",
+              "wrap": false
             }
           ]
         },
