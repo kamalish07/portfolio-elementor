@@ -881,26 +881,38 @@ input, select, textarea { font-family: inherit; }
    Later rules override the dark theme above.
    ====================================================== */
 :root {
+  /* Per CMS Editor UI Style Guide — primary #3F51B5 / #26316D, slate neutrals */
   --sb-bg: #ffffff;
-  --sb-bg-light: #f7f8fb;
-  --sb-bg-hover: #f1f2f7;
-  --sb-bg-active: #e9eaf4;
-  --sb-border: #e7e9f0;
-  --sb-text: #4b5163;
-  --sb-text-bright: #0f172a;
-  --sb-text-muted: #8a91a3;
-  --sb-accent: #6366f1;
-  --sb-accent-bg: rgba(99,102,241,0.10);
-  --sb-danger: #ef4444;
+  --sb-bg-light: #F8FAFC;
+  --sb-bg-hover: #F1F5F9;
+  --sb-bg-active: #E2E8F0;
+  --sb-border: #E2E8F0;
+  --sb-text: #475569;
+  --sb-text-bright: #1E293B;
+  --sb-text-muted: #64748B;
+  --sb-accent: #3F51B5;
+  --sb-accent-dark: #26316D;
+  --sb-accent-bg: rgba(63,81,181,0.10);
+  --sb-danger: #EF4444;
+  --green: #22C55E; --green-dark: #16A34A; --amber: #F59E0B; --red: #EF4444; --info: #0EA5E9;
   --hdr-bg: #ffffff;
-  --hdr-border: #e7e9f0;
-  --preview-bg: #eef0f5;
+  --hdr-border: #E2E8F0;
+  --preview-bg: #EEF1F6;
   --inp-bg: #ffffff;
-  --inp-border: #dfe2ec;
-  --inp-text: #1f2430;
-  --inp-focus: #6366f1;
+  --inp-border: #CBD5E1;
+  --inp-text: #1E293B;
+  --inp-focus: #3F51B5;
+  /* Radii from the guide */
+  --r-input: 8px; --r-card: 12px; --r-dialog: 16px;
 }
 body { background: var(--preview-bg); color: var(--sb-text); }
+
+/* Style-guide radii + primary CTA polish */
+.ctl-input, .ctl-textarea, .ctl-select, .colorfield__row input[type=text], .align-btn, .widget-card { border-radius: var(--r-input); }
+.btn-publish, .multi-panel__group { background: var(--sb-accent); border-radius: var(--r-input); }
+.btn-publish:hover, .multi-panel__group:hover { background: var(--sb-accent-dark); filter: none; }
+.modal { border-radius: var(--r-dialog); }
+.widget-popover, .pages-dropdown, .section-chooser { border-radius: var(--r-card); }
 
 /* ---- Header ---- */
 .cms-header {
@@ -1054,7 +1066,7 @@ body { font-size: 14.5px; }
 html[data-cms-theme="dark"] {
   --sb-bg: #12141a; --sb-bg-light: #191d25; --sb-bg-hover: #232834; --sb-bg-active: #2b313f;
   --sb-border: #2a2f3b; --sb-text: #b8bfcc; --sb-text-bright: #f2f4f8; --sb-text-muted: #7e8698;
-  --sb-accent: #818cf8; --sb-accent-bg: rgba(129,140,248,.15);
+  --sb-accent: #8B96D3; --sb-accent-dark: #3F51B5; --sb-accent-bg: rgba(139,150,211,.16);
   --hdr-bg: #161a21; --hdr-border: #2a2f3b;
   --preview-bg: #0d0f14;
   --inp-bg: #191d25; --inp-border: #343b4a; --inp-text: #e9ecf2; --inp-focus: #818cf8;
@@ -1098,6 +1110,26 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
 .media-cell span { max-width: 100%; }
 .media-grid--panel { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 .widget-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+
+/* ---- Page settings pane ---- */
+.page-pane__head { padding: 4px 2px 14px; border-bottom: 1px solid var(--sb-border); margin-bottom: 14px; }
+.page-pane__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--sb-accent); }
+.page-pane__head h3 { font-size: 20px; font-weight: 700; color: var(--sb-text-bright); margin: 2px 0 4px; }
+.settings-group--collapsible { border: 1px solid var(--sb-border); border-radius: var(--r-card); padding: 0; margin-top: 18px; overflow: hidden; }
+.settings-group--collapsible summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; align-items: center; background: var(--sb-bg-light); }
+.settings-group--collapsible summary::-webkit-details-marker { display: none; }
+.settings-group--collapsible summary h4 { margin: 0; }
+.settings-group--collapsible summary::after { content: '▾'; margin-left: auto; color: var(--sb-text-muted); transition: transform .15s; }
+.settings-group--collapsible[open] summary::after { transform: rotate(180deg); }
+.settings-group--collapsible > *:not(summary) { padding-left: 14px; padding-right: 14px; }
+.settings-group--collapsible[open] { padding-bottom: 12px; }
+
+/* ---- Segmented control (Figma-style pill toggle) ---- */
+.segmented { display: flex; gap: 3px; background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: var(--r-input); padding: 3px; }
+.segmented__btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; border: none; border-radius: 6px; padding: 7px 4px; font-size: 12.5px; font-weight: 600; color: var(--sb-text-muted); cursor: pointer; line-height: 1.2; }
+.segmented__btn small { font-size: 9.5px; font-weight: 400; opacity: .7; }
+.segmented__btn:hover { color: var(--sb-text-bright); }
+.segmented__btn.active { background: var(--sb-panel-bg); color: var(--sb-accent); box-shadow: 0 1px 3px rgba(15,23,42,.12); }
 
 /* ---- Multi-select panel (right Block tab) ---- */
 .multi-panel { padding: 2px 0; }
@@ -1291,20 +1323,25 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
       </div>
       <div id="rpane-page" class="rpane" style="display:none">
         <div id="tab-settings">
+          <div class="page-pane__head">
+            <span class="page-pane__eyebrow">Page settings</span>
+            <h3 id="pagePaneTitle">Home</h3>
+            <p class="hint">Content and metadata for this page. Global theme &amp; site details are at the bottom.</p>
+          </div>
           <div class="settings-group">
-            <h4>🎨 Theme Colors</h4>
+            <h4>📄 This page’s content</h4>
+            <nav class="page-data-toc" id="toc"></nav>
+            <div id="editor" class="page-data-section"></div>
+          </div>
+          <details class="settings-group settings-group--collapsible">
+            <summary><h4>🎨 Global theme &amp; colors</h4></summary>
             <div class="settings-actions">
               <button class="btn-save-theme" id="themeSaveBtn" type="button" disabled>Save Theme</button>
               <button class="btn-reset-theme" id="themeResetBtn" type="button">Reset</button>
               <span class="settings-status" id="themeStatus"></span>
             </div>
             <div id="appearanceControls"></div>
-          </div>
-          <div class="settings-group">
-            <h4>📄 Page Data</h4>
-            <nav class="page-data-toc" id="toc"></nav>
-            <div id="editor" class="page-data-section"></div>
-          </div>
+          </details>
         </div>
       </div>
     </aside>
@@ -2676,6 +2713,8 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     const e2 = document.getElementById('pagesCrumbBtn');
     if (e1) e1.textContent = label;
     if (e2) e2.textContent = label + ' ▾';
+    const e3 = document.getElementById('pagePaneTitle');
+    if (e3) e3.textContent = label;
     if (window.filterPageData) window.filterPageData(currentPage);
   }
   function buildPageBar() {
@@ -3127,6 +3166,18 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
     });
     s.addEventListener('change', () => onCh(s.value));
     return s;
+  }
+  // Segmented control (Figma-style pill toggle) with optional key hints.
+  function segmented(options, val, onCh) {
+    const wrap = document.createElement('div'); wrap.className = 'segmented';
+    options.forEach((o) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'segmented__btn' + (o.v === val ? ' active' : '');
+      b.innerHTML = o.l + (o.hint ? '<small>' + o.hint + '</small>' : '');
+      b.addEventListener('click', () => { onCh(o.v); wrap.querySelectorAll('.segmented__btn').forEach((x) => x.classList.remove('active')); b.classList.add('active'); });
+      wrap.append(b);
+    });
+    return wrap;
   }
   function colorInput(val, onCh) {
     const row = document.createElement('div'); row.className = 'ctl-color-row';
@@ -3706,6 +3757,11 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       } else {
         const ta = textInput(blk.text, (v) => { blk.text = v; upd(); }, true);
         panelC.append(field('Text (use [Text](/url) for links)', ta, 'blocktext'));
+        // Link the whole text block to a page or external URL.
+        panelC.append(field('Link this text to (page or URL)', linkInput(blk.link || '', (v) => { blk.link = v; upd(); })));
+        if (blk.link && /^https?:\/\//i.test(blk.link)) {
+          panelC.append(checkboxRow('Open external link in a new tab', blk.linkBlank, (v) => { blk.linkBlank = v; upd(); }));
+        }
       }
     }
 
@@ -3730,10 +3786,17 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
       panelS.append(field('Border', borderControls(sec, upd)));
     } else {
       if (blk.type === 'image') {
+        // Figma-style "Resize behavior" — how dragging the corner handle acts.
+        panelS.append(field('Resize behavior', segmented([
+          { v: 'normal', l: 'Resize', hint: 'R' }, { v: 'scale', l: 'Scale', hint: 'K' }, { v: 'crop', l: 'Crop', hint: 'C' },
+        ], blk.resizeMode || 'normal', (v) => { blk.resizeMode = v; upd(); })));
+        const modeHint = document.createElement('p'); modeHint.className = 'hint'; modeHint.style.marginTop = '-6px';
+        modeHint.textContent = 'Drag the image’s corner on the canvas. Hold Ctrl to crop or Shift to scale at any time.';
+        panelS.append(modeHint);
         panelS.append(field('Corner radius (px)', numInput(blk.radius, (v) => { blk.radius = v; upd(); }, 0, 100)));
         panelS.append(field('Crop height (px, 0 = natural)', numInput(blk.freeH || 0, (v) => { blk.freeH = v || 0; upd(); renderInspector(); }, 0, 1600)));
         if (blk.freeH) {
-          panelS.append(field('Crop mode', selInput([
+          panelS.append(field('Fill mode', selInput([
             { v: 'cover', l: 'Cover — crop to fill' }, { v: 'contain', l: 'Contain — fit inside' }, { v: 'fill', l: 'Stretch' },
           ], blk.fit || 'cover', (v) => { blk.fit = v; upd(); })));
           panelS.append(field('Focal point X (%)', numInput(blk.focusX != null ? blk.focusX : 50, (v) => { blk.focusX = v; upd(); }, 0, 100)));
