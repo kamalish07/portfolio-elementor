@@ -442,10 +442,42 @@
          wrap.appendChild(ph);
       }
     } else if (b.type === 'button') {
+      // Buttons are their own tiny auto-layout row: optional icon + editable
+      // label, arranged with a gap and content alignment, with custom
+      // background/text colors overriding the theme defaults.
       var btn = document.createElement('a');
-      btn.className = 'button-link typography-button inline-flex items-center justify-center rounded-button border px-5 py-3 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 button-link--primary border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:opacity-80';
-      btn.textContent = b.text || 'Button';
+      btn.className = 'button-link typography-button rounded-button border px-5 py-3 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 button-link--primary border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:opacity-80';
       btn.href = b.url ? (window.PloyTheme ? window.PloyTheme.url(b.url) : b.url) : '#';
+      btn.style.display = 'inline-flex';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = { left: 'flex-start', center: 'center', right: 'flex-end' }[b.contentAlign || 'center'];
+      btn.style.gap = (b.gap != null ? b.gap : 8) + 'px';
+      if (b.bg) btn.style.backgroundColor = b.bg;
+      if (b.color) btn.style.color = b.color;
+      if (b.size) btn.style.fontSize = b.size + 'px';
+      if (b.bold) btn.style.fontWeight = '700';
+      if (b.font && window.PloyTheme) btn.style.fontFamily = window.PloyTheme.fontStack(b.font, b.fontCustom);
+
+      function makeBtnIcon() {
+        var ic = document.createElement('img');
+        ic.className = 'ploy-btn__icon';
+        ic.src = window.PloyTheme ? window.PloyTheme.url(b.icon) : b.icon;
+        ic.alt = '';
+        var sz = b.iconSize || 18;
+        ic.style.width = sz + 'px';
+        ic.style.height = sz + 'px';
+        ic.style.objectFit = 'contain';
+        ic.style.flexShrink = '0';
+        return ic;
+      }
+      if (b.icon && (b.iconPosition || 'left') === 'left') btn.appendChild(makeBtnIcon());
+      var label = document.createElement('span');
+      label.className = 'ploy-btn__label';
+      label.innerHTML = b.text || 'Button';
+      label.style.whiteSpace = 'pre-wrap';
+      btn.appendChild(label);
+      if (b.icon && b.iconPosition === 'right') btn.appendChild(makeBtnIcon());
+
       if (state.editMode) btn.addEventListener('click', function(e) { e.preventDefault(); });
       wrap.appendChild(btn);
     } else if (b.type === 'image') {
@@ -949,7 +981,9 @@
   }
 
   function attachBlockEditing(wrap, sec, b, freeCtx) {
-    var textEl = b.type === 'text' ? wrap.querySelector('.ploy-blk__text') : null;
+    // Buttons get the same click-to-select/click-to-edit text behavior as
+    // text widgets, just targeting the button's label span.
+    var textEl = (b.type === 'text' || b.type === 'button') ? wrap.querySelector('.ploy-blk__text, .ploy-btn__label') : null;
 
     // Single click SELECTS the widget (shows its properties). Clicking an
     // already-selected text widget again enters edit mode — like Figma:

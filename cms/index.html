@@ -2477,7 +2477,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
   }
   function newImageBlock() { return { id: uid('b'), type: 'image', src: '', alt: '', width: 48, radius: 0 }; }
   function newContainerBlock() { return { id: uid('b'), type: 'container', width: 100, flexDirection: 'column', gap: 16, alignItems: 'stretch', justifyContent: 'flex-start', padding: 0, bg: '', radius: 0, blocks: [newTextBlock()] }; }
-  function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100 }; }
+  function newButtonBlock() { return { id: uid('b'), type: 'button', text: 'Button', url: '#', width: 100, gap: 8, iconPosition: 'left', iconSize: 18, contentAlign: 'center' }; }
   function newShapeBlock() { return { id: uid('b'), type: 'shape', shape: 'rectangle', fill: '#6366f1', height: 120, thickness: 3, width: 30, freeW: 200 }; }
   function newSection() {
     // New sections are free-form canvases by default: drop widgets in and
@@ -3804,7 +3804,17 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelC.append(field('Link to (page or URL)', linkInput(blk.url || '', (v) => { blk.url = v; upd(); })));
       } else if (blk.type === 'button') {
         panelC.append(field('Button text', textInput(blk.text, (v) => { blk.text = v; upd(); })));
+        const btnHint = document.createElement('p'); btnHint.className = 'hint';
+        btnHint.textContent = 'Click the button on the canvas to edit its text in place — bold, links, etc.';
+        panelC.append(btnHint);
         panelC.append(field('Link to (page or URL)', linkInput(blk.url || '', (v) => { blk.url = v; upd(); })));
+        panelC.append(field('Icon (optional)', imageControl(blk.icon || '', (v) => { blk.icon = v; upd(); renderInspector(); })));
+        if (blk.icon) {
+          panelC.append(field('Icon position', segmented([
+            { v: 'left', l: 'Left' }, { v: 'right', l: 'Right' },
+          ], blk.iconPosition || 'left', (v) => { blk.iconPosition = v; upd(); })));
+          panelC.append(field('Icon size (px)', numInput(blk.iconSize || 18, (v) => { blk.iconSize = v; upd(); }, 8, 64)));
+        }
       } else {
         const ta = textInput(blk.text, (v) => { blk.text = v; upd(); }, true);
         panelC.append(field('Text (use [Text](/url) for links)', ta, 'blocktext'));
@@ -3872,6 +3882,18 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelS.append(field('Line color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
         panelS.append(field('Thickness (px)', numInput(blk.height, (v) => { blk.height = v; upd(); }, 1, 20)));
         panelS.append(field('Line style', selInput([{v:'solid',l:'Solid'},{v:'dashed',l:'Dashed'},{v:'dotted',l:'Dotted'}], blk.lineStyle || 'solid', (v) => { blk.lineStyle = v; upd(); })));
+      } else if (blk.type === 'button') {
+        panelS.append(field('Background color', colorInput(blk.bg, (v) => { blk.bg = v; upd(); })));
+        panelS.append(field('Text color', colorInput(blk.color, (v) => { blk.color = v; upd(); })));
+        panelS.append(field('Font Family', fontInputs(blk, upd)));
+        panelS.append(field('Text size (px, 0 = default)', numInput(blk.size, (v) => { blk.size = v; upd(); }, 0, 80)));
+        panelS.append(field('Bold', checkboxRow('Enable bold', blk.bold, (v) => { blk.bold = v; upd(); })));
+        // Auto-layout: how the icon + label are arranged inside the button.
+        panelS.append(field('Content alignment', selInput(
+          [{ v: 'left', l: 'Left' }, { v: 'center', l: 'Center' }, { v: 'right', l: 'Right' }],
+          blk.contentAlign || 'center', (v) => { blk.contentAlign = v; upd(); }
+        )));
+        panelS.append(field('Gap between icon & text (px)', numInput(blk.gap != null ? blk.gap : 8, (v) => { blk.gap = v; upd(); }, 0, 60)));
       } else if (blk.type === 'shape') {
         panelS.append(field('Shape', selInput([
           { v: 'rectangle', l: 'Rectangle' }, { v: 'circle', l: 'Circle' }, { v: 'line', l: 'Line' },
