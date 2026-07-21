@@ -1111,6 +1111,14 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
 .media-grid--panel { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 .widget-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
 
+/* ---- Website / Free form mode toggle ---- */
+.mode-toggle { display: flex; gap: 2px; background: var(--sb-bg-light); border: 1px solid var(--sb-border); border-radius: 999px; padding: 3px; margin-left: 14px; }
+.mode-toggle__btn { border: none; background: none; border-radius: 999px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: var(--sb-text-muted); cursor: pointer; }
+.mode-toggle__btn:hover { color: var(--sb-text-bright); }
+.mode-toggle__btn.active { background: var(--sb-accent); color: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.18); }
+.cms-app.mode-freeform .pages-crumb { opacity: .45; pointer-events: none; }
+.cms-app.mode-freeform .rtabs, .cms-app.mode-freeform #rtabPageBtn { display: none; }
+
 /* ---- Page settings pane ---- */
 .page-pane__head { padding: 4px 2px 14px; border-bottom: 1px solid var(--sb-border); margin-bottom: 14px; }
 .page-pane__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--sb-accent); }
@@ -1174,6 +1182,10 @@ html[data-cms-theme="dark"] .media-cell img { background: #232834; }
         <div class="pages-dropdown" id="pagesDropdown">
           <div class="cms-header__pages" id="pageBar"></div>
         </div>
+      </div>
+      <div class="mode-toggle" id="modeToggle">
+        <button type="button" class="mode-toggle__btn active" data-mode="website">Website</button>
+        <button type="button" class="mode-toggle__btn" data-mode="freeform">Free form</button>
       </div>
     </div>
 
@@ -2774,6 +2786,37 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
 
   function loadInitialFrame() { frame.src = ORIGIN + currentPagePath; }
 
+  // ---- WEBSITE / FREE FORM MODE TOGGLE ----
+  // "Free form" is a hidden pseudo-page (never in pages.json / the public
+  // Pages list) — a blank canvas for sketching ideas with the same free-form
+  // widget engine as any section. Ctrl+C there, switch back to Website,
+  // Ctrl+V into a real section — the widget clipboard is shared globally.
+  let editorMode = 'website';
+  let lastWebsitePage = { slug: 'home', path: '/' };
+  function setEditorMode(mode) {
+    if (mode === editorMode) return;
+    if (editorMode === 'website') lastWebsitePage = { slug: currentPage, path: currentPagePath };
+    editorMode = mode;
+    document.getElementById('modeToggle').querySelectorAll('.mode-toggle__btn').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    document.querySelector('.cms-app').classList.toggle('mode-freeform', mode === 'freeform');
+    if (mode === 'freeform') {
+      currentPage = 'freeform'; currentPagePath = '/freeform/';
+      if (!blocksData.pages.freeform) blocksData.pages.freeform = { sections: [] };
+      const e1 = document.getElementById('editingLabel'); if (e1) e1.textContent = 'Free form';
+    } else {
+      currentPage = lastWebsitePage.slug; currentPagePath = lastWebsitePage.path;
+      const pg = pagesData.pages.find((p) => p.slug === currentPage);
+      if (pg) setPageLabels(pg.label);
+    }
+    if (window.showBlockTab) window.showBlockTab();
+    selected = { s: null, b: null }; multiSel.clear(); knownDefaultSections = [];
+    frame.src = ORIGIN + currentPagePath;
+    renderAll();
+  }
+  document.querySelectorAll('#modeToggle .mode-toggle__btn').forEach((b) => {
+    b.addEventListener('click', () => setEditorMode(b.dataset.mode));
+  });
+
   // ---- MESSAGES FROM PREVIEW ----
   window.addEventListener('message', (ev) => {
     if (ev.origin !== ORIGIN) return;
@@ -2785,7 +2828,15 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
           cur().migrated = true;
           const oldSecs = cur().sections.slice(); cur().sections = [];
           knownDefaultSections.forEach((ds) => { cur().sections.push({ id: ds.id, type: 'default_section', key: ds.key }); });
-          cur().sections.push(...oldSecs); markBlocksDirty();
+          cur().sections.push(...oldSecs);
+          // Freeform is a bare canvas with no default sections — give it one
+          // big free-form frame to start sketching in immediately.
+          if (currentPage === 'freeform' && !cur().sections.length) {
+            const s = newSection();
+            s.minHeight = 900; s.maxWidth = 1600; s.paddingY = 0;
+            cur().sections.push(s);
+          }
+          markBlocksDirty();
         } else {
           // Pick up default sections the page doesn't know about yet (e.g. Header,
           // newly wrapped in data-default-section) so they don't vanish from
@@ -3874,6 +3925,7 @@ window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); 
         panelS.append(field('Width (%)', numInput(Math.round(blk.width), (v) => { blk.width = Math.min(100, Math.max(8, v || 100)); upd(); }, 8, 100), 'blockwidth'));
       }
       panelS.append(field('Border', borderControls(blk, upd)));
+      panelS.append(field('Opacity (%)', numInput(blk.opacity != null ? blk.opacity : 100, (v) => { blk.opacity = Math.max(0, Math.min(100, v)); upd(); }, 0, 100)));
     }
 
     // Advanced Tab

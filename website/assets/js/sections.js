@@ -65,6 +65,9 @@
     if (o.borderRadius != null && o.borderRadius !== '' && o.borderRadius !== 0) {
       el.style.borderRadius = o.borderRadius + 'px';
     }
+    if (o.opacity != null && o.opacity !== '' && o.opacity !== 100) {
+      el.style.opacity = String(clamp(o.opacity, 0, 100) / 100);
+    }
   }
 
   var TAGS = {
